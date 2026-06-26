@@ -89,6 +89,10 @@ CFS uses `cpu.weight` (range 1–10000, default 100) to allocate proportional CP
 | luna-system.slice | 300 | ~15% |
 | luna-ai.slice | 200 | ~10% |
 
+**DL-021 NOTE:** The `luna-ai.slice` at boot contains only the **Presence Engine** (luna-ai-d), which is lightweight (< 100 MB RAM, minimal CPU). The 200-weight allocation is generous for the Presence Engine alone.
+
+When the LLM Inference Engine starts on first demand, Ollama joins `luna-ai.slice`. At that point the 200-weight allocation becomes the binding constraint that prevents Ollama from starving interactive workloads.
+
 **How CFS weight works in practice:** CPU weight only takes effect under contention. When the system is idle, any process can use 100% of a CPU core. When multiple slices compete for CPU time, the scheduler allocates time proportional to the weight ratios. A compositor at weight 800 will receive approximately 4× more CPU time than an AI slice at weight 200 during a contested period.
 
 This means Ollama can saturate a CPU core during idle desktop periods. The moment the compositor needs to render a frame, CFS preempts Ollama immediately.
@@ -114,39 +118,40 @@ luna-ai.slice:
   cpu.max = "500000 1000000"   # 50% of one CPU core per 1-second period
 ```
 
-This means Ollama can use at most 50% of one CPU core in any 1-second window, regardless of how many cores are available. The remaining CPU is available for other slices.
+This quota applies when Ollama is running (i.e., after first LLM demand). At boot, only the lightweight Presence Engine is in this slice, so the quota has negligible effect until the LLM Inference Engine starts.
 
 ```
 TODO:
 Decision not yet finalized.
-Reason: The 50% CPU quota for the AI slice is an initial estimate.
-This throttles inference performance. If LUNA.AI responses feel too slow on
-reference hardware, this limit should be raised.
-Testing required before finalizing this value.
+Reason: The 50% CPU quota for the AI slice may be too restrictive once Ollama
+is active. Testing required under real inference workloads.
+The quota can be raised without changing the slice architecture.
 ```
 
 ### Memory Limits
 
 cgroup v2 also provides memory limits. LunaOS sets soft limits (memory.high) that trigger memory pressure signals, and hard limits (memory.max) that OOM-kill processes within the slice.
 
-| Slice | memory.high | memory.max | Rationale |
+| Slice | memory.high (soft limit) | memory.max (hard limit) | Notes |
 |---|---|---|---|
-| luna-compositor.slice | 512 MB | 1 GB | Compositor should not OOM the system |
-| luna-shell.slice | 256 MB | 512 MB | Shell components are lightweight |
-| luna-session.slice | none | none | User applications: no limit |
-| luna-system.slice | 256 MB | 512 MB | System daemons are lightweight |
-| luna-ai.slice | 5 GB | 6 GB | Ollama holds model weights in RAM |
+| luna-compositor.slice | 512 MB | 1 GB | |
+| luna-shell.slice | 256 MB | 512 MB | |
+| luna-session.slice | none | none | User apps: no limit |
+| luna-system.slice | 256 MB | 512 MB | |
+| luna-ai.slice | 512 MB (at boot) | 6 GB (when Ollama active) | See note |
+
+**luna-ai.slice memory note (DL-021):** At boot, the slice contains only the Presence Engine (~100 MB). The `memory.high` soft limit may be set low (512 MB) at boot and raised dynamically when the LLM Inference Engine starts and Ollama loads its model (~3 GB).
 
 ```
 TODO:
 Decision not yet finalized.
-Reason: AI slice memory limits depend on which Ollama model is loaded.
-Phi-3 Mini: ~2 GB. Qwen2.5 3B: ~3 GB.
-If both are loaded simultaneously: ~5 GB.
-The 6 GB hard limit above assumes 8 GB total RAM.
-On 4 GB systems, this limit must be lower (which constrains model choice).
-Model selection and minimum RAM spec must be resolved together.
-See architecture_overview.md Open Question 4.
+Reason: Whether luna-init adjusts cgroup memory limits dynamically when Ollama
+starts (on first LLM demand) has not been specified.
+Option A: Set memory.max to 6 GB from the start (wastes nothing, but signals
+          more capacity than is used at boot).
+Option B: luna-ai-d adjusts its own cgroup memory.max before starting Ollama.
+Option B requires luna-ai-d to have cgroup write capabilities. Must be a
+Decision Log entry before luna-ai-d implementation.
 ```
 
 ### Process Priority (nice values)
@@ -292,18 +297,18 @@ Decision not yet finalized.
 An AI agent implementing LunaOS scheduling must understand:
 
 - Cgroup v2 is the resource management mechanism. Cgroup v1 is not used.
-- `luna-init` creates the cgroup hierarchy and assigns each service to a slice at start time. No service assigns itself.
-- The cgroup hierarchy has five slices: compositor, shell, session, AI, and system. Their relative cpu.weight values are: 800, 400, 300, 200, 300.
-- The AI slice (luna-ai.slice) has an additional `cpu.max` quota of 50% of one CPU core per second. This throttles inference but protects interactive responsiveness.
+- `luna-init` creates the cgroup hierarchy and assigns each service to a slice at start time.
+- The `luna-ai.slice` at boot contains only the **Presence Engine** (lightweight, < 100 MB). The 200-weight and CPU quota take effect meaningfully only once Ollama starts (on first LLM demand).
+- **Ollama does NOT run at boot (DL-021).** Do not design scheduling policy around Ollama being present at desktop-ready time.
 - The LGP compositor runs at nice -10. This is the only LunaOS process with a negative nice value.
-- Ollama runs at nice +10. It is explicitly a background task.
+- Ollama runs at nice +10 when active. The Presence Engine runs at default (nice 0).
 - `lpkg` build jobs run at nice +15. They must never impact desktop responsiveness.
 - All scheduling policy values above are initial estimates pending validation on reference hardware.
-- PREEMPT_RT is not used in v1. The decision to use it (or not) is deferred to v1.5 based on measured latency data.
 
 ---
 
 *Document: `Volume II / 05_scheduler.md`*
 *Author: Hardik Bhaskar (Luna Kitsune)*
-*Version: 0.1-draft*
-*Depends on: architecture_overview.md, boot_flow.md, linux_architecture.md, init_system.md, core_laws.md (Law III Animation Budget), non_negotiables.md*
+*Version: 0.2-draft*
+*Depends on: architecture_overview.md, boot_flow.md, linux_architecture.md, init_system.md, core_laws.md (Law III Animation Budget), decision_log.md (DL-021), non_negotiables.md*
+*Supersedes: v0.1-draft (assumed Ollama boot-resident; updated for lazy LLM loading)*

@@ -42,9 +42,13 @@ The hierarchy is intentional. Every directory exists because something needs it.
 ```
 /
 ├── boot/
-│   ├── vmlinuz-lunaos          # Compiled kernel image
-│   ├── initramfs-lunaos.img    # Initial RAM filesystem
-│   └── limine.cfg              # Bootloader configuration
+│   ├── efi/                         # EFI System Partition mounted here (FAT32, DL-012)
+│   │   └── EFI/
+│   │       └── BOOT/                # limine EFI binary
+│   │           └── BOOTX64.EFI
+│   ├── vmlinuz-lunaos               # Compiled kernel image
+│   ├── initramfs-lunaos.img         # Initial RAM filesystem
+│   └── limine.cfg                   # Bootloader configuration (on ESP)
 │
 ├── dev/                         # Device nodes (managed by devtmpfs)
 ├── proc/                        # Kernel process information (procfs)
@@ -119,6 +123,26 @@ The hierarchy is intentional. Every directory exists because something needs it.
     └── luna-init                # Symlink to /usr/sbin/luna-init (initramfs compat)
 ```
 
+### Per-User Package Installation Paths (DL-017)
+
+Per DL-017, packages install per-user by default. The user home directory gains:
+
+```
+~/
+├── .local/
+│   ├── bin/                     # Per-user executables (on $PATH when set)
+│   ├── lib/                     # Per-user libraries
+│   ├── share/                   # Per-user shared data
+│   └── share/lpkg/
+│       └── installed.db         # Per-user lpkg package database (SQLite)
+└── .luna/
+    └── ... (AI data — see 06_memory.md)
+```
+
+Installation target selection:
+- `lpkg install <pkg>` — installs to `~/.local/` (per-user, no privilege required)
+- `lpkg install --system <pkg>` — installs to `/usr/` (system-wide, requires LUNA permission dialog or terminal auth per DL-016)
+
 ### User Home Directory Layout
 
 ```
@@ -149,8 +173,8 @@ The `~/.luna/` directory is fully documented in `06_memory.md`. It is not duplic
 
 | Mount point | Filesystem | Rationale |
 |---|---|---|
-| `/` | ext4 | Root filesystem (see `03_linux_architecture.md` — format decision pending DL entry) |
-| `/boot` | ext4 (same partition) or FAT32 (separate EFI partition) | limine requirement: EFI partition must be FAT32 |
+| `/` | ext4 or Btrfs | Root filesystem (DL-011 — Btrfs preferred for snapshot support; implementation under evaluation) |
+| `/boot/efi` | FAT32 | EFI System Partition — standard Linux UEFI layout (DL-012) |
 | `/tmp` | tmpfs | Cleared on boot, fast, never hits disk |
 | `/run` | tmpfs | Runtime state — cleared on boot |
 | `/dev` | devtmpfs | Kernel-managed device nodes |
@@ -183,7 +207,18 @@ All user LUNA configuration files:
 
 ### Package Installation Paths
 
-`lpkg` installs packages to the following locations:
+`lpkg` installs packages to two possible target sets based on scope (DL-017):
+
+**Per-user (default):**
+
+| File type | Installation path |
+|---|---|
+| Executables | `~/.local/bin/` |
+| Libraries | `~/.local/lib/` |
+| Shared data | `~/.local/share/<package>/` |
+| Package database | `~/.local/share/lpkg/installed.db` |
+
+**System-wide (`--system` flag, requires privilege escalation via DL-016):**
 
 | File type | Installation path |
 |---|---|
@@ -194,10 +229,8 @@ All user LUNA configuration files:
 | Shared data | `/usr/share/<package>/` |
 | Man pages | `/usr/share/man/` |
 | Config templates | `/etc/<package>/` (or `/etc/luna/` for Luna-specific) |
-| Package database | `/var/lib/lpkg/` |
+| Package database | `/var/lib/lpkg/installed.db` |
 | Package cache | `/var/lib/lpkg/cache/` |
-
-`lpkg` does not install files to `/opt/`, `/usr/local/`, or any other location. Files outside the above paths after an `lpkg install` indicate a packaging error.
 
 ---
 
@@ -293,11 +326,11 @@ TODO:
 Decision not yet finalized.
 ```
 
-1. **Root filesystem type.** ext4 vs. Btrfs. Must be a Decision Log entry before installer work. See `03_linux_architecture.md` Open Question 1.
+1. **Root filesystem type.** Btrfs is the preferred candidate for snapshot support (DL-011). Final decision pending implementation evaluation.
 
-2. **EFI partition strategy.** Separate FAT32 `/boot/efi` vs. merged `/boot`. Must be a Decision Log entry.
+2. ~~**EFI partition strategy.**~~ **Resolved (DL-012).** Standard Linux UEFI layout: FAT32 ESP mounted at `/boot/efi`.
 
-3. **`/usr` merge.** Whether `/bin` → `/usr/bin` and `/sbin` → `/usr/sbin` are symlinks or separate directories. Modern Linux convention is the merge. Decide before installation layout is finalized.
+3. **`/usr` merge.** Whether `/bin` → `/usr/bin` and `/sbin` → `/usr/sbin` are symlinks or separate directories. Decide before installation layout is finalized.
 
 4. **LGP compositor resource paths.** `/usr/lib/luna/lgp/` is a placeholder. Actual paths depend on Volume III / 01_lgp.md decisions.
 
@@ -309,18 +342,22 @@ Decision not yet finalized.
 
 An AI agent creating files in LunaOS must:
 
-1. Check this document first. If the file type is listed in the installation paths table, use the documented path. Do not create files in undocumented locations.
-2. Never write files to `~/.luna/` except from `luna-ai-d`. Never write files to `/etc/luna/` except from `luna-init` or `lpkg`.
-3. Respect TOML as the configuration format for all LunaOS config files. See DL-008.
-4. Service files belong in `/etc/luna/services/` with `.toml` extension.
-5. AppArmor profiles belong in `/etc/apparmor.d/`.
-6. Executables installed by `lpkg` go to `/usr/bin/` (user-facing) or `/usr/sbin/` (root-intended). Not `/usr/local/`.
-7. If a new component needs a directory not listed in this document, add the directory to this document before creating it. Do not create undocumented directories.
-8. `/run/` and `/tmp/` are tmpfs — they are cleared on every reboot. Do not store persistent state in these directories. Persistent state belongs in `/var/lib/` (system) or `~/.luna/` (user AI data).
+1. Check this document first. If the file type is listed in the installation paths tables, use the documented path. Do not create files in undocumented locations.
+2. **Default installation is per-user (`~/.local/`)**, not system-wide. System-wide requires `--system` flag and privilege escalation (DL-017).
+3. Never write files to `~/.luna/` except from `luna-ai-d`. Never write files to `/etc/luna/` except from `luna-init` or `lpkg`.
+4. Respect TOML as the configuration format for all LunaOS config files. See DL-008.
+5. Service files belong in `/etc/luna/services/` with `.toml` extension.
+6. AppArmor profiles belong in `/etc/apparmor.d/`.
+7. Executables installed system-wide by `lpkg --system` go to `/usr/bin/` (user-facing) or `/usr/sbin/` (root-intended). Not `/usr/local/`.
+8. Executables installed per-user by `lpkg` go to `~/.local/bin/`.
+9. If a new component needs a directory not listed in this document, add the directory to this document before creating it.
+10. `/run/` and `/tmp/` are tmpfs — cleared on every reboot. Persistent state belongs in `/var/lib/` (system) or `~/.luna/` (user AI data).
+11. The EFI System Partition is at `/boot/efi` (FAT32). Do not place non-EFI files there.
 
 ---
 
 *Document: `Volume II / 09_filesystem.md`*
 *Author: Hardik Bhaskar (Luna Kitsune)*
-*Version: 0.1-draft*
-*Depends on: architecture_overview.md, init_system.md, memory.md, security.md, core_laws.md (Law I, VI), decision_log.md (DL-008), non_negotiables.md*
+*Version: 0.3-draft*
+*Depends on: architecture_overview.md, init_system.md, memory.md, security.md, core_laws.md (Law I, VI), decision_log.md (DL-008, DL-011, DL-012, DL-017), non_negotiables.md*
+*Supersedes: v0.1-draft (EFI layout undecided, per-user install not documented)*

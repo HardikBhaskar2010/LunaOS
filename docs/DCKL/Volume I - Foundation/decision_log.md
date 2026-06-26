@@ -340,6 +340,413 @@ Phase 2 (booting to desktop) for early community vs. Phase 4 (polished) for big 
 
 ---
 
+## Architecture Review Meeting #2 — Decisions
+
+*Source: `Discussion_Session_2.md`*
+*Integrated: 2026-06-26*
+
+> **Documentation Conflict Note:**
+> `Discussion_Session_2.md` used DL-005 through DL-018 as its internal numbering. These numbers collide with existing DL-005 through DL-010 in this log (limine, Ollama, glibc, TOML, kernel, port). The discussion document's decisions have been **renumbered** to DL-011 onwards in this canonical log. DL-004R is preserved as the supersession marker. The original DL-005–DL-010 entries above retain their original meanings. All Volume II documents are updated to reference the renumbered DL identifiers.
+
+---
+
+## [DL-004R] Graphics Architecture — Hybrid Model
+
+**Date:** Architecture Review Meeting #2
+**Status:** ACCEPTED — Supersedes DL-004
+**Source:** Discussion_Session_2.md
+
+### Question
+What graphics architecture model serves both simple application developers and high-performance software?
+
+### Decision
+LunaOS adopts a **hybrid graphics architecture**:
+- Standard applications communicate through the **LunaGUI toolkit**
+- Advanced applications may communicate directly with the **Luna Graphics Protocol (LGP)**
+
+### Reasoning
+- LunaGUI provides a simple, high-level API for application developers who do not need direct graphics control
+- Direct LGP access preserves the ability for performance-critical applications (games, video editors, custom renderers) to bypass the toolkit layer
+- Both paths are supported simultaneously — no capability is sacrificed
+
+### Consequences
+- LunaGUI toolkit is a required v1 deliverable — it is the primary application interface
+- LGP remains the underlying protocol that LunaGUI uses internally
+- Volume III must document both LGP (protocol) and LunaGUI (toolkit) as distinct but related components
+- DL-004 (Hyprland compositor) is fully superseded — replaced by LGP compositor + LunaGUI
+
+---
+
+## [DL-011] Root Filesystem — Snapshot-Capable Strategy
+
+**Date:** Architecture Review Meeting #2
+**Status:** PROVISIONAL — implementation (Ext4 vs. Btrfs) under evaluation
+**Source:** Discussion_Session_2.md (was numbered DL-005 internally)
+
+### Question
+What filesystem strategy for the LunaOS root partition?
+
+### Decision
+The root filesystem must prioritize **maximum performance** and **simple recovery**.
+
+Automatic snapshots will be created before:
+- System updates
+- Kernel updates
+
+Manual snapshots remain available at any time.
+
+### Reasoning
+- Pre-update snapshots provide a rollback path without requiring the user to understand backup tools
+- Automatic snapshot creation before every destructive operation aligns with Core Law V (User Owns the Machine)
+
+### Consequences
+- Filesystem choice must support snapshots — Btrfs is the leading candidate; Ext4 requires a separate snapshot mechanism
+- The installer must create the filesystem with snapshot support enabled
+- `lpkg` must trigger pre-update snapshot creation before executing updates
+- Final filesystem choice (Ext4 vs. Btrfs) requires a follow-up DL entry when implementation begins
+
+---
+
+## [DL-012] EFI Partition Layout
+
+**Date:** Architecture Review Meeting #2
+**Status:** ACCEPTED
+**Source:** Discussion_Session_2.md (was numbered DL-006 internally)
+
+### Decision
+LunaOS follows the **standard Linux UEFI partition layout** for the EFI System Partition (ESP).
+
+### Reasoning
+- Preserves compatibility with existing firmware, dual-boot environments, and recovery tooling
+- Reduces installer complexity
+- Future internal directory structures within LunaOS may differ, but the ESP remains standards-compliant
+
+### Consequences
+- ESP is FAT32, mounted at `/boot/efi` (standard location)
+- limine config lives at the ESP-standard path
+- The Open Question in `09_filesystem.md` regarding EFI layout is resolved: separate FAT32 ESP at `/boot/efi`
+
+---
+
+## [DL-013] Wireless Backend
+
+**Date:** Architecture Review Meeting #2
+**Status:** PROVISIONAL — implementation under evaluation
+**Source:** Discussion_Session_2.md (was numbered DL-007 internally)
+
+### Decision
+Priority criteria: **maximum hardware compatibility** and **strong performance**.
+
+### Reasoning
+- Broad device support is required for v1 usability on real hardware
+- Low latency matters for desktop responsiveness
+- wpa_supplicant (broad compat) vs. iwd (modern, lower maintenance) remains under evaluation
+
+### Consequences
+- Final backend selection requires a follow-up DL entry after hardware compatibility testing
+- NetworkManager will be used regardless of which backend is selected
+- The Open Question in `10_networking.md` regarding wireless backend is partially resolved: criteria defined, implementation pending
+
+---
+
+## [DL-014] DNS Strategy
+
+**Date:** Architecture Review Meeting #2
+**Status:** ACCEPTED
+**Source:** Discussion_Session_2.md (was numbered DL-008 internally)
+
+### Decision
+Version 1.x uses the **existing Linux DNS resolver** (NetworkManager writes `/etc/resolv.conf` with DHCP-provided servers).
+
+A future **LunaDNS** service may replace it after sufficient architectural research.
+
+### Reasoning
+- The existing resolver provides stability
+- DNS is not a differentiating subsystem for v1
+- Future LunaDNS can add DNS-over-TLS, local caching, and privacy features without blocking v1 delivery
+
+### Consequences
+- The Open Question in `10_networking.md` regarding DNS is resolved: use NetworkManager passthrough for v1
+- No additional DNS daemon is required in the v1 service file set
+- LunaDNS is a post-v1 architectural research item
+
+---
+
+## [DL-015] Time Synchronization
+
+**Date:** Architecture Review Meeting #2
+**Status:** ACCEPTED
+**Source:** Discussion_Session_2.md (was numbered DL-009 internally)
+
+### Decision
+LunaOS uses the **existing Linux time synchronization service** (chrony or ntpd — standard upstream tool).
+
+Time synchronization is not a differentiating subsystem for v1.
+
+### Reasoning
+- Reliability over reinvention for a non-differentiating subsystem
+- chrony or ntpd are well-understood (Law I permits upstream tools we fully understand)
+
+### Consequences
+- The Open Question in `10_networking.md` regarding NTP is resolved: use an established upstream NTP tool
+- NTP service is added to the luna-init service file set as a standard Stage 4 service
+- A service file `/etc/luna/services/ntpd.toml` (or chrony equivalent) is required
+
+---
+
+## [DL-016] Package Privilege Escalation
+
+**Date:** Architecture Review Meeting #2
+**Status:** ACCEPTED
+**Source:** Discussion_Session_2.md (was numbered DL-010 internally)
+
+### Decision
+Package installation requiring elevated privileges requests authorization through the **LUNA graphical permission interface**.
+
+Terminal authentication remains available as an alternative.
+
+Graphical authorization is the preferred user experience.
+
+### Reasoning
+- The LUNA graphical interface is more accessible and consistent with the Living Interface design
+- Terminal fallback preserves headless/recovery use cases
+- LUNA presenting the authorization request maintains the "digital presence" identity (DL-015 AI layer always-running)
+
+### Consequences
+- The graphical permission interface must be implemented before `lpkg` can perform privilege escalation in the desktop session
+- The LUNA Presence Engine (see DL-021) must be running for graphical authorization to function
+- Terminal authentication fallback is required for non-graphical sessions
+- The Open Question in `08_security.md` regarding lpkg privilege escalation is partially resolved: graphical + terminal, with graphical preferred
+
+---
+
+## [DL-017] Package Installation Scope
+
+**Date:** Architecture Review Meeting #2
+**Status:** ACCEPTED
+**Source:** Discussion_Session_2.md (was numbered DL-011 internally)
+
+### Decision
+Packages install **per-user by default**.
+
+System-wide installation is available when explicitly requested by an administrator.
+
+### Reasoning
+- Per-user installation does not require privilege escalation for the common case
+- System-wide installation remains available for shared system components
+- Reduces the attack surface of the package manager for typical use
+
+### Consequences
+- `lpkg` must implement both per-user (`~/.local/`) and system-wide (`/usr/`) installation targets
+- The default installation prefix is `~/.local/` unless `--system` is specified
+- Per-user `lpkg` database lives at `~/.local/share/lpkg/installed.db`
+- System `lpkg` database remains at `/var/lib/lpkg/installed.db`
+- `09_filesystem.md` must be updated to document the per-user installation paths
+
+---
+
+## [DL-018] Package Transaction Rollback
+
+**Date:** Architecture Review Meeting #2
+**Status:** ACCEPTED
+**Source:** Discussion_Session_2.md (was numbered DL-012 internally)
+
+### Decision
+Every package transaction is **atomic** where possible.
+
+On installation failure, `lpkg` automatically restores the previous system state.
+
+Reliability takes precedence over partial installation.
+
+### Reasoning
+- A failed install that leaves the system in a broken state is worse than a failed install that cleanly rolls back
+- Atomic transactions give the user confidence to install and try packages
+- Aligns with Core Law V (User Owns the Machine — no irreversible actions without confirmation)
+
+### Consequences
+- `lpkg` must implement a transaction log: record every file operation before executing it
+- On failure, replay the transaction log in reverse to restore previous state
+- Rollback must handle: file removal, file restoration, database state
+- This is a significant implementation complexity — must be scoped before lpkg v1 work begins
+- Snapshot support (DL-011) provides an additional fallback for catastrophic failures
+
+---
+
+## [DL-019] Repository Policy
+
+**Date:** Architecture Review Meeting #2
+**Status:** ACCEPTED
+**Source:** Discussion_Session_2.md (was numbered DL-013 internally)
+
+### Decision
+LunaOS supports:
+- Official repositories
+- Community repositories
+- Third-party repositories
+
+Security is achieved through **verification, not limitation**:
+- Signature verification
+- Reputation indicators
+- Malware scanning
+- Security analysis
+- User warnings
+
+### Reasoning
+- Blocking software sources artificially restricts what LunaOS can run
+- Verification-based security provides protection without reducing capability
+- Community and third-party repos are essential for a living ecosystem
+
+### Consequences
+- `lpkg` must implement signature verification for all repository types
+- Reputation and malware scanning infrastructure must be designed (out of scope for v1 core, may be a v1.5 feature)
+- Repository trust levels (official / community / third-party) must be communicated clearly in the UI
+- Official repos are fully trusted. Community repos are signature-verified. Third-party repos show explicit user warnings.
+
+---
+
+## [DL-020] Third-Party Application Isolation
+
+**Date:** Architecture Review Meeting #2
+**Status:** ACCEPTED
+**Source:** Discussion_Session_2.md (was numbered DL-014 internally)
+
+### Decision
+Third-party applications execute inside an **isolated sandbox by default**.
+
+Users may explicitly relax restrictions.
+
+Security defaults favor containment without preventing advanced workflows.
+
+### Reasoning
+- Default sandboxing reduces the impact of malicious or poorly-written third-party software
+- User override capability preserves power-user workflows
+- Aligns with DL-019: accept all software sources but sandbox the untrusted ones
+
+### Consequences
+- A sandboxing mechanism is required (namespace isolation, seccomp, AppArmor profiles)
+- "Third-party" must be defined precisely: is it by repository source, by signature trust level, or both?
+- The sandbox must not prevent normal application functionality — it constrains what the app can access, not how it runs
+- This is a significant security architecture deliverable — must be designed in `08_security.md` and Volume V
+
+---
+
+## [DL-021] AI Runtime Architecture — Two Independent Systems
+
+**Date:** Architecture Review Meeting #2
+**Status:** ACCEPTED
+**Source:** Discussion_Session_2.md (was numbered DL-015 internally)
+
+### Decision
+LUNA consists of two independent systems:
+
+**LUNA Presence Engine** — starts automatically at boot:
+- Luna Island
+- Context awareness
+- Expressions
+- Notifications
+- Lightweight behavior
+
+**LLM Inference Engine** — loads lazily:
+- Initializes only when: user starts conversation, voice interaction begins, AI automation requested, explicit reasoning required
+- Minimizes idle memory consumption while preserving responsiveness
+
+### Reasoning
+- The Presence Engine provides always-on system presence with minimal resource cost
+- The LLM (Ollama + model weights) is the heavyweight component — loading it at boot wastes ~2-3 GB of RAM during periods when the user is not conversing
+- Lazy loading delivers the promise of "LUNA online" at boot without the full AI inference cost
+
+### Consequences
+- `luna-ai-d` is split into two logical components: presence daemon and inference engine
+- The presence daemon starts at Stage 6 boot alongside shell components
+- Ollama does not start at boot — it is launched by the inference engine on first LLM demand
+- The memory layout in `06_memory.md` changes: Ollama model weights are NOT resident at boot
+- `02_boot_flow.md` Stage 6 must be updated: Ollama is not a boot-time service
+- Total boot-time RAM usage is significantly reduced — Presence Engine is lightweight (< 100 MB target)
+- Luna Island, context tracking, and pattern observation are all Presence Engine functions
+- LLM queries, conversation, voice, and automation are Inference Engine functions
+
+---
+
+## [DL-022] Context Service
+
+**Date:** Architecture Review Meeting #2
+**Status:** ACCEPTED
+**Source:** Discussion_Session_2.md (was numbered DL-016 internally)
+
+### Decision
+A **lightweight background context service** runs after boot.
+
+During installation, the user explicitly grants or denies observation permissions.
+
+Only approved data sources may be observed. No hidden monitoring.
+
+### Reasoning
+- Install-time explicit permission grant is cleaner than runtime popups asking for observation access
+- User knows exactly what LUNA will observe before the system is running
+- Aligns with Core Law II Privacy Sub-Law (deny-by-default observation) and Core Law IV (Silence Before Suggestion)
+
+### Consequences
+- The LunaOS installer must include an observation permission configuration step
+- `~/.luna/config/observe.toml` is populated during installation, not during first run
+- The installer UI must clearly communicate what each observation permission does
+- "Context service" = the Presence Engine's context awareness component (DL-021)
+
+---
+
+## [DL-023] Persistent Memory
+
+**Date:** Architecture Review Meeting #2
+**Status:** ACCEPTED
+**Source:** Discussion_Session_2.md (was numbered DL-017 internally)
+
+### Decision
+LUNA **maintains memory across reboots**.
+
+During shutdown, a protected summarization process produces a condensed memory record.
+
+This memory is **encrypted** and stored in a dedicated protected location.
+
+Long-term memory remains entirely under user control.
+
+### Reasoning
+- Persistent memory makes LUNA progressively more useful over time — she remembers your patterns across sessions
+- Summarization at shutdown prevents the memory store from growing unboundedly
+- Encryption protects user behavioral data at rest (addresses the Open Question in `06_memory.md`)
+- User control of all memory data is non-negotiable (Core Law II, Core Law V)
+
+### Consequences
+- Memory encryption at rest is a v1 requirement, not a v2 deferral
+- A shutdown hook in luna-init must trigger the summarization process before stopping services
+- Summarization process must complete within the shutdown timeout (current: 5 seconds total — may need adjustment)
+- Encryption key management must be designed — likely tied to user login credentials
+- `06_memory.md` must be updated: memory encryption is ACCEPTED, not deferred
+- `luna memory --clear` must also clear the encrypted persistent summary
+
+---
+
+## [DL-024] LunaOS Success Criteria
+
+**Date:** Architecture Review Meeting #2
+**Status:** CANONICAL
+**Source:** Discussion_Session_2.md (was numbered DL-018 internally)
+
+### Decision
+Version 1.0 succeeds when:
+- The operating system **feels technically impressive**
+- The operating system **genuinely feels alive**
+
+Neither goal may come at the expense of the other.
+
+**Performance and Presence are equal pillars of LunaOS.**
+
+### Consequences
+- Every architectural and implementation decision is evaluated against both criteria simultaneously
+- A feature that is technically impressive but makes the system feel lifeless does not ship
+- A feature that creates presence but degrades performance does not ship
+- DL-018 is canonical — it cannot be amended by a future DL entry, only by full project review
+
+---
+
 *Document: `00_Foundation/decision_log.md`*
 *Author: Hardik Bhaskar (Luna Kitsune)*
 *This document is append-only. Add new entries at the top of the numbered section.*

@@ -44,42 +44,43 @@ Memory management in LunaOS is governed by two Core Laws:
 
 ### Physical Memory Regions
 
-On a reference 8 GB system, memory is distributed approximately as follows:
-
-```
-Physical Memory — 8 GB total
+Physical Memory — 8 GB total (at boot, before first LLM demand)
 
 ┌──────────────────────────────────────────┐  High address
-│  Ollama model weights (resident)          │  ~3 GB
-│  (inside luna-ai.slice)                   │
+│  User applications                          │  ~1.5 GB (variable)
 ├──────────────────────────────────────────┤
-│  User applications                        │  ~1.5 GB (variable)
+│  LGP compositor + shell                     │  ~512 MB
 ├──────────────────────────────────────────┤
-│  LGP compositor + shell                   │  ~512 MB
+│  System services (D-Bus, NetworkMgr,        │  ~256 MB
+│  PipeWire, luna-ai-d Presence Engine)       │
 ├──────────────────────────────────────────┤
-│  System services (D-Bus, NetworkMgr,      │  ~256 MB
-│  PipeWire, luna-ai-d)                     │
+│  Page cache (filesystem I/O cache)          │  ~4 GB (dynamic — expands to fill free RAM)
 ├──────────────────────────────────────────┤
-│  Page cache (filesystem I/O cache)        │  ~1.5 GB (dynamic — shrinks under pressure)
-├──────────────────────────────────────────┤
-│  Kernel memory (kmalloc, vmalloc,         │  ~256 MB
-│  per-CPU data, kernel stacks)             │
+│  Kernel memory (kmalloc, vmalloc,           │  ~256 MB
+│  per-CPU data, kernel stacks)               │
 └──────────────────────────────────────────┘  Low address
-```
+
+DL-021 NOTE: Ollama model weights are NOT present at boot. Per DL-021, the LLM
+Inference Engine is lazy-loaded on first demand. On a system idle at desktop,
+the ~3 GB Ollama weight region does not exist. That space is page cache.
+
+After first LLM demand (physical memory layout changes):
+
+┌──────────────────────────────────────────┐  High address
+│  Ollama model weights (resident once loaded) │  ~3 GB
+├──────────────────────────────────────────┤
+│  User applications                          │  ~1.5 GB (variable)
+├──────────────────────────────────────────┤
+│  LGP compositor + shell                     │  ~512 MB
+├──────────────────────────────────────────┤
+│  System services + Presence Engine          │  ~256 MB
+├──────────────────────────────────────────┤
+│  Page cache (compressed to free space)      │  ~1 GB (shrunken by Ollama)
+├──────────────────────────────────────────┤
+│  Kernel memory                              │  ~256 MB
+└──────────────────────────────────────────┘  Low address
 
 The dominant memory consumer is Ollama's model weights held in RAM for fast inference. This is unavoidable with local AI inference. The system is designed around this constraint.
-
-```
-TODO:
-Decision not yet finalized.
-Reason: Memory layout above assumes a specific Ollama model loaded at boot.
-Phi-3 Mini ~2 GB. Qwen2.5 3B ~3 GB.
-If the model is not loaded at boot (lazy load on first query), the page cache
-can use that space until needed.
-Default model loading behavior (eager vs. lazy) must be decided before
-the memory layout can be finalized.
-See: architecture_overview.md Open Question 4.
-```
 
 ### Virtual Address Space
 
@@ -201,6 +202,10 @@ When a cgroup exceeds `memory.high`, the kernel slows memory allocations for pro
 
 Memory accounting has a small overhead (typically 1-2% CPU for allocation-heavy workloads). This overhead is acceptable.
 
+### Shutdown Summarization
+
+To ensure data integrity, `luna-ai-d` performs a memory summarization sweep on SIGTERM. The kernel grants `luna-init` a maximum of 5 seconds to complete this write-back before forcibly terminating the daemon.
+
 ### sysctl Memory Tuning
 
 ```toml
@@ -245,20 +250,21 @@ This section documents the `~/.luna/memory/` data store — LUNA.AI's persistent
 
 The following behaviors are guaranteed by Core Law II and cannot be overridden by any other system component:
 
-1. **Exclusive read access.** Only `luna-ai-d` reads `~/.luna/memory/`. No other process has permission to read this directory. This is enforced by filesystem permissions (`chmod 700 ~/.luna/`, owned by the user, `luna-ai-d` runs as the same user).
+1. **Exclusive read access.** Only `luna-ai-d` reads `~/.luna/memory/`. No other process has permission to read this directory.
 
-2. **No automatic transmission.** `luna-ai-d` never makes outbound network connections to transmit memory data. Outbound connections are only made when the user explicitly invokes `luna bridge --send` (cloud bridge opt-in).
+2. **No automatic transmission.** `luna-ai-d` never makes outbound network connections to transmit memory data.
 
 3. **`luna memory --clear` always works.** This command:
-   - Stops `luna-ai-d` observation (sends SIGUSR1 to pause observation)
+   - Stops `luna-ai-d` observation (sends SIGUSR1 to pause)
    - Deletes all files in `~/.luna/memory/`
+   - Deletes the encrypted persistent summary (DL-023)
    - Reinitializes empty database files
    - Resumes `luna-ai-d` with a clean memory state
-   - This command cannot be disabled by configuration, by another service, or by a scheduled task.
+   - This command cannot be disabled.
 
-4. **`luna memory --audit` always works.** Produces a human-readable log of all patterns stored, all application sequences observed, and all preferences learned. This cannot be disabled.
+4. **`luna memory --audit` always works.** Produces a human-readable log of all patterns stored.
 
-5. **Observation is deny-by-default.** New applications are never observed without an explicit entry in `~/.luna/config/observe.toml`. The observation allow-list is never modified without user action.
+5. **Observation is deny-by-default.** New applications are never observed without an explicit entry in `~/.luna/config/observe.toml`. The allow-list is populated during installation (DL-022), never modified without user action.
 
 ### observe.toml Format
 
@@ -308,8 +314,8 @@ Confidence threshold for suggestion generation: ≥ 0.75 (configurable, minimum 
 | Improvement | Target | Notes |
 |---|---|---|
 | Memory pressure daemon | v1 | Userspace daemon that proactively manages memory pressure signals from kernel |
-| AI memory encryption at rest | v2 | Encrypt `~/.luna/memory/` with user key — requires key management infrastructure |
-| musl impact on memory layout | v2 | musl's allocator behaves differently from glibc's — reassess memory tuning at migration |
+| AI memory encryption at rest | **v1** | DL-023: Encryption is a v1 requirement — not deferred |
+| musl impact on memory layout | v2 | musl’s allocator behaves differently from glibc’s — reassess at migration |
 | AI memory compaction | v1.5 | Periodic cleanup of low-confidence, old patterns from workflow.db |
 | Swapfile auto-sizing | v1 | Installer sizes swapfile based on detected RAM |
 
@@ -324,13 +330,15 @@ Decision not yet finalized.
 
 1. **Swap type (partition vs. swapfile).** Must be a Decision Log entry before installer work.
 
-2. **Default Ollama model eager vs. lazy loading.** Affects the physical memory layout significantly. Must be decided before minimum RAM spec can be finalized.
+2. ~~**Default Ollama model eager vs. lazy loading.**~~ **Resolved (DL-021).** LLM Inference Engine is lazy-loaded. Ollama is not resident at boot.
 
 3. **OOM score adjustment values.** Initial estimates. Must be validated under memory pressure testing.
 
-4. **observe.toml scope values.** The allowed observation scope strings (`file_open`, `build_run`, `tab_pattern`) are placeholders. The full set of observable events must be defined in Volume IV / 03_context_engine.md.
+4. **observe.toml scope values.** The allowed observation scope strings are placeholders. Full set of observable events must be defined in Volume IV / 03_context_engine.md.
 
-5. **AI memory encryption.** Storing pattern data unencrypted on disk is a potential privacy risk if the device is physically compromised. Encryption is a v2 goal but the key management approach has not been designed.
+5. ~~**AI memory encryption.**~~ **Resolved (DL-023).** Memory encryption at rest is a v1 requirement. Key management design is required (tied to user login credentials).
+
+6. **Summarization timeout budget.** How long luna-ai-d’s shutdown summarization may take before luna-init proceeds regardless. Must be a Decision Log entry.
 
 ---
 
@@ -352,5 +360,6 @@ An AI agent working on LunaOS memory systems must understand:
 
 *Document: `Volume II / 06_memory.md`*
 *Author: Hardik Bhaskar (Luna Kitsune)*
-*Version: 0.1-draft*
-*Depends on: architecture_overview.md, linux_architecture.md, scheduler.md, core_laws.md (Law II, IV, V), non_negotiables.md, decision_log.md (DL-008)*
+*Version: 0.2-draft*
+*Depends on: architecture_overview.md, linux_architecture.md, scheduler.md, core_laws.md (Law II, IV, V), non_negotiables.md, decision_log.md (DL-008, DL-021, DL-022, DL-023)*
+*Supersedes: v0.1-draft (Ollama assumed boot-resident; memory encryption incorrectly deferred to v2)*

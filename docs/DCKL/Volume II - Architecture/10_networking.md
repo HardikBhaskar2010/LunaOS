@@ -51,38 +51,34 @@ NetworkManager (userspace)
 
 ### Network Services
 
+### Network Services
+
 | Service | Role | Started by |
 |---|---|---|
+| nftables | Firewall — starts before NetworkManager | luna-init Stage 4 (first) |
 | NetworkManager | Interface management, DHCP, Wi-Fi | luna-init Stage 4 |
-| wpa_supplicant or iwd | Wi-Fi authentication | NetworkManager subprocess |
-| nftables | Firewall rules | luna-init Stage 4 (before NetworkManager) |
+| wpa_supplicant or iwd | Wi-Fi authentication (DL-013 — criteria defined, choice pending) | NetworkManager subprocess |
+| ntpd or chrony | Time synchronization (DL-015) | luna-init Stage 4 |
 
 ```
-TODO:
-Decision not yet finalized.
-Reason: Wi-Fi authentication backend has not been decided.
-Options:
-  wpa_supplicant — industry standard, heavy, complex configuration
-  iwd (Intel Wireless Daemon) — modern, simpler, better NetworkManager integration
-Recommendation: iwd — it is the direction NetworkManager is moving and it is
-simpler to own (Law I). Must be a Decision Log entry.
+DL-013 NOTE:
+Wireless backend criteria (DL-013): maximum hardware compatibility and strong performance.
+wpa_supplicant vs. iwd evaluation is ongoing. Both are compatible with NetworkManager.
+A follow-up Decision Log entry is required after hardware compatibility testing.
 ```
 
 ### DNS Configuration
 
-```
-TODO:
-Decision not yet finalized.
-Reason: DNS resolver strategy has not been decided.
-Options:
-  A: NetworkManager writes /etc/resolv.conf with upstream DHCP-provided DNS servers.
-     Simple, no local resolver. Relies on ISP DNS. Privacy concerns.
-  B: A local caching resolver (Unbound or dnsmasq) sits between NetworkManager
-     and the upstream DNS. Provides caching and optional DNS-over-TLS.
-  C: systemd-resolved equivalent — not available since LunaOS does not use systemd.
-Recommendation: Option B with Unbound for DNS-over-TLS support.
-This is a privacy-aligned choice consistent with Law II (Local First).
-Must be a Decision Log entry before networking is implemented.
+**Resolved (DL-014):** Version 1.x uses the existing Linux DNS resolver.
+
+NetworkManager writes `/etc/resolv.conf` with DHCP-provided upstream DNS servers. No local caching resolver is used in v1.
+
+A future **LunaDNS** service may replace this after sufficient architectural research. LunaDNS would add DNS-over-TLS, local caching, and privacy features. It is a post-v1 research item.
+
+```toml
+# NetworkManager.conf — DNS passthrough
+[main]
+dns = default   # Write /etc/resolv.conf with DHCP-provided servers
 ```
 
 ### Firewall Architecture
@@ -192,8 +188,8 @@ This table defines exactly what outbound network traffic LunaOS initiates and un
 | Traffic | Initiator | Trigger | User Control |
 |---|---|---|---|
 | DHCP | NetworkManager | Network interface comes up | Automatic — required for network access |
-| DNS queries | NetworkManager / Unbound | Any DNS lookup | Automatic — required for network access |
-| NTP (clock sync) | TODO — see Open Questions | Boot or periodic | Should be user-configurable |
+| DNS queries | NetworkManager / resolv.conf | Any DNS lookup | Automatic — required for network access |
+| NTP (clock sync) | ntpd / chrony (DL-015) | Boot, then periodic | Automatic — standard NTP behavior |
 | Package index | lpkg | `lpkg update` (manual) | ✅ Manual only |
 | Package download | lpkg | `lpkg install <pkg>` (manual) | ✅ Manual only |
 | Model download | Ollama | `ollama pull <model>` (manual) | ✅ Manual only |
@@ -205,17 +201,10 @@ This table defines exactly what outbound network traffic LunaOS initiates and un
 ```
 TODO:
 Decision not yet finalized.
-Reason: NTP (time synchronization) has not been specified.
-Options:
-  A: Use the system clock set at boot from hwclock only — no NTP.
-     Simple. Correct on hardware with accurate clocks.
-  B: Run chronyd or ntpd — automatic continuous NTP sync.
-     More accurate. An outbound connection that runs without user instruction.
-  C: Run ntpd only when the user explicitly requests a clock sync.
-     Best for Law II compliance.
-For Law II compliance, Option C or a strictly controlled Option B
-(only syncs on first boot and manual request) is preferred.
-Must be a Decision Log entry.
+Reason: NTP is automatic (DL-015: use existing Linux NTP service). This is
+an outbound connection that runs without explicit user instruction.
+This is accepted as necessary infrastructure (same category as DHCP and DNS).
+The user may disable NTP via config if desired, but it is on by default.
 ```
 
 ### LAN and Local Network
@@ -246,22 +235,17 @@ After a clean install, `nmap` scanning the LunaOS host from another machine on t
 
 ## Open Questions
 
-```
-TODO:
-Decision not yet finalized.
-```
+1. **Wi-Fi backend.** **Partially resolved (DL-013).** Criteria defined: maximum hardware compatibility and strong performance. wpa_supplicant vs. iwd evaluation ongoing. Follow-up DL entry required.
 
-1. **Wi-Fi backend.** wpa_supplicant vs. iwd. Must be a Decision Log entry.
+2. **DNS resolver.** **Resolved (DL-014).** NetworkManager passthrough: write `/etc/resolv.conf` with DHCP-provided servers. LunaDNS is a post-v1 research item.
 
-2. **DNS resolver.** NetworkManager passthrough vs. local Unbound. Must be a Decision Log entry. Privacy-sensitive decision.
-
-3. **NTP synchronization policy.** Automatic vs. manual-only vs. first-boot-only. Must be a Decision Log entry.
+3. **NTP synchronization policy.** **Resolved (DL-015).** Use existing Linux NTP service (ntpd or chrony). Starts at Stage 4.
 
 4. **Interface naming.** Kernel names vs. predictable names. Depends on udev/devtmpfs device management decision.
 
-5. **udev.** Whether LunaOS runs udevd or relies on devtmpfs alone for device management has not been decided. This affects interface naming, hotplug events, and device node permissions.
+5. **udev.** Whether LunaOS runs udevd or relies on devtmpfs alone has not been decided.
 
-6. **NetworkManager TOML exception.** If NetworkManager's keyfile format is accepted as an upstream exception to DL-008, this must be documented in the Decision Log.
+6. **NetworkManager TOML exception.** If NetworkManager’s keyfile format is accepted as an upstream exception to DL-008, this must be documented in the Decision Log.
 
 ---
 
@@ -275,11 +259,14 @@ An AI agent implementing LunaOS networking must understand:
 - `luna-ai-d` never makes outbound calls except (a) localhost, and (b) cloud bridge via explicit user command. If implementing luna-ai-d, do not add any automatic outbound calls.
 - The NTP strategy is undecided. Do not implement a background NTP sync without a Decision Log entry. Until decided, the clock is set from hwclock at boot.
 - DNS resolution depends on whether Unbound is adopted. Until that decision is made, NetworkManager writes to `/etc/resolv.conf` directly. Do not hardcode DNS resolver paths.
+- NTP runs automatically (DL-015). This is an accepted infrastructure outbound connection alongside DHCP and DNS. It is not a violation of the “no automatic outbound” policy.
+- DNS uses NetworkManager passthrough to `/etc/resolv.conf` (DL-014). No local Unbound daemon runs in v1.
 - Auto-updates do not exist in LunaOS. Any code that schedules automatic downloads or package updates is a violation of Core Law V.
 
 ---
 
 *Document: `Volume II / 10_networking.md`*
 *Author: Hardik Bhaskar (Luna Kitsune)*
-*Version: 0.1-draft*
-*Depends on: architecture_overview.md, linux_architecture.md, init_system.md, security.md, ipc.md, core_laws.md (Law II, V), non_negotiables.md*
+*Version: 0.2-draft*
+*Depends on: architecture_overview.md, linux_architecture.md, init_system.md, security.md, ipc.md, core_laws.md (Law II, V), decision_log.md (DL-013, DL-014, DL-015), non_negotiables.md*
+*Supersedes: v0.1-draft (DNS and NTP open questions now resolved)*

@@ -76,9 +76,9 @@ Every architectural decision is recorded in `decision_log.md`. No subsystem may 
 │  Layer 5 — Userland / Shell                                     │
 │  luna-shell · luna-bar · luna-notif · luna-island              │
 ├─────────────────────────────────────────────────────────────────┤
-│  Layer 4 — Graphics / LGP                                       │
-│  Luna Graphics Protocol (LGP) · custom compositor              │
-│  animation engine · theme engine · rendering pipeline          │
+│  Layer 4 — Graphics / LGP / LunaGUI                             │
+│  Luna Graphics Protocol (LGP) · LunaGUI toolkit                │
+│  custom compositor · animation engine · theme engine           │
 ├─────────────────────────────────────────────────────────────────┤
 │  Layer 3 — System Services                                      │
 │  luna-init · PipeWire · NetworkManager · D-Bus                 │
@@ -128,31 +128,36 @@ The kernel configuration is tracked in `kernel/.config` with comments in `kernel
 
 `luna-init` service files use TOML format. Each service declares: name, binary path, dependencies, restart policy, capability requirements. See `04_init_system.md` for service file specification.
 
-### Layer 4 — Graphics and LGP
+### Layer 4 — Graphics, LGP, and LunaGUI
 
-The LunaOS graphics stack is built around the **Luna Graphics Protocol (LGP)**. LGP is the canonical interface between the shell layer and the custom compositor. It exposes the Color Semantic Contract, Motion Vocabulary, and Animation Budget as protocol-level primitives.
+The LunaOS graphics stack is built around two related but distinct components (DL-004R — hybrid graphics architecture):
+
+**Luna Graphics Protocol (LGP):** The foundational graphics protocol between the compositor and all graphical clients. Exposes the Color Semantic Contract, Motion Vocabulary, and Animation Budget as protocol-level primitives. Advanced applications may use LGP directly.
+
+**LunaGUI toolkit:** The standard high-level application interface. LunaGUI uses LGP internally. Normal applications communicate through LunaGUI — they do not need to know LGP details. This preserves simplicity for application developers while allowing high-performance software to bypass to LGP directly.
 
 ```
 TODO:
 Decision not yet finalized.
-Reason: LGP protocol specification has not yet been written.
-The LGP direction (application-facing, compositor-facing, or both) determines
-the entire Volume III architecture.
-Volume III / 01_lgp.md is the document that must resolve this.
-This volume (Volume II) documents the architectural role of LGP without
-specifying its wire format.
+Reason: LGP protocol wire format has not been specified.
+Volume III / 01_lgp.md must define:
+  - LGP protocol format (compositor-facing)
+  - LunaGUI toolkit API surface (application-facing)
+  - The boundary between LunaGUI and direct-LGP access
+This volume documents the architectural roles without specifying formats.
 ```
 
-What is decided:
+What is decided (DL-004R):
 - LGP is the graphics protocol. No Wayland protocol is used.
-- A custom compositor is the rendering target for LGP.
-- The compositor is a LunaOS-written component, not an adapted upstream compositor.
-- Luna Island is rendered as a native compositor layer surface by the LGP compositor.
+- LunaGUI is the standard application toolkit, built on LGP.
+- A custom LunaOS-written compositor is the rendering target.
+- Luna Island is a native compositor surface.
+- Advanced applications may use LGP directly without LunaGUI.
 
 What is not yet decided:
-- The internal protocol format of LGP (See Volume III / 01_lgp.md).
-- Whether LGP is GPU-accelerated via Vulkan, OpenGL, or a software renderer.
-- The wire format between shell clients and the compositor.
+- LGP wire format (Volume III / 01_lgp.md).
+- LunaGUI API surface (Volume III — separate document).
+- GPU acceleration backend (Vulkan, OpenGL, or software renderer).
 
 ### Layer 5 — Userland Shell
 
@@ -178,17 +183,32 @@ communication details cannot be finalized.
 
 ### Layer 6 — LUNA AI Layer
 
-`luna-ai-d` is the LUNA.AI daemon. It runs as an unprivileged user service and is the only process authorized to read `~/.luna/`.
+Per DL-021, LUNA consists of two independent systems with different startup behaviors:
+
+**LUNA Presence Engine** — starts at boot (Stage 6), always running:
 
 | Component | Function |
 |---|---|
 | Presence Engine | Determines LUNA's active mode (DEVSHELL, FOCUS, MEDIA, AMBIENT, CONVERSATION, CRISIS) |
 | Personality Engine | Selects tone and response style based on active mode |
-| Context Engine | Aggregates current system state for AI inference |
+| Context Engine | Aggregates current system state — lightweight, no LLM |
 | Memory Engine | Reads/writes `~/.luna/memory/` — pattern history, user preferences |
 | Permission Engine | Enforces observation allow-list from `~/.luna/config/observe.toml` |
 
-All Volume IV documents describe these components in detail. The AI layer depends on Ollama for local model inference (DL-006). All Volume IV documents describe these components in detail.
+The Presence Engine handles Luna Island, context awareness, expressions, notifications, and lightweight behavior. It is always running after boot. Target footprint: under 100 MB RAM.
+
+**LLM Inference Engine** — loads lazily, on first demand:
+
+| Trigger | Action |
+|---|---|
+| User starts a conversation | Inference engine initializes, Ollama starts, model loads |
+| Voice interaction begins | Same as above |
+| AI automation requested | Same as above |
+| Explicit reasoning required | Same as above |
+
+The LLM Inference Engine and Ollama are **not started at boot**. They initialize on first demand. This eliminates the 2–3 GB Ollama RAM footprint during normal desktop operation when the user is not actively conversing with LUNA.
+
+Both systems together form `luna-ai-d`. Their separation is a runtime behavior distinction, not necessarily a process separation (implementation detail deferred to Volume IV).
 
 ---
 
@@ -242,22 +262,18 @@ All decisions are recorded in `decision_log.md`. Decisions affecting architectur
 | DL-001 | No upstream distro base — LFS approach |
 | DL-002 | luna-init in C, TOML service files |
 | DL-003 | lpkg in Python (v1), Rust planned (v2) |
+| DL-004R | Hybrid graphics: LunaGUI toolkit + direct LGP access (supersedes DL-004) |
 | DL-005 | limine bootloader |
 | DL-006 | Ollama for local AI inference |
 | DL-007 | glibc (v1) → musl (v2) |
 | DL-008 | TOML as universal config format |
 | DL-009 | Linux 6.6.x LTS kernel |
 | DL-010 | luna-ai-d on localhost:7734 |
+| DL-021 | AI Runtime: Presence Engine (boot) and LLM Inference Engine (lazy) |
 
-Note: DL-004 (Hyprland compositor) from the original decision log is superseded by `non_negotiables.md`. The compositor is a custom LunaOS-written component using LGP. This must be recorded as a new Decision Log entry before Volume III work begins.
+Note: DL-004 is superseded by DL-004R (Architecture Review Meeting #2). The graphics architecture is hybrid: LunaGUI for standard applications, direct LGP for advanced applications. A custom LunaOS compositor is the rendering target. This is now formally recorded in `decision_log.md`.
 
-```
-TODO:
-Action required before Volume III begins.
-A new DL entry must be recorded in decision_log.md formally superseding DL-004
-and documenting the LGP + custom compositor decision.
-This entry is the project owner's responsibility.
-```
+Note: DL-021 (AI Runtime) splits LUNA into Presence Engine (boot-time) and LLM Inference Engine (lazy). Ollama is not a boot-time service.
 
 ---
 
