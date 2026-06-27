@@ -35,6 +35,8 @@ Legend:
 ### 0.1 — Development Environment
 
 - [ ] Host toolchain: cross-compiler for x86_64-linux-gnu (GCC or Clang)
+- [ ] Security Tooling: AddressSanitizer and UndefinedBehaviorSanitizer integrated for Debug builds
+- [ ] Static Analysis: `clang-tidy` integration established in CI pipeline
 - [ ] QEMU/KVM virtual machine configured for LunaOS development
 - [ ] KVM machine profile: 4 cores, 4 GB RAM, virtio disk, virtio-vga
 - [ ] Build system chosen (Makefile, Meson, or custom) and scaffolded
@@ -272,15 +274,16 @@ Legend:
 
 ---
 
-### 2.4 — Boot Splash (Framebuffer)
+### 2.4 — Boot Splash (luna-splash)
 
-- [ ] Boot splash renderer in luna-init (before compositor starts)
+- [ ] `src/luna-splash/` created (minimal C binary, no dynamic allocation)
+- [ ] Boot splash rendered by `luna-splash` (started in Stage 3)
 - [ ] Splash: LUNA Void background + LunaOS wordmark (bitmap, no font rendering needed)
 - [ ] Splash displays from Stage 3 until compositor starts in Stage 5
-- [ ] Transition: compositor claims framebuffer, splash disappears
+- [ ] Transition: `luna-init` kills `luna-splash` (SIGTERM), then starts `lgp-compositor` which claims the framebuffer
 - [ ] Boot splash respects Animation Budget: transition ≤ 300ms
 
-**Done when:** Boot shows the splash. Compositor start replaces it cleanly.
+**Done when:** Boot shows the splash via `luna-splash`. Compositor start replaces it cleanly.
 
 ---
 

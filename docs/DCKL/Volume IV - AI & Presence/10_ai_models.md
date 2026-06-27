@@ -145,6 +145,27 @@ These targets must be validated on the minimum recommended hardware:
 
 ---
 
+## Model Security
+
+To prevent supply-chain attacks via compromised LLM models, LunaOS enforces strict hash pinning. Ollama is not trusted to validate its own downloads independently.
+
+```
+Model Hash Verification Flow:
+
+  1. User runs `luna model install llama3.1` (or system installs default on first boot).
+  2. `luna-shell` delegates the request to `lpkg`.
+  3. `lpkg` reads the Ed25519-signed system manifest (`/etc/luna/models.toml`).
+  4. `lpkg` verifies the signature of the manifest using the OS public key.
+  5. `lpkg` extracts the expected SHA-256 hash for the requested model.
+  6. `lpkg` instructs Ollama to pull the model.
+  7. Before Ollama can load the model into RAM, `lpkg` performs a hash check against the downloaded blob.
+  8. If the hash fails, `lpkg` deletes the blob and logs a FATAL security error.
+
+  This ensures that only models explicitly verified and signed by the LunaOS core team can be executed by the AI Runtime.
+```
+
+---
+
 ## Model Management
 
 ### Model Storage

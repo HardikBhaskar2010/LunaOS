@@ -65,6 +65,7 @@ Reader Rule:    Any component may read public state without
 | Firewall rules | luna-init | `luna-init` | Writes nftables config at boot. Runtime changes via `nft` | Luna Performance Lab (experimental) |
 | System logs | luna-init (coordinates) | `luna-init` | Files in `/var/log/luna-init/` | All processes write to log API |
 | Boot sequence | luna-init | `luna-init` | Internal — no external interface | — |
+| Boot splash | luna-splash | `luna-splash` | Framebuffer directly | luna-init (kills it) |
 | Compositor crash recovery | luna-init | `luna-init` | SIGCHLD detection, automatic restart | Compositor + all LGP clients |
 | Screen lock | luna-lock | `luna-lock` | `LAYER_SYSTEM_MODAL` surface | User input |
 

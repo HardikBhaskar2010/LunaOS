@@ -284,7 +284,7 @@ key_id   = "0xCOMPANYKEY"
 trusted  = true                  # user has explicitly trusted this repo
 ```
 
-### Package Signing (DL-019)
+### Package Signing & Manifest Signatures (DL-019)
 
 ```
 Package signing requirement:
@@ -297,7 +297,14 @@ Package signing requirement:
   Override: lpkg install --allow-unsigned <package> (explicit user decision)
             Shows warning dialog before proceeding
 
-  Signature format: ed25519 or GPG (both supported)
+  Signature format: Ed25519 (GPG is explicitly rejected for complexity)
+
+Manifest Signatures:
+  lpkg maintains a signed manifest of allowed system assets (like AI models) 
+  in /etc/luna/models.toml. First-party repositories provide a detached Ed25519 
+  signature for these manifests. lpkg validates this signature using a public key 
+  embedded in the base OS image.
+```
   Signature file:   <package>.lpkg.sig accompanies every .lpkg file
 ```
 

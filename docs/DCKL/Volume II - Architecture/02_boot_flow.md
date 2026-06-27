@@ -83,8 +83,8 @@ Power on
     ↓
 [Stage 5] Graphics Layer
     │  GPU/framebuffer readiness check
+    │  luna-splash receives SIGTERM
     │  LGP compositor starts
-    │  Boot splash transitions to compositor
     ↓
 [Stage 6] Shell + LUNA Presence Engine
     │  luna-shell starts
@@ -217,8 +217,9 @@ Executed sequentially within luna-init:
 1. **Hostname:** `sethostname()` syscall using value from `/etc/luna/hostname`.
 2. **Clock:** `hwclock --hctosys --utc` to synchronize hardware clock.
 3. **Entropy:** Write to kernel entropy pool from available hardware sources.
-4. **Kernel modules:** Load each module listed in `/etc/luna/modules.conf` via `modprobe`. Failures are logged, do not halt boot.
-5. **sysctl parameters:** Apply settings from `/etc/luna/sysctl.toml`.
+4. **Boot Splash:** Spawn `luna-splash` to render the boot animation.
+5. **Kernel modules:** Load each module listed in `/etc/luna/modules.conf` via `modprobe`. Failures are logged, do not halt boot.
+6. **sysctl parameters:** Apply settings from `/etc/luna/sysctl.toml`.
 
 All Stage 3 operations are non-fatal. Failures write to `/var/log/luna-init/boot.log`.
 
@@ -247,19 +248,6 @@ A service that fails after the configured restart attempt limit is marked `DEGRA
 
 ### Stage 5 — Graphics Layer
 
-```
-TODO:
-Decision not yet finalized.
-Reason: Stage 5 implementation depends on the LGP compositor design.
-The following behavior is directionally decided but not yet specified:
-  - luna-init waits for GPU/framebuffer device availability
-  - luna-init starts the LGP compositor process
-  - The boot splash (framebuffer renderer in luna-init) hands off to the compositor
-Specifics of: readiness detection, handoff mechanism, compositor process name,
-and framebuffer-to-LGP transition must be specified in Volume III before
-this stage can be fully documented.
-```
-
 **Boot splash visual states (Motion Vocabulary — `core_laws.md` Law III):**
 
 ```
@@ -274,8 +262,9 @@ All motion types above are from the locked Motion Vocabulary. No other motion ty
 
 **Framebuffer-to-compositor handoff:**
 
-Per DL-043, LunaOS accepts a brief visual transition (single black frame, ~16ms at 60Hz) between the luna-init framebuffer boot splash and the LGP compositor's first frame.
-- The boot splash renderer (luna-init) stops rendering before the compositor takes over.
+Per DL-043, LunaOS accepts a brief visual transition (single black frame, ~16ms at 60Hz) between the `luna-splash` framebuffer boot splash and the LGP compositor's first frame.
+- `luna-init` spawns `luna-splash` at Stage 3.
+- `luna-init` sends SIGTERM to `luna-splash` before the compositor takes over in Stage 5.
 - The lgp-compositor's first frame is its own rendered output.
 - No architectural complexity is introduced to eliminate this cut.
 

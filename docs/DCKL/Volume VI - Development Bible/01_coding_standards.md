@@ -77,6 +77,14 @@ Headers must contain include guards:
 ```
 Only expose symbols in headers that are strictly part of the public API. Prefix internal symbols in `.c` files with `static`.
 
+### 5. Memory Safety & Tooling
+
+To mitigate the inherent risks of C17 in highly privileged daemons (`luna-init`, `lpkg`, `lgp-compositor`), the following security tooling is strictly mandatory:
+
+- **Sanitizers:** All Debug builds must be compiled with AddressSanitizer (`-fsanitize=address`) and UndefinedBehaviorSanitizer (`-fsanitize=undefined`).
+- **Static Analysis:** `clang-tidy` is mandatory in the CI pipeline for all pull requests. Code with static analysis warnings will not be merged.
+- **Parsers:** All parsers for external input (TOML configurations, LGP TLV packets, `lpkg` manifests) must use strictly bounded buffers. Fuzzing via `AFL++` is required for all parser modules.
+
 ---
 
 ## Rust Coding Standards (v2)

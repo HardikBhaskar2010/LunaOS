@@ -128,9 +128,9 @@ luna-init shutdown:
 
 The compositor is always shut down after shell components — a blank display during shell teardown is acceptable, but a functional compositor without any shell is not useful.
 
-### Crash Recovery
+### Crash Recovery & Reconnection Protocol (`lgp_ext_recovery_v1`)
 
-If `lgp-compositor` crashes (SIGSEGV, SIGABRT, or unexpected exit):
+If `lgp-compositor` crashes (SIGSEGV, SIGABRT, or unexpected exit), the session is not lost. LunaOS enforces a strict state-reconciliation protocol.
 
 ```
 luna-init supervision:
@@ -139,15 +139,21 @@ luna-init supervision:
   3. Attempt restart #1:
        a. Clean up /run/lgp/compositor.sock
        b. Start new lgp-compositor instance
-       c. If successful: send COMPOSITOR_RESTART signal to all Stage 6 processes
-       d. Stage 6 processes reconnect to the new compositor
+       c. If successful: emit D-Bus org.lunaos.compositor.Ready
   4. If compositor crashes again within 30 seconds: enter degraded mode
        a. Do not attempt further restarts
        b. Log: [luna-init] [FATAL] lgp-compositor failed to recover
-       c. Luna Island shows compositor failure state (TTY fallback message)
 ```
 
-Stage 6 processes (luna-shell, luna-island, luna-ai-d) must be written to handle a compositor restart event gracefully — reconnect and re-create their surfaces.
+**Client Reconnection Sequence:**
+Stage 6 processes (and all graphical apps) must implement the `lgp_ext_recovery_v1` protocol to restore the desktop seamlessly:
+1. Client detects socket disconnect.
+2. Client waits for `org.lunaos.compositor.Ready` via D-Bus.
+3. Client reconnects to `/run/lgp/compositor.sock`.
+4. Client sends `LGP_RECOVERY_BEGIN`.
+5. Client resends its last known state: `LGP_CREATE_SURFACE`, `LGP_SET_GEOMETRY`, and `LGP_COMMIT_BUFFER`.
+6. Client sends `LGP_RECOVERY_END`.
+7. The compositor buffers all recovery requests and maps all surfaces simultaneously once the recovery window closes, preventing visual tearing.
 
 ---
 
