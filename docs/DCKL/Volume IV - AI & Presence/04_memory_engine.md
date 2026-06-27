@@ -247,8 +247,8 @@ Users have full control over LUNA's memory (Core Law V — User Owns the Machine
 ### D-Bus Interface
 
 ```
-Service: org.lunaos.luna
-Interface: org.lunaos.luna.Memory
+Service: org.mahina.luna
+Interface: org.mahina.luna.Memory
 
 Methods:
   GetMemorySummary() → string

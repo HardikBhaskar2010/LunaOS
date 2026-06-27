@@ -295,8 +295,8 @@ luna permissions clear
 
 D-Bus equivalents:
 ```
-Service: org.lunaos.luna
-Interface: org.lunaos.luna.Permissions
+Service: org.mahina.luna
+Interface: org.mahina.luna.Permissions
 
 Methods:
   ListPermissions() → array<dict>

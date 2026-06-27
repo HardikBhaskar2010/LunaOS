@@ -314,7 +314,7 @@ limine configuration written to EFI:
 
   # /boot/efi/limine.conf
 
-  DEFAULT_ENTRY=lunaos
+  DEFAULT_ENTRY=mahina
 
   :Mahina
       PROTOCOL=linux

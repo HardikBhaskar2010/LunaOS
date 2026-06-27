@@ -268,7 +268,7 @@ Application requests package install
   ▼
 lpkg client (Layer 4)
   │
-  │  D-Bus message: org.lunaos.lpkg.Install("package-name")
+  │  D-Bus message: org.mahina.lpkg.Install("package-name")
   ▼
 lpkg daemon (Layer 2)
   │

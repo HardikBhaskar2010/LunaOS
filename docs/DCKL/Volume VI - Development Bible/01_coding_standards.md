@@ -70,8 +70,8 @@ int lgp_surface_create(lgp_client_t *client, lgp_surface_t **out_surface) {
 Every `.c` file must have a corresponding `.h` file.
 Headers must contain include guards:
 ```c
-#ifndef LUNAOS_LGP_SURFACE_H
-#define LUNAOS_LGP_SURFACE_H
+#ifndef MAHINA_LGP_SURFACE_H
+#define MAHINA_LGP_SURFACE_H
 // ...
 #endif
 ```

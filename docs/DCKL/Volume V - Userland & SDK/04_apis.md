@@ -142,11 +142,11 @@ lgp_workspace_geometry_t lgp_get_workspace_geometry(lgp_connection_t *conn,
 
 ## Layer 2: D-Bus APIs
 
-### org.lunaos.shell — Desktop Shell
+### org.mahina.shell — Desktop Shell
 
 ```
-Service:    org.lunaos.shell
-Object:     /org/lunaos/shell
+Service:    org.mahina.shell
+Object:     /org/mahina/shell
 
 Methods:
   Launch(app_id: string) → void
@@ -178,11 +178,11 @@ Signals:
   WorkspaceChanged(workspace_id: uint32)
 ```
 
-### org.lunaos.luna — AI Presence
+### org.mahina.luna — AI Presence
 
 ```
-Service:    org.lunaos.luna
-Object:     /org/lunaos/luna
+Service:    org.mahina.luna
+Object:     /org/mahina/luna
 
 Methods:
   GetMode() → string
@@ -208,11 +208,11 @@ Signals:
   TokenReceived(token: string, is_final: bool, turn_id: uint32)
 ```
 
-### org.lunaos.pkg — Package Manager
+### org.mahina.pkg — Package Manager
 
 ```
-Service:    org.lunaos.pkg
-Object:     /org/lunaos/pkg
+Service:    org.mahina.pkg
+Object:     /org/mahina/pkg
 
 Methods:
   Install(package_id: string, scope: string) → operation_id: uint32
@@ -231,11 +231,11 @@ Signals:
   PackageRemoved(package_id: string)
 ```
 
-### org.lunaos.notify — Notifications
+### org.mahina.notify — Notifications
 
 ```
-Service:    org.lunaos.notify
-Object:     /org/lunaos/notify
+Service:    org.mahina.notify
+Object:     /org/mahina/notify
 Standard:   Compatible with freedesktop.org Notification spec (subset)
 
 Methods:
@@ -259,11 +259,11 @@ Signals:
   ActionInvoked(notification_id: uint32, action_key: string)
 ```
 
-### org.lunaos.theme — Theme Engine
+### org.mahina.theme — Theme Engine
 
 ```
-Service:    org.lunaos.theme
-Object:     /org/lunaos/theme
+Service:    org.mahina.theme
+Object:     /org/mahina/theme
 
 Methods:
   GetActiveTheme() → ThemeInfo dict
@@ -281,11 +281,11 @@ Signals:
     Applications should re-query all color tokens on this signal.
 ```
 
-### org.lunaos.power — Power Management
+### org.mahina.power — Power Management
 
 ```
-Service:    org.lunaos.power
-Object:     /org/lunaos/power
+Service:    org.mahina.power
+Object:     /org/mahina/power
 
 Methods:
   GetBatteryInfo() → BatteryInfo dict
@@ -308,8 +308,8 @@ Signals:
 Applications may publish context information to LUNA's Context Engine to improve observation quality:
 
 ```
-Service:    org.lunaos.context
-Object:     /org/lunaos/context/<app_name>
+Service:    org.mahina.context
+Object:     /org/mahina/context/<app_name>
 
 Methods (published BY application, consumed BY luna-ai-d):
 
@@ -336,13 +336,13 @@ Every interface implements:
   GetVersion() → (major: uint32, minor: uint32, patch: uint32)
   
 Current versions (v1):
-  org.lunaos.shell:   1.0.0
-  org.lunaos.luna:    1.0.0
-  org.lunaos.pkg:     1.0.0
-  org.lunaos.notify:  1.0.0
-  org.lunaos.theme:   1.0.0
-  org.lunaos.power:   1.0.0
-  org.lunaos.context: 1.0.0
+  org.mahina.shell:   1.0.0
+  org.mahina.luna:    1.0.0
+  org.mahina.pkg:     1.0.0
+  org.mahina.notify:  1.0.0
+  org.mahina.theme:   1.0.0
+  org.mahina.power:   1.0.0
+  org.mahina.context: 1.0.0
 ```
 
 ---
@@ -363,7 +363,7 @@ API stability contract for Mahina v1.x:
     - D-Bus signal payloads (fields may be added, not removed)
 
   EXPERIMENTAL (explicitly unstable, expect breakage):
-    - org.lunaos.context (application context publishing)
+    - org.mahina.context (application context publishing)
     - Any API marked with [EXPERIMENTAL] in documentation
 ```
 
@@ -376,7 +376,7 @@ API stability contract for Mahina v1.x:
 | LGP is the graphics protocol — no Wayland | non_negotiables.md | ✅ Accepted |
 | D-Bus for system service APIs | Volume II/07 | ✅ Accepted |
 | Notification API compatible with freedesktop spec | This document | ✅ Accepted |
-| Application context publishing via org.lunaos.context | This document | 🧪 Experimental |
+| Application context publishing via org.mahina.context | This document | 🧪 Experimental |
 | API stability promise: stable for v1.x | This document | ✅ Accepted |
 
 ---
@@ -403,7 +403,7 @@ Decision not yet finalized.
 ## AI Context
 
 - The three-layer API model (LGP, D-Bus, SDK) is intentional. Applications don't have to use all three. A game uses only LGP. A settings panel uses D-Bus only (via SDK). A full application uses all three.
-- The `org.lunaos.context` API is experimental — it allows apps to publish context to LUNA but the exact fields and behavior may change. Do not build critical features on top of it in v1.
+- The `org.mahina.context` API is experimental — it allows apps to publish context to LUNA but the exact fields and behavior may change. Do not build critical features on top of it in v1.
 - The Notification API is freedesktop-compatible. This means existing Linux applications that use libnotify will work on Mahina without modification — they send to `org.freedesktop.Notifications` and luna-notif implements that interface.
 - `Shell.CloseWindow()` sends a close request to the window — it does not force-kill the application. The application must handle the `LGP_EVENT_SURFACE_CLOSE` event and clean up gracefully. Force-kill is only available to the shell itself, not to third-party callers.
 - All API signatures in this document are drafts until the C headers and D-Bus introspection files are generated and published. When implementation begins, the headers become canonical.

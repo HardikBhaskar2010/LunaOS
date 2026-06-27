@@ -23,7 +23,7 @@ This document defines:
 ```
 Update pipeline:
 
-  Repository servers (packages.lunaos.dev)
+  Repository servers (packages.mahina.dev)
        │  (luna-update polls every 6 hours by default)
        ▼
   luna-update daemon
@@ -31,7 +31,7 @@ Update pipeline:
        │
        │  Updates available?
        ▼
-  Notify LUNA (org.lunaos.luna.SendObservation)
+  Notify LUNA (org.mahina.luna.SendObservation)
   LUNA notifies user via luna-island (ambient, non-intrusive)
        │
        │  User acknowledges
@@ -296,7 +296,7 @@ luna rollback auto
   → Rolls back to the most recent pre-update snapshot
 ```
 
-D-Bus equivalent: `org.lunaos.pkg.RollbackToSnapshot(snapshot_id: string)`
+D-Bus equivalent: `org.mahina.pkg.RollbackToSnapshot(snapshot_id: string)`
 
 ---
 

@@ -54,7 +54,7 @@ v1 Core Applications:
 
 ### Role
 
-luna-notif is the notification daemon. It receives notification requests from all applications via the freedesktop-compatible D-Bus interface (`org.freedesktop.Notifications` / `org.lunaos.notify`) and decides how to display them.
+luna-notif is the notification daemon. It receives notification requests from all applications via the freedesktop-compatible D-Bus interface (`org.freedesktop.Notifications` / `org.mahina.notify`) and decides how to display them.
 
 ### Notification Pipeline
 
@@ -158,7 +158,7 @@ luna-files window layout:
 ### LUNA Integration
 
 ```
-luna-files publishes to org.lunaos.context.Files:
+luna-files publishes to org.mahina.context.Files:
 
   DirectoryOpened(path: string)
   → Context Engine: user is browsing files at this path
@@ -275,7 +275,7 @@ luna-text is the default text editor. It handles plain text, Markdown, and code 
 ### LUNA Integration
 
 ```
-luna-text publishes to org.lunaos.context.Files:
+luna-text publishes to org.mahina.context.Files:
 
   FileOpened(path: string, mime_type: string)
   ActiveFileChanged(path: string)
@@ -315,21 +315,21 @@ luna-lock:
 ### luna-netd
 
 Thin wrapper over NetworkManager. Exposes:
-- `org.lunaos.network` D-Bus interface (simplified)
+- `org.mahina.network` D-Bus interface (simplified)
 - luna-settings reads from here for network configuration
 - luna-bar reads connectivity status from here
 
 ### luna-power
 
 Monitors battery, handles lid events, manages suspend/shutdown:
-- `org.lunaos.power` D-Bus interface
+- `org.mahina.power` D-Bus interface
 - Signals luna-shell when battery is critically low
 - Handles `acpi_listen` events (lid, power button)
 
 ### luna-audio (v1.5)
 
 PipeWire session manager frontend:
-- `org.lunaos.audio` D-Bus interface
+- `org.mahina.audio` D-Bus interface
 - luna-bar reads volume from here
 - luna-settings configures audio devices via here
 - Status: not in v1 — v1 uses PipeWire directly without a management daemon

@@ -23,7 +23,7 @@ lpkg components:
   │                                                             │
   │  ┌──────────────┐  ┌───────────────┐  ┌────────────────┐  │
   │  │  CLI Frontend │  │  D-Bus Service│  │  LunaGUI Dialog│  │
-  │  │  `lpkg ...`  │  │ org.lunaos.  │  │  (graphical    │  │
+  │  │  `lpkg ...`  │  │ org.mahina.  │  │  (graphical    │  │
   │  │              │  │  pkg`        │  │   confirmations│  │
   │  └──────┬───────┘  └───────┬───────┘  └───────┬────────┘  │
   │         └──────────────────┴──────────────────┘           │
@@ -88,7 +88,7 @@ license       = "MPL-2.0"
 
 [package.author]
 name          = "Mozilla Foundation"
-email         = "packaging@lunaos.dev"  # the package maintainer
+email         = "packaging@mahina.dev"  # the package maintainer
 
 [package.install]
 scope         = "user"              # "user" | "system" (DL-017)
@@ -263,14 +263,14 @@ btrfs subvolume snapshot / /snapshots/lpkg-pre-install-firefox-120.0-1719472800
 
 [[repo]]
 name     = "luna-official"
-url      = "https://packages.lunaos.dev/official"
+url      = "https://packages.mahina.dev/official"
 priority = 100                   # highest priority
 signed   = true
 key_id   = "0xABCD1234EFGH5678"  # GPG key fingerprint
 
 [[repo]]
 name     = "luna-community"
-url      = "https://packages.lunaos.dev/community"
+url      = "https://packages.mahina.dev/community"
 priority = 50
 signed   = true
 key_id   = "0xCOMMUNITYKEY"
@@ -364,7 +364,7 @@ Privilege escalation flow (graphical session):
        │
        ▼
   lpkg D-Bus service requests privilege from luna-ai-d:
-  org.lunaos.shell.RequestPrivilege(
+  org.mahina.shell.RequestPrivilege(
       action = "system_package_install",
       package = "firefox 120.0",
       reason = "System-wide installation requires administrator access"

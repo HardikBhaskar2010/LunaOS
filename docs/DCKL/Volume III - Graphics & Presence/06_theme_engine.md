@@ -239,7 +239,7 @@ Reason: The theme switch notification protocol has not been specified.
 How does the compositor notify LunaGUI clients of a theme change?
 Options:
   A: LGP protocol message: LGP_THEME_CHANGED (broadcast to all clients)
-  B: D-Bus signal: org.lunaos.theme.changed
+  B: D-Bus signal: org.mahina.theme.changed
   C: Both A and B (belt and suspenders)
 Option C is recommended: LGP for graphical clients, D-Bus for non-graphical
 services that need to react to theme changes.

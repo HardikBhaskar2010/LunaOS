@@ -104,7 +104,7 @@ luna-init Stage 5:
 
 Before step 8, no LGP clients can connect. Stage 6 components (luna-shell, luna-island) wait for the socket to appear before connecting.
 
-Per **DL-031**, the LGP compositor signals readiness by publishing a D-Bus signal `org.lunaos.compositor.Ready`. Stage 6 components wait for this signal before connecting to the LGP socket.
+Per **DL-031**, the LGP compositor signals readiness by publishing a D-Bus signal `org.mahina.compositor.Ready`. Stage 6 components wait for this signal before connecting to the LGP socket.
 
 ### Shutdown Sequence
 
@@ -139,7 +139,7 @@ luna-init supervision:
   3. Attempt restart #1:
        a. Clean up /run/lgp/compositor.sock
        b. Start new lgp-compositor instance
-       c. If successful: emit D-Bus org.lunaos.compositor.Ready
+       c. If successful: emit D-Bus org.mahina.compositor.Ready
   4. If compositor crashes again within 30 seconds: enter degraded mode
        a. Do not attempt further restarts
        b. Log: [luna-init] [FATAL] lgp-compositor failed to recover
@@ -148,7 +148,7 @@ luna-init supervision:
 **Client Reconnection Sequence:**
 Stage 6 processes (and all graphical apps) must implement the `lgp_ext_recovery_v1` protocol to restore the desktop seamlessly:
 1. Client detects socket disconnect.
-2. Client waits for `org.lunaos.compositor.Ready` via D-Bus.
+2. Client waits for `org.mahina.compositor.Ready` via D-Bus.
 3. Client reconnects to `/run/lgp/compositor.sock`.
 4. Client sends `LGP_RECOVERY_BEGIN`.
 5. Client resends its last known state: `LGP_CREATE_SURFACE`, `LGP_SET_GEOMETRY`, and `LGP_COMMIT_BUFFER`.

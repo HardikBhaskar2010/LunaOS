@@ -14,7 +14,7 @@ Mahina is a ground-up Linux-based operating system — custom kernel configurati
 **Aesthetic directive:** Dark Cyberpunk · Anime-First · Ghost in the Shell × Cyberpunk Edgerunners
 **Base strategy:** Custom distro — no Arch, no Debian, no upstream base
 **Author:** Hardik Bhaskar (Luna Kitsune)
-**Repository:** `github.com/lunakitsune/lunaos`
+**Repository:** `github.com/lunakitsune/mahina`
 **License:** MIT
 
 ---

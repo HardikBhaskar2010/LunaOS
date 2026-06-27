@@ -64,7 +64,7 @@ Legend:
 ### 0.3 — Kernel Configuration
 
 - [ ] Upstream Linux kernel version pinned (LTS release)
-- [ ] `lunaos_defconfig` created — start from `x86_64_defconfig`
+- [ ] `mahina_defconfig` created — start from `x86_64_defconfig`
 - [ ] Enable: cgroup v2 (CONFIG_CGROUPS, CONFIG_CGROUP_V2)
 - [ ] Enable: BPF (CONFIG_BPF, CONFIG_BPF_SYSCALL)
 - [ ] Enable: io_uring (CONFIG_IO_URING)
@@ -81,9 +81,9 @@ Legend:
 - [ ] Enable: USB HID (for keyboard/mouse — QEMU input)
 - [ ] Enable: virtio block, virtio net (QEMU devices)
 - [ ] Disable: systemd dependencies (CONFIG_GENTOO_LINUX_INIT_SYSTEMD off)
-- [ ] Kernel builds cleanly with `lunaos_defconfig`
+- [ ] Kernel builds cleanly with `mahina_defconfig`
 
-**Done when:** Kernel image (`vmlinuz-lunaos`) is under 10MB compressed and boots in QEMU.
+**Done when:** Kernel image (`vmlinuz-mahina`) is under 10MB compressed and boots in QEMU.
 
 ---
 
@@ -408,7 +408,7 @@ Legend:
 - [ ] Presence Engine starts at Stage 6 of boot
 - [ ] Context engine: reads `~/.luna/config/observe.toml`, monitors allowed applications
 - [ ] Mode detection: maps application context to LUNA mode (AMBIENT, DEVSHELL, FOCUS, STUDY, CREATIVE)
-- [ ] D-Bus API: `org.lunaos.luna.GetMode()`, `org.lunaos.luna.ModeChanged` signal
+- [ ] D-Bus API: `org.mahina.luna.GetMode()`, `org.mahina.luna.ModeChanged` signal
 - [ ] luna-island subscribes to `ModeChanged` signal
 - [ ] Memory: observation written to `~/.luna/memory/workflow.db` (SQLite)
 - [ ] Inference Engine: NOT started — lazy-load path wired up but Ollama not yet integrated
@@ -452,7 +452,7 @@ Legend:
 - [ ] Ollama binary included in the OS image (via lpkg)
 - [ ] Ollama starts lazily: luna-ai-d spawns Ollama subprocess on first LLM request
 - [ ] Default model selected and bundled or downloaded at first boot (DL-021)
-- [ ] LLM conversation API: D-Bus method `org.lunaos.luna.Chat(prompt) → response`
+- [ ] LLM conversation API: D-Bus method `org.mahina.luna.Chat(prompt) → response`
 - [ ] Streaming response support: D-Bus signal per token
 - [ ] Ollama assigned to `luna-ai.slice` cgroup (DL-021)
 - [ ] OOM behavior: Ollama has highest OOM score (killed first under memory pressure)

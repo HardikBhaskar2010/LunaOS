@@ -298,7 +298,7 @@ This rule implements Core Law I (Own Every Layer) and Core Law VI (Documentation
 
 | Improvement | Target | Notes |
 |---|---|---|
-| luna-ai-d API versioning | v1 | Add `Accept: application/vnd.lunaos.ai+json;version=1` header support |
+| luna-ai-d API versioning | v1 | Add `Accept: application/vnd.mahina.ai+json;version=1` header support |
 | D-Bus interface XML specifications | v1 | Full interface definitions for all Mahina D-Bus names |
 | LGP protocol specification | v1 | Entire Volume III / 01_lgp.md |
 | luna-init-ctl privilege model | v1 | Decide per-command access control |

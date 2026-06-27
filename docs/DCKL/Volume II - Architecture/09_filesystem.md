@@ -46,8 +46,8 @@ The hierarchy is intentional. Every directory exists because something needs it.
 │   │   └── EFI/
 │   │       └── BOOT/                # limine EFI binary
 │   │           └── BOOTX64.EFI
-│   ├── vmlinuz-lunaos               # Compiled kernel image
-│   ├── initramfs-lunaos.img         # Initial RAM filesystem
+│   ├── vmlinuz-mahina               # Compiled kernel image
+│   ├── initramfs-mahina.img         # Initial RAM filesystem
 │   └── limine.cfg                   # Bootloader configuration (on ESP)
 │
 ├── dev/                         # Device nodes (managed by devtmpfs)
@@ -298,8 +298,8 @@ This schema is intentionally minimal for v1. `lpkg` queries this database to:
 ### Boot Partition
 
 The boot partition contains:
-- `vmlinuz-lunaos` — the compiled kernel image
-- `initramfs-lunaos.img` — the initial RAM filesystem containing luna-init and minimal tools
+- `vmlinuz-mahina` — the compiled kernel image
+- `initramfs-mahina.img` — the initial RAM filesystem containing luna-init and minimal tools
 - `limine.cfg` — bootloader configuration
 
 Nothing else belongs in `/boot/`. Application binaries, libraries, and config files are never placed in `/boot/`.

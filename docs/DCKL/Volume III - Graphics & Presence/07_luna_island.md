@@ -52,7 +52,7 @@ Luna Island sits at the intersection of three systems:
 luna-island is:
 - A **separate process** from luna-ai-d (DL-044, Volume IV/00_luna_runtime.md)
 - An **LGP client** that holds a `LUNA_ISLAND` surface type
-- A **D-Bus subscriber** to `org.lunaos.luna` signals
+- A **D-Bus subscriber** to `org.mahina.luna` signals
 - The **only process** that may create a `LUNA_ISLAND` surface (enforced by compositor policy)
 
 luna-island is **not**:
@@ -78,9 +78,9 @@ Process: luna-island
     │     └── LGP_OUTPUT_CHANGED → reposition if display changes
     │
     └── D-Bus subscriber thread
-          ├── org.lunaos.luna.ModeChanged      → state transition
-          ├── org.lunaos.luna.ExpressionChanged → expression update
-          └── org.lunaos.luna.TokenReceived    → stream LUNA response text
+          ├── org.mahina.luna.ModeChanged      → state transition
+          ├── org.mahina.luna.ExpressionChanged → expression update
+          └── org.mahina.luna.TokenReceived    → stream LUNA response text
 
   Render Thread (dedicated):
     └── Receives render commands from main thread
@@ -196,8 +196,8 @@ Anchor: bottom-right (expands upward)
 ```
 
 **Data sources:**
-- Mode label and color: `org.lunaos.luna.GetMode()` D-Bus call (cached from last `ModeChanged`)
-- Context summary: `org.lunaos.luna.GetContext()` D-Bus call (fetched on expansion)
+- Mode label and color: `org.mahina.luna.GetMode()` D-Bus call (cached from last `ModeChanged`)
+- Context summary: `org.mahina.luna.GetContext()` D-Bus call (fetched on expansion)
 - Session time: local timer (luna-island tracks time since session start)
 
 **Input affordance:** Tapping the text field transitions to `FULL_CONVERSATION`. Long-pressing the Island from this state also transitions to `FULL_CONVERSATION`.
@@ -241,7 +241,7 @@ Anchor: bottom-right (expands upward and leftward)
 [↗] button: detaches conversation into a larger floating window (v1.5)
 ```
 
-**Streaming:** Tokens received via `org.lunaos.luna.TokenReceived` D-Bus signal are appended to the current LUNA message bubble character by character. When `is_final = true`, the streaming cursor (▌) is removed and the message is finalized.
+**Streaming:** Tokens received via `org.mahina.luna.TokenReceived` D-Bus signal are appended to the current LUNA message bubble character by character. When `is_final = true`, the streaming cursor (▌) is removed and the message is finalized.
 
 **Voice input:** The 🎤 button is visible only when TTS/STT is enabled (DL-041). Disabled by default.
 
@@ -304,7 +304,7 @@ The Expression System translates `ExpressionChanged` D-Bus signals from the Pres
 ### Expression Signal Format
 
 ```c
-// D-Bus signal: org.lunaos.luna.ExpressionChanged
+// D-Bus signal: org.mahina.luna.ExpressionChanged
 // Payload (dict):
 {
     "expression_type":  string,   // see Expression Types below

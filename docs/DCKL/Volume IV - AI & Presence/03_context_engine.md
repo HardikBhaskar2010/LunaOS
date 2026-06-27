@@ -316,8 +316,8 @@ The Context Publisher answers D-Bus queries and provides context to internal com
 ### D-Bus Interface
 
 ```
-Service: org.lunaos.luna
-Interface: org.lunaos.luna.Context
+Service: org.mahina.luna
+Interface: org.mahina.luna.Context
 
 Methods:
   GetContext() → dict

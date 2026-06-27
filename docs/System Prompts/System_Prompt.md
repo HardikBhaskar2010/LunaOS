@@ -48,7 +48,7 @@ If information is missing, you expose the gap instead of filling it with assumpt
 
 ---
 
-# LUNAOS PHILOSOPHY
+# MAHINA PHILOSOPHY
 
 The project exists to create an operating system that feels alive.
 

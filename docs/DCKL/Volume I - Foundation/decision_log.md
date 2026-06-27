@@ -895,7 +895,7 @@ The flexbox model handles the vast majority of Mahina application layouts (setti
 **Supersedes:** DL-P09 (pending)
 
 ### Decision
-The LGP compositor signals readiness by publishing a **D-Bus signal**: `org.lunaos.compositor.Ready`. Stage 6 services wait on this signal before connecting to the compositor socket.
+The LGP compositor signals readiness by publishing a **D-Bus signal**: `org.mahina.compositor.Ready`. Stage 6 services wait on this signal before connecting to the compositor socket.
 
 ### Rationale
 D-Bus is already running at Stage 4. Using it for the compositor readiness signal is architecturally consistent, eliminates polling, and avoids sentinel file proliferation in `/run/`.
@@ -1024,7 +1024,7 @@ Maximum hardware compatibility is the highest networking priority for v1. wpa_su
 ### Decision
 Theme change notifications are delivered through **both** channels:
 - **LGP:** `LGP_THEME_CHANGED` broadcast to all connected graphical clients
-- **D-Bus:** `org.lunaos.theme.Changed` signal for non-graphical services
+- **D-Bus:** `org.mahina.theme.Changed` signal for non-graphical services
 
 ### Rationale
 Graphical clients use the LGP channel they already have open. Non-graphical services (CLI tools, system daemons that format output with theme-aware colors) need D-Bus. The implementation cost of both channels is negligible.
@@ -1217,6 +1217,32 @@ This principle governs all future typography decisions in LunaGUI, the theme eng
 > Reasoning is on demand.
 
 This principle governs all future luna-ai-d architecture decisions, memory allocation, and startup behavior.
+
+---
+
+## [DL-045] Operating System Identity Renamed to Mahina
+**Date:** 2026-06-27
+**Status:** ✅ Accepted
+**Session:** AR-006
+
+### Question
+How do we resolve the ecosystem naming conflict and set up the operating system for long-term scalability without abandoning its core philosophical identity?
+
+### Options Considered
+- Keep the name **LunaOS** and accept the ecosystem conflicts.
+- Create a completely new identity disconnected from the moon/lunar theme.
+- Rename the operating system to **Mahina** (meaning Moon), preserving LUNA as the digital presence within it.
+
+### Decision
+The operating system shall officially be known as **Mahina**. LUNA remains the digital presence (AI) within the operating system.
+
+### Reasoning
+Mahina provides a unique identity with high searchability and low ecosystem conflict, while preserving the project's original philosophical foundation. Separating the OS (Mahina) from the AI (LUNA) creates a cleaner layered identity: Mahina is the world, LUNA is the consciousness that inhabits it.
+
+### Consequences
+- All canonical public references to the OS are updated from LunaOS to Mahina.
+- The Luna ecosystem (LunaGUI, Luna Island, LGP, lpkg, LUNA runtime) remains unchanged.
+- Supersedes all previous documentation identifying the OS as LunaOS.
 
 ---
 

@@ -119,7 +119,7 @@ The compositor delivers `LGP_FOCUS_CHANGED` events when the keyboard-focused sur
 - The surface type (`APPLICATION_WINDOW`, `CANVAS_SURFACE`, etc.)
 
 **2. Active File Path (via D-Bus, opt-in)**
-If the focused application declares `observe_active_file = true` in `observe.toml`, it may publish its active file path to D-Bus at `org.lunaos.context.ActiveFile`. Applications that do not publish this are observed at the application level only (no file-level context).
+If the focused application declares `observe_active_file = true` in `observe.toml`, it may publish its active file path to D-Bus at `org.mahina.context.ActiveFile`. Applications that do not publish this are observed at the application level only (no file-level context).
 
 **3. Idle Detection**
 If no focus change events arrive for a configurable `idle_timeout` (default: 5 minutes), the Context Observer emits an IDLE context. The Mode State Machine responds to IDLE by transitioning toward AMBIENT.

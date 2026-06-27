@@ -39,7 +39,7 @@ Conversation lifecycle:
        │ LLM starts generating
        ▼
   STREAMING
-  (Tokens received via org.lunaos.luna.TokenReceived D-Bus signal)
+  (Tokens received via org.mahina.luna.TokenReceived D-Bus signal)
   (luna-island: streaming cursor active)
        │
        │ is_final = true received
@@ -64,7 +64,7 @@ A conversation can be initiated in three ways:
 
 **1. Long press on Luna Island** (primary path — DL-034)
 - luna-island transitions to `FULL_CONVERSATION` state
-- luna-island calls `org.lunaos.luna.Chat()` or begins streaming
+- luna-island calls `org.mahina.luna.Chat()` or begins streaming
 - Inference Engine activates
 
 **2. CLI: `luna ask "..."`**
@@ -274,7 +274,7 @@ void handle_stream_timeout() {
 ### Token Received Signal Format
 
 ```
-D-Bus signal: org.lunaos.luna.TokenReceived
+D-Bus signal: org.mahina.luna.TokenReceived
 
 Arguments:
   token:    string   — one or more characters (may be a full word or partial)

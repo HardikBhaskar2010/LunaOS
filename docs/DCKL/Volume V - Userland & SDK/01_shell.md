@@ -70,14 +70,14 @@ luna-shell process (single process, multiple threads):
       └── LGP_FRAME_CALLBACK   → render shell surfaces
 
   D-Bus Thread:
-    ├── org.lunaos.shell.Launch(app_id) → launch an application
-    ├── org.lunaos.shell.GetWindowList() → list of open windows
-    ├── org.lunaos.shell.FocusWindow(surface_id) → bring window to front
-    ├── org.lunaos.shell.MinimizeWindow(surface_id)
-    ├── org.lunaos.shell.CloseWindow(surface_id)
-    ├── org.lunaos.shell.Lock()  → trigger luna-lock
-    ├── org.lunaos.shell.Logout() → terminate session
-    └── org.lunaos.shell.Shutdown() → initiate system shutdown
+    ├── org.mahina.shell.Launch(app_id) → launch an application
+    ├── org.mahina.shell.GetWindowList() → list of open windows
+    ├── org.mahina.shell.FocusWindow(surface_id) → bring window to front
+    ├── org.mahina.shell.MinimizeWindow(surface_id)
+    ├── org.mahina.shell.CloseWindow(surface_id)
+    ├── org.mahina.shell.Lock()  → trigger luna-lock
+    ├── org.mahina.shell.Logout() → terminate session
+    └── org.mahina.shell.Shutdown() → initiate system shutdown
 
   Render Thread:
     Wallpaper renderer (runs only on wallpaper update)
@@ -264,7 +264,7 @@ position  = "bottom"  # "bottom" only in v1; "left"/"right" in v1.5
 The launcher is the Mahina equivalent of a start menu / application grid. It is opened by:
 - Pressing the **Super key**
 - Clicking the **Luna icon** in luna-bar
-- Calling `org.lunaos.shell.OpenLauncher()` via D-Bus
+- Calling `org.mahina.shell.OpenLauncher()` via D-Bus
 
 ### Launcher Layout
 
@@ -456,7 +456,7 @@ Lock sequence:
 
   Trigger: Super+L, luna-bar lock button, lid close (luna-power signal)
 
-  1. luna-shell calls org.lunaos.luna.PrepareForLock() on luna-ai-d
+  1. luna-shell calls org.mahina.luna.PrepareForLock() on luna-ai-d
      (luna-ai-d saves context, suspends observation)
   2. luna-shell spawns luna-lock process
   3. luna-lock creates SYSTEM_MODAL surface (layer 600)
@@ -488,7 +488,7 @@ Logout sequence:
 ```
 Shutdown trigger:
 
-  luna-shell calls org.lunaos.lunaInit.Shutdown() D-Bus method
+  luna-shell calls org.mahina.lunaInit.Shutdown() D-Bus method
   (luna-init owns the shutdown — shell requests it)
   luna-init proceeds with the Stage 7 shutdown sequence (Volume II/04)
 ```

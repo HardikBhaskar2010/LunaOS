@@ -62,8 +62,8 @@ Build command:
 ```sh
 cd kernel/
 make -j$(nproc) all
-make modules_install INSTALL_MOD_PATH=/mnt/lunaos
-make install INSTALL_PATH=/mnt/lunaos/boot
+make modules_install INSTALL_MOD_PATH=/mnt/mahina
+make install INSTALL_PATH=/mnt/mahina/boot
 ```
 
 ### Config Maintenance Process
@@ -264,7 +264,7 @@ VirtIO options are included because Mahina development is done in virtual machin
 ### Build System Integration
 
 ```
-build-lunaos.sh
+build-mahina.sh
     │
     ├── [1] Build luna-init (C compiler)
     ├── [2] Build kernel (make -j<N>)

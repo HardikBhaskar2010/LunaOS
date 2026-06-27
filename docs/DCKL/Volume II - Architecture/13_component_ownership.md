@@ -44,20 +44,20 @@ Reader Rule:    Any component may read public state without
 | Theme selection (which theme is active) | luna-settings | `luna-settings` | Writes `~/.luna/config/theme.toml`, sends D-Bus signal | compositor |
 | Input routing | LGP compositor | `lgp-compositor` | `LGP_INPUT_EVENT` delivery | All LGP clients |
 | Focus (keyboard focus surface) | LGP compositor | `lgp-compositor` | Internal compositor state | read via LGP focus events |
-| Session (user login / logout) | luna-init | `luna-init` | D-Bus: `org.lunaos.session.*` | All services |
+| Session (user login / logout) | luna-init | `luna-init` | D-Bus: `org.mahina.session.*` | All services |
 | Display outputs (monitors) | LGP compositor | `lgp-compositor` | KMS (kernel) → LGP output events | All LGP clients |
-| Power management | luna-power | `luna-power` (Volume V) | D-Bus: `org.lunaos.power.*` | Luna Performance Lab, AI advisor |
+| Power management | luna-power | `luna-power` (Volume V) | D-Bus: `org.mahina.power.*` | Luna Performance Lab, AI advisor |
 | Network connections | NetworkManager | `NetworkManager` | D-Bus: `org.freedesktop.NetworkManager` | luna-bar, lpkg, luna-ai-d |
 | DNS resolution | System resolver | `/etc/resolv.conf` (DL-014) | POSIX `getaddrinfo()` | All processes |
 | Time / clock | ntpd / chrony | `ntpd` | Kernel clock via `adjtimex()` | All processes (read via `gettimeofday()`) |
-| Package installation | lpkg daemon | `lpkg` | D-Bus: `org.lunaos.lpkg.*` | All processes requesting installs |
+| Package installation | lpkg daemon | `lpkg` | D-Bus: `org.mahina.lpkg.*` | All processes requesting installs |
 | Package database | lpkg daemon | `lpkg` | SQLite at `/var/lib/lpkg/installed.db` | lpkg client, update checker |
 | Audio routing | PipeWire | `pipewire` | PipeWire native protocol | All audio-producing apps |
 | Process cgroup assignment | luna-init | `luna-init` | Internal — assigns at service start | Read via `/sys/fs/cgroup/` |
 | Cgroup resource limits | luna-init | `luna-init` | Internal — configures at start. Performance Lab may write at runtime | Read via `/sys/fs/cgroup/` |
 | AppArmor profiles | lpkg daemon | `lpkg` | Written to `/etc/apparmor.d/` at install time | Linux kernel enforces |
-| AI mode (AMBIENT, FOCUS, etc.) | Presence Engine | `luna-ai-d` | D-Bus: `org.lunaos.luna.ModeChanged` signal | luna-island, luna-bar |
-| AI conversation (LLM) | Inference Engine | `luna-ai-d` | D-Bus: `org.lunaos.luna.Chat()` | Any app via LUNA API |
+| AI mode (AMBIENT, FOCUS, etc.) | Presence Engine | `luna-ai-d` | D-Bus: `org.mahina.luna.ModeChanged` signal | luna-island, luna-bar |
+| AI conversation (LLM) | Inference Engine | `luna-ai-d` | D-Bus: `org.mahina.luna.Chat()` | Any app via LUNA API |
 | User memory (workflow, preferences) | Memory Engine | `luna-ai-d` | Exclusive file ownership: `~/.luna/memory/` | No other process reads |
 | Accessibility tree | LunaGUI | `libLunaGUI` (in-process) | AT-SPI2 D-Bus interface (future) | Screen readers |
 | LUNA Island surface | luna-island | `luna-island` | `LUNA_ISLAND` LGP surface type | Visual — no other process writes |

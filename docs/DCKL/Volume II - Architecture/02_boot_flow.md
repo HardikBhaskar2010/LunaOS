@@ -130,9 +130,9 @@ TIMEOUT=1
 
 :Mahina
 PROTOCOL=linux
-KERNEL_PATH=boot:///vmlinuz-lunaos
+KERNEL_PATH=boot:///vmlinuz-mahina
 CMDLINE=root=/dev/sda1 rw quiet splash
-MODULE_PATH=boot:///initramfs-lunaos.img
+MODULE_PATH=boot:///initramfs-mahina.img
 ```
 
 Boot parameters:

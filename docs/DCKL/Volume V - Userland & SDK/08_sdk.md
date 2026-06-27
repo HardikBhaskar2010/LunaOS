@@ -437,7 +437,7 @@ lpkg install ./my-app-1.0.0-x86_64.lpkg  # install locally for testing
 ```
 SDK documentation resources:
 
-  API Reference:    https://docs.lunaos.dev/sdk/
+  API Reference:    https://docs.mahina.dev/sdk/
                     Generated from C headers using Doxygen.
 
   Tutorials:

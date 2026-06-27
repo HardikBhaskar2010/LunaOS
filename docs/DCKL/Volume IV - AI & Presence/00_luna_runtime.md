@@ -182,7 +182,7 @@ LUNA Runtime overall state:
 
 ### luna-ai-d D-Bus Services
 
-**Service name:** `org.lunaos.luna`
+**Service name:** `org.mahina.luna`
 
 | Method / Signal | Type | Description |
 |---|---|---|
@@ -264,7 +264,7 @@ luna-init Stage 6:
        c. Open ~/.luna/memory/workflow.db
        d. Load persistent_summary.enc (decrypt if exists)
        e. Connect to compositor LGP socket (for context signals)
-       f. Register D-Bus services: org.lunaos.luna
+       f. Register D-Bus services: org.mahina.luna
        g. Signal luna-init: LUNA_PRESENCE_READY
 
   2. Start luna-island
@@ -370,7 +370,7 @@ Decision not yet finalized.
 - When implementing a new LUNA behavior: ask "is this a decision (luna-ai-d) or a rendering (luna-island)?" The answer tells you which process it belongs in.
 - The Presence Engine is always on. The Inference Engine is dormant at boot. Never start Ollama at luna-ai-d startup — it starts lazily on first demand (DL-021).
 - `~/.luna/memory/` is exclusive to `luna-ai-d`. No other process reads or writes it. Not luna-island. Not luna-shell. Not any application. This is Core Law II.
-- LUNA's mode is published via D-Bus. Any component that needs to know the current mode calls `org.lunaos.luna.GetMode()` or subscribes to `ModeChanged`. It does not read LUNA state from files.
+- LUNA's mode is published via D-Bus. Any component that needs to know the current mode calls `org.mahina.luna.GetMode()` or subscribes to `ModeChanged`. It does not read LUNA state from files.
 
 ---
 

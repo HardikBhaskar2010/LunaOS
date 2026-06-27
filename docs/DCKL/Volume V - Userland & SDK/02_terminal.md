@@ -125,7 +125,7 @@ terminal_cell_t grid[TERM_ROWS_MAX][TERM_COLS_MAX];
 
 ### Command Observation Protocol
 
-luna-terminal publishes D-Bus signals to `org.lunaos.context.Terminal`:
+luna-terminal publishes D-Bus signals to `org.mahina.context.Terminal`:
 
 ```
 D-Bus signals published by luna-terminal:
@@ -264,7 +264,7 @@ Tab bar (appears when > 1 tab open):
 LUNA Assist flow:
 
   1. User presses Ctrl+Shift+L in luna-terminal
-  2. luna-terminal calls org.lunaos.luna.OpenConversationWithContext():
+  2. luna-terminal calls org.mahina.luna.OpenConversationWithContext():
        context = {
            "trigger": "terminal_assist",
            "last_command": last_run_command,
