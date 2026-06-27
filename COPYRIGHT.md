@@ -1,6 +1,11 @@
-# Copyright and Licensing
+# Copyright
 
-All original source code in the Mahina OS repository is Copyright (c) 2026 Hardik Bhaskar and is licensed under the MIT License.
+Copyright © 2026 Hardik Bhaskar.
 
-## Third-Party Components
-This repository may contain statically linked or dynamically linked third-party components which are governed by their respective licenses. Please review the `docs/DCKL/Volume VII - Implementation Roadmap/05_dependency_audit.md` for a comprehensive list of approved dependencies and their licensing.
+The Mahina source code is licensed under the MIT License unless otherwise stated.
+
+Documentation is licensed under the MIT License.
+
+The Mahina name, logo, branding, artwork, and future mascot may be protected separately.
+
+Contributors retain copyright to their own contributions while licensing them under the project license.

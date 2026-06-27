@@ -1,21 +1,22 @@
 # Security Policy
 
-## Supported Versions
+Supported Versions
 
-Currently, Mahina OS is in early development (v0.x). We do not provide long-term support for pre-1.0 releases.
+| Version | Supported |
+|---------|-----------|
+| v1.x    | ✅        |
+| v0.x    | ❌        |
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.0.x   | Planned            |
-| 0.x.x   | Best effort        |
+Reporting Vulnerabilities
 
-## Reporting a Vulnerability
+Please do not open public GitHub issues for security vulnerabilities.
 
-If you discover a security vulnerability in Mahina OS, please do NOT report it via public GitHub issues.
+Instead, contact the maintainers privately.
 
-Instead, please send an email or contact the maintainers directly. We will review all reports and provide a timeline for a patch.
+Provide:
 
-Please include:
-- A description of the vulnerability.
-- Steps to reproduce the issue.
-- Potential impact on the system.
+- Version
+- Steps to reproduce
+- Expected behavior
+- Actual behavior
+- Logs

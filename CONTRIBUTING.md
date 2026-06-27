@@ -1,25 +1,30 @@
-# Contributing to Mahina OS
+# Contributing
 
-Thank you for your interest in contributing to Mahina OS! 
+Thank you for contributing to Mahina.
 
-## Core Philosophy
+## Requirements
 
-Before contributing, please read the entire Document Control Knowledge Library (DCKL) in the `docs/DCKL/` directory. 
-Mahina strictly follows **Documentation-First Engineering**. No code is merged unless the architectural decisions have been formally accepted in the Decision Log.
+- Follow the DCKL.
+- Never contradict accepted Decision Log entries.
+- Follow coding standards in Volume VI.
+- All new features require documentation updates.
+- Architecture discussions belong in Architecture Reviews.
 
-Specifically, read:
-1. `docs/DCKL/Volume I - Foundation/core_laws.md`
-2. `docs/DCKL/Volume VI - Development Bible/01_coding_standards.md`
+## Pull Requests
 
-## Getting Started
+Every PR should include:
 
-1. Check the `Volume VII - Implementation Roadmap` to see what is currently in scope. Do not submit PRs for v2.0 features when we are building v1.0.
-2. Ensure your C17 code compiles with zero warnings under `clang`.
-3. Run `make lint` (clang-tidy) and ensure it passes.
-4. Run `make test-unit` to ensure no memory leaks (ASan/UBSan are enabled).
+- Description
+- Tests
+- Documentation updates
+- Screenshots (if applicable)
 
-## Submitting Pull Requests
+## Commit Format
 
-1. Fork the repository and create your branch from `main`.
-2. Include the copyright header in all new `.c` and `.h` files.
-3. Keep PRs small and focused on a single architectural goal.
+- `feat:`
+- `fix:`
+- `docs:`
+- `refactor:`
+- `perf:`
+- `test:`
+- `build:`
