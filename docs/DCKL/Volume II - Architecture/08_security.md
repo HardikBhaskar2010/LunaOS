@@ -1,4 +1,4 @@
-# LunaOS — Security Architecture
+# Mahina — Security Architecture
 **Volume II · Chapter 8**
 **Classification:** Core Architecture — Security
 **Status:** Active · Reference for all component implementation
@@ -7,15 +7,15 @@
 
 ## Purpose
 
-This document specifies the LunaOS security architecture: the threat model, privilege separation model, mandatory access control policy, IPC security boundaries, and user-facing security guarantees.
+This document specifies the Mahina security architecture: the threat model, privilege separation model, mandatory access control policy, IPC security boundaries, and user-facing security guarantees.
 
-Security in LunaOS is not a feature layer applied on top of a working system. It is a structural property of the system from the kernel upward. Every component's security posture is defined before that component is implemented.
+Security in Mahina is not a feature layer applied on top of a working system. It is a structural property of the system from the kernel upward. Every component's security posture is defined before that component is implemented.
 
 ---
 
 ## Overview
 
-LunaOS security is organized around five axes:
+Mahina security is organized around five axes:
 
 1. **Privilege separation** — Processes run with the minimum privilege necessary
 2. **Mandatory access control (MAC)** — AppArmor profiles constrain what processes can do
@@ -27,11 +27,11 @@ LunaOS security is organized around five axes:
 
 ## Design Philosophy
 
-Security decisions in LunaOS follow three rules derived from the Core Laws:
+Security decisions in Mahina follow three rules derived from the Core Laws:
 
 **Rule 1 — Least privilege (from Law I).** Every process runs with the minimum set of capabilities and file permissions required to perform its function. A process that needs to read `/etc/luna/services/` does not get write access to `/`.
 
-**Rule 2 — No hidden outbound traffic (from Law II, Law V).** LunaOS never transmits data without explicit user instruction. No crash reports. No telemetry. No analytics. No "improve LunaOS" data collection. The only outbound network traffic initiated by LunaOS infrastructure is:
+**Rule 2 — No hidden outbound traffic (from Law II, Law V).** Mahina never transmits data without explicit user instruction. No crash reports. No telemetry. No analytics. No "improve Mahina" data collection. The only outbound network traffic initiated by Mahina infrastructure is:
 - `lpkg` fetching packages when the user runs `lpkg update` or `lpkg install`
 - Ollama pulling model weights when the user runs `ollama pull`
 - Cloud bridge calls when the user explicitly invokes `luna bridge --send`
@@ -61,9 +61,9 @@ Anything else is a bug.
 |---|---|
 | Malicious local process connecting to localhost:7734 | Any local process can connect to localhost. This is a v1 known limitation. A capability-based auth token is a v2 improvement. |
 | Physical hardware attacks (cold boot, DMA attacks) | v1 does not implement hardware security measures |
-| Side-channel attacks (Spectre/Meltdown mitigations) | Standard kernel mitigations enabled by default; no additional LunaOS-specific work |
+| Side-channel attacks (Spectre/Meltdown mitigations) | Standard kernel mitigations enabled by default; no additional Mahina-specific work |
 | Kernel exploits | Kernel hardening is a v2 concern; KASLR is the primary mitigation in v1 |
-| Multi-user security | LunaOS v1 is a single-user system |
+| Multi-user security | Mahina v1 is a single-user system |
 
 ---
 
@@ -136,7 +136,7 @@ Key permission boundaries:
 
 ### AppArmor Profiles
 
-LunaOS uses AppArmor as the mandatory access control system (`CONFIG_DEFAULT_SECURITY_APPARMOR=y` — see `03_linux_architecture.md`).
+Mahina uses AppArmor as the mandatory access control system (`CONFIG_DEFAULT_SECURITY_APPARMOR=y` — see `03_linux_architecture.md`).
 
 AppArmor profiles are stored in `/etc/apparmor.d/` and are activated by luna-init at boot.
 
@@ -190,11 +190,11 @@ All IPC security is documented in detail in `07_ipc.md`. Summary of security pos
 - **localhost:7734 (luna-ai-d):** Any local process can connect. v1 known limitation. Mitigation: `luna-ai-d` validates that requests do not request actions outside its defined API.
 - **localhost:11434 (Ollama):** Any local process can connect. Mitigation: Only `luna-ai-d` is expected to use this port. Documented trust assumption.
 - **`/run/luna-init.sock`:** Permissions `0600`, root only. Hard access control.
-- **D-Bus system bus:** D-Bus policy files (`/etc/dbus-1/system.d/`) control which processes can own LunaOS well-known names.
+- **D-Bus system bus:** D-Bus policy files (`/etc/dbus-1/system.d/`) control which processes can own Mahina well-known names.
 
 ### Firewall Configuration
 
-The default LunaOS firewall rules (implemented via nftables, loaded by a luna-init service at Stage 4):
+The default Mahina firewall rules (implemented via nftables, loaded by a luna-init service at Stage 4):
 
 ```
 # /etc/luna/nftables.conf
@@ -242,7 +242,7 @@ The firewall:
 
 ### lpkg Security Model
 
-`lpkg` is the LunaOS package manager. It installs software that may require root filesystem access. The security model:
+`lpkg` is the Mahina package manager. It installs software that may require root filesystem access. The security model:
 
 ```
 TODO:
@@ -261,7 +261,7 @@ This must be a Decision Log entry before lpkg implementation.
 
 ### Package Signing
 
-All LunaOS packages distributed through the official repository must be cryptographically signed. `lpkg` verifies package signatures before installation.
+All Mahina packages distributed through the official repository must be cryptographically signed. `lpkg` verifies package signatures before installation.
 
 ```
 TODO:
@@ -327,13 +327,13 @@ Decision not yet finalized.
 
 ## AI Context
 
-An AI agent implementing any LunaOS component must understand:
+An AI agent implementing any Mahina component must understand:
 
 - Every process runs at the minimum privilege necessary. If a component does not need root, it must not run as root. Document the reason if root is unavoidable.
 - `~/.luna/` is exclusively the user's. No process except `luna-ai-d` may open files in this directory. This is enforced by both filesystem permissions and AppArmor.
 - `luna-ai-d` makes no outbound network calls except: (a) to localhost:11434 (Ollama), (b) to the cloud bridge whitelist when `luna bridge --send` is explicitly called by the user. Any other outbound connection from `luna-ai-d` is a security violation.
 - The firewall default-drops all inbound connections except loopback and established state. Do not add firewall rules that open ports to external interfaces without a Decision Log entry and user instruction.
-- AppArmor profiles are required for all LunaOS daemons before v1 public release. If implementing a new daemon, the AppArmor profile is part of the implementation deliverable.
+- AppArmor profiles are required for all Mahina daemons before v1 public release. If implementing a new daemon, the AppArmor profile is part of the implementation deliverable.
 - Package signing is required before any packages are distributed publicly. Do not implement a package distribution mechanism without implementing signature verification in lpkg simultaneously.
 - `luna memory --clear` and `luna observe --off` must always work. No code path may intercept, delay, or deny these commands.
 

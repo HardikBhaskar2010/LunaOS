@@ -1,4 +1,4 @@
-# LunaOS — Luna Graphics Protocol (LGP)
+# Mahina — Luna Graphics Protocol (LGP)
 **Volume III · Chapter 1**
 **Classification:** Core Architecture — Graphics Foundation
 **Status:** Active · Foundational dependency for all Volume III documents
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document specifies the **Luna Graphics Protocol (LGP)**: the foundational graphics protocol of LunaOS. LGP is the interface through which every graphical surface on LunaOS is created, rendered, and composed.
+This document specifies the **Luna Graphics Protocol (LGP)**: the foundational graphics protocol of Mahina. LGP is the interface through which every graphical surface on Mahina is created, rendered, and composed.
 
 This document is the authoritative reference for:
 - What LGP is and what it is not
@@ -22,12 +22,12 @@ This document is the entry point for Volume III. All subsequent Volume III docum
 
 ## Overview
 
-LGP is LunaOS's custom graphics protocol. It replaces the role that Wayland fills in conventional Linux desktops. LGP is not Wayland. LGP is not built on Wayland. No Wayland protocol is used.
+LGP is Mahina's custom graphics protocol. It replaces the role that Wayland fills in conventional Linux desktops. LGP is not Wayland. LGP is not built on Wayland. No Wayland protocol is used.
 
 LGP has two client-facing interfaces (DL-004R — hybrid graphics architecture):
 
 **Interface A — LunaGUI toolkit:**
-Standard applications use LunaGUI. LunaGUI is a widget and rendering library that uses LGP internally. Application developers interact with LunaGUI's API — they do not need to know LGP's wire format. LunaGUI is the primary path for the vast majority of LunaOS applications.
+Standard applications use LunaGUI. LunaGUI is a widget and rendering library that uses LGP internally. Application developers interact with LunaGUI's API — they do not need to know LGP's wire format. LunaGUI is the primary path for the vast majority of Mahina applications.
 
 **Interface B — Direct LGP:**
 Advanced applications (games, video editors, custom GPU renderers) may communicate directly with the LGP compositor via the LGP protocol. Direct LGP provides full access to compositor surfaces without the widget layer overhead.
@@ -51,7 +51,7 @@ Consequences:
 
 ### No application owns the compositor
 
-In conventional Linux desktops, the compositor is typically a standalone server that clients connect to and request services from. LGP follows a similar model but with one critical difference: **no application process owns or can replace the LGP compositor.** The compositor is a LunaOS system component, started by `luna-init` at Stage 5. It is not a user-replaceable shell component.
+In conventional Linux desktops, the compositor is typically a standalone server that clients connect to and request services from. LGP follows a similar model but with one critical difference: **no application process owns or can replace the LGP compositor.** The compositor is a Mahina system component, started by `luna-init` at Stage 5. It is not a user-replaceable shell component.
 
 ### LGP is local-only
 
@@ -121,7 +121,7 @@ LGP defines the following surface types. Each type carries different constraints
 
 | Surface type | Who creates it | Color constraint | Motion constraint | Direct GPU access |
 |---|---|---|---|---|
-| `SYSTEM_CHROME` | LunaOS components only | Semantic colors only | Motion Vocabulary only | No |
+| `SYSTEM_CHROME` | Mahina components only | Semantic colors only | Motion Vocabulary only | No |
 | `LUNA_ISLAND` | luna-ai-d only | Semantic colors only | Motion Vocabulary only | No |
 | `SHELL_SURFACE` | luna-shell only | Semantic colors only | Motion Vocabulary only | No |
 | `APPLICATION_WINDOW` | LunaGUI apps | Semantic colors (chrome) | Motion Vocabulary (transitions) | No |
@@ -484,7 +484,7 @@ Decision not yet finalized.
 
 6. **Accessibility.** The LGP protocol currently has no accessibility message types. Screen readers need a way to receive semantic information about surfaces. This is a v1 gap.
 
-7. **Living Interface enforcement scope.** `living_interface_design.md` Open Question 1: does Living Interface apply only to LunaOS chrome or also to third-party application windows? If only to chrome: third-party APPLICATION_WINDOW surfaces have no color/motion constraints. If to all surfaces: LunaGUI must propagate enforcement to application developers. Not yet decided.
+7. **Living Interface enforcement scope.** `living_interface_design.md` Open Question 1: does Living Interface apply only to Mahina chrome or also to third-party application windows? If only to chrome: third-party APPLICATION_WINDOW surfaces have no color/motion constraints. If to all surfaces: LunaGUI must propagate enforcement to application developers. Not yet decided.
 
 8. **Reduced-motion accessibility mode.** `living_interface_design.md` Open Question 2: if a user enables reduced motion, how does LGP handle motion classes? The protocol currently has no reduced-motion flag on motion messages.
 
@@ -492,10 +492,10 @@ Decision not yet finalized.
 
 ## AI Context
 
-An AI agent implementing any LunaOS graphical component must understand:
+An AI agent implementing any Mahina graphical component must understand:
 
 - **LGP is not Wayland.** Do not use any Wayland protocol primitives, headers, or libraries. If you find yourself including `wayland-client.h` or using `wl_surface`, stop — you are on the wrong path.
-- **The compositor is a LunaOS system component.** It is not a replaceable user component. It is started by `luna-init` at Stage 5. Application code never starts or restarts the compositor.
+- **The compositor is a Mahina system component.** It is not a replaceable user component. It is started by `luna-init` at Stage 5. Application code never starts or restarts the compositor.
 - **All pixel data goes through the compositor.** Applications never write to `/dev/dri` or the framebuffer directly. They submit buffers via LGP and the compositor decides when to present them.
 - **Color Semantic Contract enforcement is at the protocol level.** If you are writing code that sets an arbitrary hex color on a `SYSTEM_CHROME` or `APPLICATION_WINDOW` surface, you are bypassing the contract. Use `LGP_SET_SEMANTIC_COLOR` with a semantic code from the locked table. `CANVAS_SURFACE` is the only exception.
 - **Motion Vocabulary enforcement is at the protocol level.** `LGP_SEND_MOTION` takes a motion class from the locked vocabulary in `core_laws.md`. There is no "custom animation" class. If the required animation is not in the vocabulary, it requires the amendment process before it can be specified.

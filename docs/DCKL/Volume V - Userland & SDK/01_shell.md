@@ -1,17 +1,17 @@
-# LunaOS — Shell
+# Mahina — Shell
 **Volume V · Chapter 1**
 **Classification:** Core Architecture — Userland
-**Status:** Canonical · This document specifies luna-shell, the LunaOS desktop environment
+**Status:** Canonical · This document specifies luna-shell, the Mahina desktop environment
 
 ---
 
 ## Purpose
 
-This document specifies **luna-shell** — the process that owns the LunaOS desktop. luna-shell is the first thing the user sees after the boot sequence completes, and it is the last thing running before the system shuts down.
+This document specifies **luna-shell** — the process that owns the Mahina desktop. luna-shell is the first thing the user sees after the boot sequence completes, and it is the last thing running before the system shuts down.
 
 luna-shell is responsible for:
 - Creating and maintaining the wallpaper surface
-- Owning the application launcher (the LunaOS equivalent of a "start menu")
+- Owning the application launcher (the Mahina equivalent of a "start menu")
 - Managing window focus, alt-tab, and workspace switching
 - Hosting luna-bar (status bar) and luna-dock (application dock)
 - Coordinating the session: login, logout, lock, shutdown
@@ -164,7 +164,7 @@ luna-bar surface:
 luna-bar layout (32px height):
 
   ┌──────────────────────────────────────────────────────────────┐
-  │  [  ]  LunaOS        App Name — Window Title      🌐 🔋 🔊 13:31 │
+  │  [  ]  Mahina        App Name — Window Title      🌐 🔋 🔊 13:31 │
   │  ↑                   ↑                            ↑          │
   │  Super key           Active window title          System tray│
   │  (opens launcher)                                 + clock    │
@@ -261,7 +261,7 @@ position  = "bottom"  # "bottom" only in v1; "left"/"right" in v1.5
 
 ## Application Launcher
 
-The launcher is the LunaOS equivalent of a start menu / application grid. It is opened by:
+The launcher is the Mahina equivalent of a start menu / application grid. It is opened by:
 - Pressing the **Super key**
 - Clicking the **Luna icon** in luna-bar
 - Calling `org.lunaos.shell.OpenLauncher()` via D-Bus
@@ -416,7 +416,7 @@ Alt-tab switcher overlay:
 
 ## Workspace Management
 
-LunaOS v1 supports **static workspaces** — a fixed number of virtual desktops.
+Mahina v1 supports **static workspaces** — a fixed number of virtual desktops.
 
 ```
 Workspace model (v1):

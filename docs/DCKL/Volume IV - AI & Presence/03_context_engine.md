@@ -1,4 +1,4 @@
-# LunaOS — Context Engine
+# Mahina — Context Engine
 **Volume IV · Chapter 3**
 **Classification:** Core Architecture — AI & Presence
 **Status:** Canonical · This document specifies how LUNA understands what the user is doing and computes a confidence score for observations
@@ -149,7 +149,7 @@ When a file is open, the Context Engine attempts to determine the project root:
 char* detect_project_root(const char* file_path) {
     // Walk up the directory tree looking for:
     //   .git directory  → git project
-    //   luna.toml       → LunaOS project
+    //   luna.toml       → Mahina project
     //   Cargo.toml      → Rust project
     //   Makefile        → C/C++ project
     //   package.json    → Node.js project
@@ -435,7 +435,7 @@ TODO:
 Decision not yet finalized.
 ```
 
-1. **Browser URL observation.** For URL-based context (CODING on GitHub vs. AMBIENT on social media), the browser would need to publish its active URL to D-Bus. Is this an opt-in per-browser integration or does LunaOS provide a browser extension? Must be a Decision Log entry.
+1. **Browser URL observation.** For URL-based context (CODING on GitHub vs. AMBIENT on social media), the browser would need to publish its active URL to D-Bus. Is this an opt-in per-browser integration or does Mahina provide a browser extension? Must be a Decision Log entry.
 
 2. **Git command observation.** Git push pattern detection currently depends on file watcher heuristics (watching `.git/ORIG_HEAD`). A proper integration would have the terminal publish git commands to D-Bus. Is this in scope for v1? Must be a Decision Log entry.
 

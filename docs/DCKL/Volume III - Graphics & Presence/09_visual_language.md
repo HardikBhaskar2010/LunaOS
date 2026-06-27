@@ -1,13 +1,13 @@
-# LunaOS — Visual Language
+# Mahina — Visual Language
 **Volume III · Chapter 9**
 **Classification:** Core Architecture — Graphics & Presence
-**Status:** Canonical · This is the authoritative reference for every visual decision in LunaOS
+**Status:** Canonical · This is the authoritative reference for every visual decision in Mahina
 
 ---
 
 ## Purpose
 
-This document defines the **Visual Language of LunaOS** — the complete vocabulary of how LunaOS looks, moves, and communicates through design. It is the single source of truth for:
+This document defines the **Visual Language of Mahina** — the complete vocabulary of how Mahina looks, moves, and communicates through design. It is the single source of truth for:
 
 - The color system and semantic meaning of every color
 - Typography: fonts, sizes, weights, and usage rules
@@ -24,7 +24,7 @@ Without this document, different components will make different visual decisions
 
 ## Overview
 
-LunaOS has one visual personality: **precise, present, alive**.
+Mahina has one visual personality: **precise, present, alive**.
 
 ```
 Three words that govern every visual decision:
@@ -42,7 +42,7 @@ Three words that govern every visual decision:
              a living system, not a static grid of rectangles.
 ```
 
-These three words are the test for every visual decision: if a proposed design element is precise, present, and alive, it belongs in LunaOS. If it is generic, static, or careless, it does not.
+These three words are the test for every visual decision: if a proposed design element is precise, present, and alive, it belongs in Mahina. If it is generic, static, or careless, it does not.
 
 ---
 
@@ -50,7 +50,7 @@ These three words are the test for every visual decision: if a proposed design e
 
 ### Foundation: Dark Environment
 
-LunaOS v1 ships **Luna Dark** as its only built-in theme (DL-039). All color decisions are made for dark environments first. The dark environment is not a constraint — it is the designed state.
+Mahina v1 ships **Luna Dark** as its only built-in theme (DL-039). All color decisions are made for dark environments first. The dark environment is not a constraint — it is the designed state.
 
 ```
 Luna Dark color environment:
@@ -123,7 +123,7 @@ State color modifier rules:
 
 ### Font Hierarchy (DL-028, AP-001)
 
-LunaOS uses **two typeface roles**, per the Typography Philosophy Principle:
+Mahina uses **two typeface roles**, per the Typography Philosophy Principle:
 
 **Display Role — Bitcount**
 Used where personality matters:
@@ -182,7 +182,7 @@ Line height rules:
 
 ## Spacing System
 
-LunaOS uses a **4px base grid**. All spacing values are multiples of 4.
+Mahina uses a **4px base grid**. All spacing values are multiples of 4.
 
 ```
 Spacing scale:
@@ -288,7 +288,7 @@ Glass layer stack (from bottom to top):
 
 ## Motion Principles
 
-The motion language of LunaOS is fully specified in `Volume III / 05_animation_engine.md`. This section provides the **visual design rationale** behind the motion rules.
+The motion language of Mahina is fully specified in `Volume III / 05_animation_engine.md`. This section provides the **visual design rationale** behind the motion rules.
 
 ### Three Motion Rules
 
@@ -299,7 +299,7 @@ Nothing animates for decoration alone. Every animation communicates information:
 User-initiated actions animate faster than system-initiated ones. A button press should feel instant (< 150ms). A background status update can take longer (up to 600ms). The user's action is always the fastest thing on screen.
 
 **3. Motion is natural.**
-All easing functions approximate natural physical motion. Things that start from rest ease in. Things that stop ease out. Things that spring back overshoot slightly. The `ease-out-quint` curve is the primary LunaOS easing — fast to appear, smooth to settle.
+All easing functions approximate natural physical motion. Things that start from rest ease in. Things that stop ease out. Things that spring back overshoot slightly. The `ease-out-quint` curve is the primary Mahina easing — fast to appear, smooth to settle.
 
 ### Timing Reference
 
@@ -323,7 +323,7 @@ Timing vocabulary:
 
 ### Icon Style
 
-LunaOS icons follow these rules:
+Mahina icons follow these rules:
 
 ```
 Icon design rules:
@@ -335,24 +335,24 @@ Icon design rules:
   Optical center: vertically centered within the grid, not mathematically
 ```
 
-**Icon set:** v1 uses a curated custom icon set for system UI (luna-bar, luna-shell, settings). The icon set is not finalized — pending a design decision. No external icon font (Font Awesome, Material Icons) is used — these carry visual identities that conflict with LunaOS's precision aesthetic.
+**Icon set:** v1 uses a curated custom icon set for system UI (luna-bar, luna-shell, settings). The icon set is not finalized — pending a design decision. No external icon font (Font Awesome, Material Icons) is used — these carry visual identities that conflict with Mahina's precision aesthetic.
 
 ```
 TODO:
 Decision not yet finalized.
-Reason: LunaOS icon set not selected / created.
+Reason: Mahina icon set not selected / created.
 Options:
   A: Commission original icon set (best visual identity, requires design work)
   B: Adapt an existing open-source set (Phosphor Icons, Lucide) as a starting point
   C: Use Unicode symbols for v1 (acceptable for development, not for release)
 Recommendation: Option B — start with Phosphor Icons (open source, MIT, line-style,
-                consistent with LunaOS aesthetic) and customize as needed.
+                consistent with Mahina aesthetic) and customize as needed.
 Must be a Decision Log entry before Stage 3.
 ```
 
 ### System Symbols
 
-These LunaOS-specific symbols are defined here and used throughout the UI:
+These Mahina-specific symbols are defined here and used throughout the UI:
 
 | Symbol | Meaning | Usage |
 |---|---|---|
@@ -368,7 +368,7 @@ These LunaOS-specific symbols are defined here and used throughout the UI:
 
 ## Density Modes
 
-LunaOS supports two density modes:
+Mahina supports two density modes:
 
 ```
 Density modes:
@@ -411,7 +411,7 @@ Contrast requirements:
 
 ## Anti-Patterns
 
-These visual patterns are explicitly **forbidden** in LunaOS:
+These visual patterns are explicitly **forbidden** in Mahina:
 
 | Anti-Pattern | Why Forbidden |
 |---|---|

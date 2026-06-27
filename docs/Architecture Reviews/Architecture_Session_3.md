@@ -1,6 +1,6 @@
 # Architecture Review Session 3
 
-## Project: LunaOS
+## Project: Mahina
 
 ## Topic: Luna Performance Lab & System Performance Philosophy
 
@@ -8,19 +8,19 @@
 
 # Meeting Objective
 
-This architecture review exists to define the philosophy, architecture, and implementation direction of LunaOS's advanced system tuning environment.
+This architecture review exists to define the philosophy, architecture, and implementation direction of Mahina's advanced system tuning environment.
 
-Unlike conventional operating systems that expose only a handful of power profiles, LunaOS aims to provide complete visibility and control over every major subsystem while maintaining safe defaults.
+Unlike conventional operating systems that expose only a handful of power profiles, Mahina aims to provide complete visibility and control over every major subsystem while maintaining safe defaults.
 
 The purpose of this meeting is **not** to discuss overclocking.
 
-The purpose is to define what "User Control" truly means inside LunaOS.
+The purpose is to define what "User Control" truly means inside Mahina.
 
 ---
 
 # Background
 
-One of LunaOS's Core Laws states:
+One of Mahina's Core Laws states:
 
 > **Control Over Possession**
 
@@ -28,7 +28,7 @@ The operating system exists to empower users rather than restrict them.
 
 Most operating systems intentionally hide advanced controls.
 
-LunaOS should instead expose them responsibly.
+Mahina should instead expose them responsibly.
 
 The operating system should never assume the user is incapable of understanding their machine.
 
@@ -48,7 +48,7 @@ These profiles hide thousands of scheduler, memory, graphics, storage, networkin
 
 Advanced users must instead modify kernel parameters, edit configuration files, install third-party tools, or access firmware settings.
 
-This contradicts LunaOS's philosophy.
+This contradicts Mahina's philosophy.
 
 ---
 
@@ -107,7 +107,7 @@ Users should understand the consequences of every decision.
 
 Traditional operating systems provide generic profiles.
 
-LunaOS may instead provide contextual profiles.
+Mahina may instead provide contextual profiles.
 
 Examples include:
 
@@ -183,7 +183,7 @@ Safety remains enabled by default.
 
 Advanced controls remain hidden until explicitly enabled.
 
-Before entering Experimental Mode, LunaOS should clearly explain:
+Before entering Experimental Mode, Mahina should clearly explain:
 
 * Potential stability risks.
 * Increased power consumption.
@@ -202,11 +202,11 @@ Example confirmation:
 
 # Relationship to Firmware
 
-LunaOS should not replace firmware configuration.
+Mahina should not replace firmware configuration.
 
 Instead, it should integrate with supported firmware capabilities whenever safe and technically feasible.
 
-If a motherboard exposes configurable hardware features, LunaOS may provide an interface for them while clearly identifying that they originate from firmware rather than the operating system itself.
+If a motherboard exposes configurable hardware features, Mahina may provide an interface for them while clearly identifying that they originate from firmware rather than the operating system itself.
 
 ---
 
@@ -289,4 +289,4 @@ Priority: High
 
 Notes:
 
-The Luna Performance Lab has the potential to become one of LunaOS's defining features by transforming system tuning from a hidden engineering task into a transparent, educational, and user-controlled experience.
+The Luna Performance Lab has the potential to become one of Mahina's defining features by transforming system tuning from a hidden engineering task into a transparent, educational, and user-controlled experience.

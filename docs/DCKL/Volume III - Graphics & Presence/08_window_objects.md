@@ -1,4 +1,4 @@
-# LunaOS — Window Objects
+# Mahina — Window Objects
 **Volume III · Chapter 8**
 **Classification:** Core Architecture — Graphics & Presence
 **Status:** Canonical · Defines all LGP surface types, their properties, and lifecycle rules
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document defines **every window object type** that exists in LunaOS. A window object is anything the compositor manages as a drawable surface. It is not limited to what users think of as "windows" — it includes panels, overlays, menus, the lock screen, Luna Island, and every other visible element.
+This document defines **every window object type** that exists in Mahina. A window object is anything the compositor manages as a drawable surface. It is not limited to what users think of as "windows" — it includes panels, overlays, menus, the lock screen, Luna Island, and every other visible element.
 
 Understanding window objects is required for:
 - Writing a compositor (what surface types to support)
@@ -19,7 +19,7 @@ Understanding window objects is required for:
 
 ## Overview
 
-Every visible element in LunaOS is a **surface** — a rectangular region of pixel data managed by the compositor. Surfaces are created by LGP clients and composited together by lgp-compositor according to their layer ordering, geometry, and opacity.
+Every visible element in Mahina is a **surface** — a rectangular region of pixel data managed by the compositor. Surfaces are created by LGP clients and composited together by lgp-compositor according to their layer ordering, geometry, and opacity.
 
 ```
 Compositor surface stack (top = rendered last = visually on top):

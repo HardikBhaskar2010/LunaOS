@@ -1,13 +1,13 @@
-# LunaOS — Terminal
+# Mahina — Terminal
 **Volume V · Chapter 2**
 **Classification:** Core Architecture — Userland
-**Status:** Canonical · Specifies luna-terminal, the LunaOS native terminal emulator
+**Status:** Canonical · Specifies luna-terminal, the Mahina native terminal emulator
 
 ---
 
 ## Purpose
 
-This document specifies **luna-terminal** — the native terminal emulator of LunaOS. The terminal is one of the most used applications on any developer-oriented OS, and LunaOS ships its own to ensure it integrates deeply with LUNA's AI presence.
+This document specifies **luna-terminal** — the native terminal emulator of Mahina. The terminal is one of the most used applications on any developer-oriented OS, and Mahina ships its own to ensure it integrates deeply with LUNA's AI presence.
 
 luna-terminal is not just a terminal. It is the primary interface between the user's command-line work and LUNA's context awareness. Every command run in luna-terminal is a signal the Presence Engine can observe. Every build failure is a LUNA observation opportunity.
 
@@ -57,7 +57,7 @@ Terminal rendering approach — v1:
 
   Option A: VTE (GNOME Virtual Terminal Emulator library)
     Pros: Mature, full Unicode/escape-sequence support, well-tested
-    Cons: GTK dependency (heavy, contradicts LunaOS lean philosophy)
+    Cons: GTK dependency (heavy, contradicts Mahina lean philosophy)
     Verdict: Rejected
 
   Option B: Custom terminal emulator (PTY + escape sequence parser)
@@ -298,7 +298,7 @@ Multiplexer interaction:
 
   tmux clipboard integration:
     tmux's clipboard-write must be intercepted and forwarded to
-    LunaOS clipboard (via LGP clipboard extension — DL-033).
+    Mahina clipboard (via LGP clipboard extension — DL-033).
     Required for: tmux copy-mode → system clipboard.
     Implementation: OSC 52 escape sequence support (terminal-level).
 ```
@@ -369,7 +369,7 @@ Decision not yet finalized.
 
 3. **GPU-accelerated terminal.** Popular terminal emulators (Alacritty, kitty, WezTerm) use GPU rendering for performance. Should luna-terminal use a GPU-rendered canvas for text? This would require the Vulkan path (Stage 3+). For v1 (CPU renderer), the performance budget must be met without GPU.
 
-4. **Shell integration scripts.** Tools like starship prompt, zoxide, and fzf need shell integration scripts to work properly. Does LunaOS ship default shell integration scripts for common tools? Must be specified before the installer is written.
+4. **Shell integration scripts.** Tools like starship prompt, zoxide, and fzf need shell integration scripts to work properly. Does Mahina ship default shell integration scripts for common tools? Must be specified before the installer is written.
 
 5. **Command privacy.** Full command text is published to D-Bus. Commands may contain passwords (e.g., `mysql -p secretpassword`). Should luna-terminal detect and redact sensitive patterns before publishing? A simple heuristic (redact after `-p`, `--password=`, etc.) would help. Must be a Decision Log entry.
 

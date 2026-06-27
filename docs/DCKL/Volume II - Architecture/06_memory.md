@@ -1,4 +1,4 @@
-# LunaOS — Memory Architecture
+# Mahina — Memory Architecture
 **Volume II · Chapter 6**
 **Classification:** Core Architecture — Memory Management
 **Status:** Active · Reference for kernel config and service implementation
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document describes how LunaOS manages memory across the system: physical memory layout, virtual address space policies, swap configuration, LUNA.AI memory data store, and per-process memory constraints enforced through the cgroup v2 hierarchy described in `05_scheduler.md`.
+This document describes how Mahina manages memory across the system: physical memory layout, virtual address space policies, swap configuration, LUNA.AI memory data store, and per-process memory constraints enforced through the cgroup v2 hierarchy described in `05_scheduler.md`.
 
 This document covers:
 - Physical and virtual memory layout decisions
@@ -20,9 +20,9 @@ This document covers:
 
 ## Overview
 
-LunaOS has two distinct memory concerns that must not be confused:
+Mahina has two distinct memory concerns that must not be confused:
 
-1. **System memory management** — how the Linux kernel and LunaOS infrastructure allocate, protect, and reclaim physical RAM for all running processes.
+1. **System memory management** — how the Linux kernel and Mahina infrastructure allocate, protect, and reclaim physical RAM for all running processes.
 
 2. **LUNA.AI memory** — the persistent user-space data store in `~/.luna/memory/` that records workflow patterns, user preferences, and interaction history for the AI layer. This is not OS memory. It is a structured data store with privacy and ownership guarantees under Core Law II.
 
@@ -32,7 +32,7 @@ Both are documented here because both are called "memory" in different contexts.
 
 ## Design Philosophy
 
-Memory management in LunaOS is governed by two Core Laws:
+Memory management in Mahina is governed by two Core Laws:
 
 **Law I (Own Every Layer):** Every memory-related kernel option is explicitly chosen. No default configuration is inherited without acknowledgment. The kernel's OOM killer policy, transparent hugepage behavior, and swap configuration are all deliberate decisions.
 
@@ -84,7 +84,7 @@ The dominant memory consumer is Ollama's model weights held in RAM for fast infe
 
 ### Virtual Address Space
 
-LunaOS uses the standard Linux x86_64 virtual address space layout:
+Mahina uses the standard Linux x86_64 virtual address space layout:
 
 ```
 0xFFFF FFFF FFFF FFFF   (top of virtual address space)
@@ -98,7 +98,7 @@ LunaOS uses the standard Linux x86_64 virtual address space layout:
 
 KASLR (`CONFIG_RANDOMIZE_BASE=y`) is enabled. The kernel base address is randomized at each boot. This is a non-optional security requirement.
 
-User-space ASLR is enabled by default (`/proc/sys/kernel/randomize_va_space = 2`). All LunaOS processes run with full ASLR. This is configured in `/etc/luna/sysctl.toml`:
+User-space ASLR is enabled by default (`/proc/sys/kernel/randomize_va_space = 2`). All Mahina processes run with full ASLR. This is configured in `/etc/luna/sysctl.toml`:
 
 ```toml
 # /etc/luna/sysctl.toml
@@ -118,7 +118,7 @@ The default (not always-on) mode is chosen to avoid the memory waste and latency
 
 ### Swap Configuration
 
-LunaOS uses a two-tier swap strategy:
+Mahina uses a two-tier swap strategy:
 
 **Tier 1 — zswap (RAM-compressed swap cache):**
 - `CONFIG_ZSWAP=y`
@@ -344,7 +344,7 @@ Decision not yet finalized.
 
 ## AI Context
 
-An AI agent working on LunaOS memory systems must understand:
+An AI agent working on Mahina memory systems must understand:
 
 - **There are two memory systems.** System memory (RAM, swap, kernel) and LUNA.AI memory (`~/.luna/memory/`). They are unrelated. Do not confuse them.
 - `~/.luna/memory/` is owned by the user and readable only by `luna-ai-d`. No other process should open, read, or write files in this directory. This is enforced by both filesystem permissions and Core Law II.

@@ -1,4 +1,4 @@
-# LunaOS — Core Laws
+# Mahina — Core Laws
 **Volume I · Chapter 4**
 **Classification:** Foundation Document — Constitutional
 **Status:** Locked. Changes require full project review.
@@ -9,19 +9,19 @@
 
 These laws exist above all other documents. They are not goals or aspirations. They are hard constraints. A feature that violates a Core Law does not ship, regardless of how useful it seems, how much time was spent building it, or how many users request it.
 
-Every new contributor, every AI assistant working on this codebase, every future maintainer must read and acknowledge these laws before touching LunaOS code.
+Every new contributor, every AI assistant working on this codebase, every future maintainer must read and acknowledge these laws before touching Mahina code.
 
 ---
 
 ## Law I — Own Every Layer
 
 ```
-You must understand everything running on LunaOS, because you put it there.
+You must understand everything running on Mahina, because you put it there.
 ```
 
 ### What This Means
 
-No component ships in LunaOS without a clear answer to:
+No component ships in Mahina without a clear answer to:
 1. What does this do?
 2. Why is this the right choice over alternatives?
 3. Where does it touch the rest of the system?
@@ -32,7 +32,7 @@ No component ships in LunaOS without a clear answer to:
 - Every upstream dependency is recorded in `docs/dependencies.md` with justification
 - Every kernel config option is commented in `kernel/.config.notes`
 - No "it probably works" integrations — tested or not shipped
-- LunaOS never auto-updates without user command
+- Mahina never auto-updates without user command
 
 ### The Distro Exception
 
@@ -45,7 +45,7 @@ Using well-understood lower-level abstractions (like DRM/KMS) is fine — we und
 ## Law II — Local First, Cloud When Useful
 
 ```
-LunaOS must be fully functional with no internet connection.
+Mahina must be fully functional with no internet connection.
 Every cloud feature must be explicitly opt-in.
 ```
 
@@ -63,7 +63,7 @@ Every cloud feature must be explicitly opt-in.
 ### Privacy Sub-Law
 
 All user data is stored in `~/.luna/`. This directory:
-- Is never read by any LunaOS component except LUNA.AI daemon with user permission
+- Is never read by any Mahina component except LUNA.AI daemon with user permission
 - Is never transmitted anywhere except when user explicitly invokes `luna bridge --send`
 - Can be completely wiped with `luna memory --clear` — this command cannot be disabled
 - Can be inspected in full with `luna memory --audit` — human-readable log
@@ -161,7 +161,7 @@ This mode cannot be overridden by any other system component, scheduled task, or
 ## Law V — The User Owns the Machine
 
 ```
-LunaOS never performs irreversible actions without explicit confirmation.
+Mahina never performs irreversible actions without explicit confirmation.
 The user always has a way out.
 ```
 
@@ -171,7 +171,7 @@ The user always has a way out.
 - No automatic updates of any kind — `lpkg update` is always a manual command
 - `luna-init` service management requires explicit commands — services do not restart themselves without configuration
 - No telemetry of any kind, ever, under any circumstances
-- No analytics, no crash reports sent anywhere, no "improve LunaOS" data collection
+- No analytics, no crash reports sent anywhere, no "improve Mahina" data collection
 
 ### The Exit Promise
 
@@ -179,8 +179,8 @@ A user must always be able to:
 1. Turn off LUNA.AI completely
 2. Wipe all AI memory
 3. Disable any observation module individually
-4. Boot into a minimal session without any LunaOS userland components
-5. Remove LunaOS cleanly and leave a functioning base Linux system
+4. Boot into a minimal session without any Mahina userland components
+5. Remove Mahina cleanly and leave a functioning base Linux system
 
 These capabilities are not features. They are rights.
 
@@ -199,7 +199,7 @@ If it's not documented, it wasn't intentionally designed.
 - Every LUNA.AI behavior has a corresponding entry in `03_LUNA_AI/`
 - Every `lpkg` command is documented in `04_Userland_SDK/lpkg.md`
 - Every kernel config decision is noted in `01_Core_Architecture/kernel.md`
-- Every LunaOS service has a `luna-init` service file and a doc entry
+- Every Mahina service has a `luna-init` service file and a doc entry
 
 ### The AI Readability Standard
 
@@ -211,7 +211,7 @@ All documentation in this project must be usable as AI context. This means:
 - Explicit TODOs rather than silent gaps
 - Every major component has an architecture diagram (ASCII is fine)
 
-This standard exists because LUNA.AI, Claude Code, and future AI tools will read these docs to help build LunaOS. Bad docs produce bad AI assistance. Good docs produce good AI assistance.
+This standard exists because LUNA.AI, Claude Code, and future AI tools will read these docs to help build Mahina. Bad docs produce bad AI assistance. Good docs produce good AI assistance.
 
 ---
 

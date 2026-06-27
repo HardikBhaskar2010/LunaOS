@@ -1,15 +1,15 @@
-# LunaOS — Package Manager (lpkg)
+# Mahina — Package Manager (lpkg)
 **Volume V · Chapter 3**
 **Classification:** Core Architecture — Userland
-**Status:** Canonical · This document is the authoritative specification for lpkg, the LunaOS package manager
+**Status:** Canonical · This document is the authoritative specification for lpkg, the Mahina package manager
 
 ---
 
 ## Purpose
 
-This document specifies **lpkg** — the LunaOS package manager. lpkg is the system that installs, updates, removes, and manages software on LunaOS. It is custom-built (DL-003) because no existing package manager satisfies LunaOS's requirements for atomic transactions, Btrfs snapshot integration, per-user installation, and LUNA-integrated privilege escalation.
+This document specifies **lpkg** — the Mahina package manager. lpkg is the system that installs, updates, removes, and manages software on Mahina. It is custom-built (DL-003) because no existing package manager satisfies Mahina's requirements for atomic transactions, Btrfs snapshot integration, per-user installation, and LUNA-integrated privilege escalation.
 
-lpkg is not apt. It is not pacman. It is purpose-built for LunaOS's architecture and its values: the user owns the machine, installations are safe and reversible, and third-party software is verified but never blocked.
+lpkg is not apt. It is not pacman. It is purpose-built for Mahina's architecture and its values: the user owns the machine, installations are safe and reversible, and third-party software is verified but never blocked.
 
 ---
 
@@ -289,7 +289,7 @@ trusted  = true                  # user has explicitly trusted this repo
 ```
 Package signing requirement:
 
-  Official repo:    Signed with LunaOS project key (mandatory)
+  Official repo:    Signed with Mahina project key (mandatory)
   Community repo:   Signed with maintainer key (mandatory)
   Third-party repo: Signed with repo owner key (mandatory)
   
@@ -468,7 +468,7 @@ Decision not yet finalized.
 
 ## AI Context
 
-- lpkg is the **gatekeeper for what runs on LunaOS**. Every application that gets installed goes through lpkg. The verification system (signatures, hashes) is what prevents malicious software from being silently installed.
+- lpkg is the **gatekeeper for what runs on Mahina**. Every application that gets installed goes through lpkg. The verification system (signatures, hashes) is what prevents malicious software from being silently installed.
 - The Btrfs snapshot must be taken **before** any file operations. Never take the snapshot during or after the installation — it provides no safety value then.
 - Atomic transactions mean the installed.db and the filesystem are always in sync. If lpkg crashes mid-install, the next run must detect and roll back the incomplete transaction (check for transactions with no result in the transactions table).
 - The graphical privilege escalation (LUNA dialog) is the preferred path. The `sudo` fallback is for non-graphical sessions only. Do not make the sudo path the default — it bypasses the LUNA permission audit system.

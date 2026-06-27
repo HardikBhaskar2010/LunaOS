@@ -1,6 +1,6 @@
 # Architecture Review Session 4
 
-## Project: LunaOS
+## Project: Mahina
 
 ## Topic: Graphics, System Foundations & Stage 2 Architecture Decisions
 
@@ -16,9 +16,9 @@
 
 **Purpose**
 
-This Architecture Review resolves the remaining high-priority architectural questions blocking Stage 2 implementation of LunaOS. Decisions recorded here supersede recommendations made in previous documentation where applicable.
+This Architecture Review resolves the remaining high-priority architectural questions blocking Stage 2 implementation of Mahina. Decisions recorded here supersede recommendations made in previous documentation where applicable.
 
-All accepted decisions shall be converted into Decision Log entries (DL-025 onward) and become part of the LunaOS canonical architecture.
+All accepted decisions shall be converted into Decision Log entries (DL-025 onward) and become part of the Mahina canonical architecture.
 
 ---
 
@@ -86,7 +86,7 @@ Reasons:
 * Rollback capability
 * Future recovery system
 * Copy-on-write
-* Better long-term architecture for LunaOS
+* Better long-term architecture for Mahina
 
 Automatic snapshots shall occur before:
 
@@ -102,7 +102,7 @@ Automatic snapshots shall occur before:
 
 **Bitcount**
 
-Bitcount becomes the canonical LunaOS system font.
+Bitcount becomes the canonical Mahina system font.
 
 Usage policy:
 
@@ -114,7 +114,7 @@ Usage policy:
 * Branding
 * Major UI headings
 
-For dense reading, documentation, terminals, editors, and productivity applications, LunaOS may use condensed or optimized companion fonts selected for readability.
+For dense reading, documentation, terminals, editors, and productivity applications, Mahina may use condensed or optimized companion fonts selected for readability.
 
 The design goal is:
 
@@ -155,7 +155,7 @@ Constraint-based layouts may be introduced in Version 1.5 or later.
 
 Reasoning
 
-The majority of LunaOS applications can be implemented using a flexible box layout.
+The majority of Mahina applications can be implemented using a flexible box layout.
 
 This minimizes implementation complexity while leaving room for future expansion.
 
@@ -181,7 +181,7 @@ libinput
 
 Reasoning
 
-LunaOS is not intended to reimplement years of touchpad and input-device compatibility work.
+Mahina is not intended to reimplement years of touchpad and input-device compatibility work.
 
 libinput provides:
 
@@ -191,7 +191,7 @@ libinput provides:
 * Pointer acceleration
 * Tablet support
 
-while allowing LunaOS to focus engineering effort elsewhere.
+while allowing Mahina to focus engineering effort elsewhere.
 
 ---
 
@@ -308,7 +308,7 @@ Version 1 ships only:
 
 Reason
 
-Dark mode represents LunaOS's visual identity.
+Dark mode represents Mahina's visual identity.
 
 LUNA's expressions, Island behavior, motion language, and semantic colors are designed around dark environments.
 
@@ -324,7 +324,7 @@ AT-SPI2
 
 Reason
 
-LunaOS should support existing accessibility tooling rather than introducing unnecessary incompatibility.
+Mahina should support existing accessibility tooling rather than introducing unnecessary incompatibility.
 
 Accessibility is considered a first-class requirement.
 

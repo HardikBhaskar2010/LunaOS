@@ -1,4 +1,4 @@
-# LunaOS Documentation Session
+# Mahina Documentation Session
 
 Follow the uploaded SYSTEM_PROMPT.md exactly.
 
@@ -40,4 +40,4 @@ Assume the answer is always:
 
 "Continue."
 
-Your job is to complete the Divine Collection of Knowledge of LunaOS from beginning to end over multiple sessions.
+Your job is to complete the Divine Collection of Knowledge of Mahina from beginning to end over multiple sessions.

@@ -1,4 +1,4 @@
-# LunaOS — LUNA Runtime
+# Mahina — LUNA Runtime
 **Volume IV · Chapter 0**
 **Classification:** Core Architecture — AI System Entry Point
 **Status:** Canonical · This is the single document that explains what LUNA is, what process owns her, and how all her components relate

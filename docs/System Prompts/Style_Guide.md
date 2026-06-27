@@ -1,6 +1,6 @@
-# LunaOS Documentation Style Guide
+# Mahina Documentation Style Guide
 
-This document defines the writing standard for every document inside the Divine Collection of Knowledge of LunaOS (DCKL).
+This document defines the writing standard for every document inside the Divine Collection of Knowledge of Mahina (DCKL).
 
 ## Writing Philosophy
 

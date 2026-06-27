@@ -1,13 +1,13 @@
-# LunaOS — Updater
+# Mahina — Updater
 **Volume V · Chapter 7**
 **Classification:** Core Architecture — Userland
-**Status:** Canonical · Specifies the LunaOS rolling release update system
+**Status:** Canonical · Specifies the Mahina rolling release update system
 
 ---
 
 ## Purpose
 
-This document specifies **luna-update** — the LunaOS update daemon and the rolling release update pipeline. LunaOS uses a rolling release model (DL-001): there are no major version upgrades. The system updates continuously, delivering individual package updates as they are available.
+This document specifies **luna-update** — the Mahina update daemon and the rolling release update pipeline. Mahina uses a rolling release model (DL-001): there are no major version upgrades. The system updates continuously, delivering individual package updates as they are available.
 
 This document defines:
 - How updates are discovered
@@ -129,9 +129,9 @@ LUNA's template response:
 
 ## Rolling Release Safety Model
 
-### Why Rolling Is Safe in LunaOS
+### Why Rolling Is Safe in Mahina
 
-Rolling release on other distros can break systems because updates are applied without safeguards. LunaOS rolling release is safe because of:
+Rolling release on other distros can break systems because updates are applied without safeguards. Mahina rolling release is safe because of:
 
 ```
 Rolling release safety stack:
@@ -326,7 +326,7 @@ Decision not yet finalized.
 
 2. **Update staging.** The spec mentions a -testing repository for staged rollouts. The staging pipeline (how a package moves from testing to stable, what validation is done) must be documented in Volume VI/07 (Release Process).
 
-3. **Post-update app restart.** When luna-shell or luna-ai-d updates, the user needs to restart them. How does LunaOS notify and facilitate this? Session restart? Per-process restart? Must be specified.
+3. **Post-update app restart.** When luna-shell or luna-ai-d updates, the user needs to restart them. How does Mahina notify and facilitate this? Session restart? Per-process restart? Must be specified.
 
 4. **Snapshot pruning.** Pre-update snapshots from > 7 days ago are pruned. But if the user never reboots (long uptime), many snapshots accumulate. A maximum snapshot count (regardless of age) should also apply. Must be specified in lpkg.
 
@@ -340,7 +340,7 @@ Decision not yet finalized.
 - The Btrfs snapshot must be taken before EVERY update transaction, even small single-package updates. The snapshot is what guarantees safety. Never skip it for "small" updates.
 - LUNA communicates update availability — she does not apply updates autonomously. The user must confirm update application every time unless auto-apply is explicitly enabled. This is Core Law V.
 - Kernel updates require a reboot. This is non-negotiable. Never claim a kernel update is "applied" without a reboot. If a reboot is needed, LUNA's notification must make this clear.
-- The rolling release model means there is no "LunaOS 2.0 upgrade" that users dread. Updates are continuous and small. The safety model (Btrfs + atomic transactions + rollback) makes this viable.
+- The rolling release model means there is no "Mahina 2.0 upgrade" that users dread. Updates are continuous and small. The safety model (Btrfs + atomic transactions + rollback) makes this viable.
 
 ---
 

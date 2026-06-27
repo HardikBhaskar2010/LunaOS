@@ -1,4 +1,4 @@
-# LunaOS — IPC Architecture
+# Mahina — IPC Architecture
 **Volume II · Chapter 7**
 **Classification:** Core Architecture — Inter-Process Communication
 **Status:** Active · Reference for all service and component implementation
@@ -7,15 +7,15 @@
 
 ## Purpose
 
-This document specifies the inter-process communication (IPC) architecture of LunaOS. It defines which IPC mechanisms exist, which components use each mechanism, the protocol formats in use, and the rules governing when a new IPC channel may be introduced.
+This document specifies the inter-process communication (IPC) architecture of Mahina. It defines which IPC mechanisms exist, which components use each mechanism, the protocol formats in use, and the rules governing when a new IPC channel may be introduced.
 
-This document is the authoritative reference for any developer or AI coding agent connecting two LunaOS components together.
+This document is the authoritative reference for any developer or AI coding agent connecting two Mahina components together.
 
 ---
 
 ## Overview
 
-LunaOS uses multiple IPC mechanisms, each selected for a specific class of communication. No single IPC bus handles all communication. Each mechanism has a documented scope.
+Mahina uses multiple IPC mechanisms, each selected for a specific class of communication. No single IPC bus handles all communication. Each mechanism has a documented scope.
 
 | Mechanism | Scope | Format |
 |---|---|---|
@@ -34,11 +34,11 @@ LunaOS uses multiple IPC mechanisms, each selected for a specific class of commu
 
 ### Explicit Over Implicit
 
-Every IPC connection in LunaOS is documented here. If two components communicate through an undocumented channel, it is a violation of Core Law I (Own Every Layer) and Core Law VI (Documentation Is Code). No implicit file-watching side-channels, no polling of shared state through the filesystem except where explicitly documented.
+Every IPC connection in Mahina is documented here. If two components communicate through an undocumented channel, it is a violation of Core Law I (Own Every Layer) and Core Law VI (Documentation Is Code). No implicit file-watching side-channels, no polling of shared state through the filesystem except where explicitly documented.
 
 ### Localhost Isolation
 
-All HTTP-based IPC is bound to localhost only (`127.0.0.1`). No LunaOS service exposes an IPC endpoint on a network interface. The firewall default-blocks all LunaOS IPC ports from external interfaces (see `08_security.md`).
+All HTTP-based IPC is bound to localhost only (`127.0.0.1`). No Mahina service exposes an IPC endpoint on a network interface. The firewall default-blocks all Mahina IPC ports from external interfaces (see `08_security.md`).
 
 ### Minimal Trust
 
@@ -94,7 +94,7 @@ Components communicate only with the components they need to. `luna-ai-d` does n
 
 **Bus address:** `/run/dbus/system_bus_socket`
 
-**LunaOS D-Bus names:**
+**Mahina D-Bus names:**
 
 | Well-known name | Owner | Purpose |
 |---|---|---|
@@ -107,13 +107,13 @@ Components communicate only with the components they need to. `luna-ai-d` does n
 ```
 TODO:
 Decision not yet finalized.
-Reason: LunaOS D-Bus interface definitions (object paths, methods, signals, properties)
+Reason: Mahina D-Bus interface definitions (object paths, methods, signals, properties)
 have not been written. The well-known names above are directional.
 Full D-Bus interface XML specifications must be written before any D-Bus client
 implementation begins. These belong in Volume V / 04_apis.md.
 ```
 
-**Design rule:** D-Bus is for broadcast/pub-sub system events. For point-to-point request-response communication, use HTTP or Unix sockets instead. D-Bus is not a general-purpose RPC mechanism in LunaOS.
+**Design rule:** D-Bus is for broadcast/pub-sub system events. For point-to-point request-response communication, use HTTP or Unix sockets instead. D-Bus is not a general-purpose RPC mechanism in Mahina.
 
 ### 2. HTTP — luna-ai-d API (localhost:7734)
 
@@ -178,7 +178,7 @@ versioning strategy are all unspecified.
 
 **Port:** 11434 (Ollama default). Bound to `127.0.0.1` only.
 
-**Only `luna-ai-d` communicates with Ollama.** No shell component, no user application, and no other LunaOS service makes direct calls to the Ollama API.
+**Only `luna-ai-d` communicates with Ollama.** No shell component, no user application, and no other Mahina service makes direct calls to the Ollama API.
 
 **Endpoints used by luna-ai-d:**
 
@@ -221,15 +221,15 @@ Full protocol documented in `04_init_system.md`.
 
 ### 5. PipeWire Socket
 
-**Scope:** Audio and video routing for all LunaOS processes.
+**Scope:** Audio and video routing for all Mahina processes.
 
 **Socket path:** `$XDG_RUNTIME_DIR/pipewire-0` (typically `/run/user/1000/pipewire-0`)
 
-**Protocol:** PipeWire native protocol. Not documented here — see PipeWire upstream documentation. LunaOS does not modify the PipeWire protocol.
+**Protocol:** PipeWire native protocol. Not documented here — see PipeWire upstream documentation. Mahina does not modify the PipeWire protocol.
 
 **Used by:** Any application requiring audio I/O. luna-ai-d if voice output is enabled. luna-island if voice module is active.
 
-WirePlumber serves as the PipeWire session manager, handling routing policy. LunaOS does not write a custom session manager.
+WirePlumber serves as the PipeWire session manager, handling routing policy. Mahina does not write a custom session manager.
 
 ### 6. LGP Protocol — Compositor IPC
 
@@ -263,20 +263,20 @@ sharing mechanism are all TODO.
 
 ### Port Registry
 
-All localhost ports used by LunaOS services:
+All localhost ports used by Mahina services:
 
 | Port | Service | Protocol | External |
 |---|---|---|---|
 | 7734 | luna-ai-d | HTTP/1.1 JSON | ❌ localhost only |
 | 11434 | Ollama | HTTP/1.1 JSON | ❌ localhost only |
 
-No other LunaOS service opens a TCP or UDP port. All other IPC uses Unix domain sockets.
+No other Mahina service opens a TCP or UDP port. All other IPC uses Unix domain sockets.
 
 ### IPC Security Boundary
 
 The security model for localhost IPC is:
 
-- No LunaOS IPC port is reachable from external network interfaces. The firewall blocks all inbound connections to these ports from non-loopback interfaces.
+- No Mahina IPC port is reachable from external network interfaces. The firewall blocks all inbound connections to these ports from non-loopback interfaces.
 - Any process running on the local machine can connect to localhost:7734 and localhost:11434. This is an acknowledged trust boundary — see `08_security.md` for the security threat model.
 - Unix socket permissions enforce access control for luna-init-ctl.
 - D-Bus policy files (in `/etc/dbus-1/system.d/`) control which processes can own which well-known D-Bus names.
@@ -299,7 +299,7 @@ This rule implements Core Law I (Own Every Layer) and Core Law VI (Documentation
 | Improvement | Target | Notes |
 |---|---|---|
 | luna-ai-d API versioning | v1 | Add `Accept: application/vnd.lunaos.ai+json;version=1` header support |
-| D-Bus interface XML specifications | v1 | Full interface definitions for all LunaOS D-Bus names |
+| D-Bus interface XML specifications | v1 | Full interface definitions for all Mahina D-Bus names |
 | LGP protocol specification | v1 | Entire Volume III / 01_lgp.md |
 | luna-init-ctl privilege model | v1 | Decide per-command access control |
 | IPC monitoring tool | v1.5 | `luna-ipc-mon` — show all active IPC connections and message rates |
@@ -327,14 +327,14 @@ Decision not yet finalized.
 
 ## AI Context
 
-An AI agent implementing any LunaOS component that requires IPC must:
+An AI agent implementing any Mahina component that requires IPC must:
 
 1. Check this document first. If the required communication channel is already specified, use the documented mechanism and format. Do not invent a new channel.
 2. If a new channel is required, do not implement it until a Decision Log entry is written. Flag it as a TODO instead.
-3. Respect the isolation rules: no component other than `luna-ai-d` connects to Ollama. No component other than shell components connects to luna-ai-d. No LunaOS service opens external network ports.
+3. Respect the isolation rules: no component other than `luna-ai-d` connects to Ollama. No component other than shell components connects to luna-ai-d. No Mahina service opens external network ports.
 4. For LGP protocol: mark all compositor↔shell communication as TODO pending Volume III / 01_lgp.md. Do not invent a Wayland or X11 substitute.
 5. All HTTP APIs use JSON. All Unix socket APIs use newline-delimited JSON. No other wire format is used in v1.
-6. `luna-ai-d` listens on port 7734. Ollama listens on port 11434. These are the only two TCP ports in LunaOS. If implementing something that requires a new port, it requires a Decision Log entry.
+6. `luna-ai-d` listens on port 7734. Ollama listens on port 11434. These are the only two TCP ports in Mahina. If implementing something that requires a new port, it requires a Decision Log entry.
 
 ---
 

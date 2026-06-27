@@ -9,7 +9,7 @@
 
 Most operating systems have virtual assistants bolted on. Cortana, Siri, Google Assistant — they exist in a sidebar, in a search box, as an afterthought with a wake word.
 
-LUNA is different. She is not a feature of LunaOS. She *is* LunaOS's personality expressed through interface.
+LUNA is different. She is not a feature of Mahina. She *is* Mahina's personality expressed through interface.
 
 She is the reason the boot screen says `LUNA online.` instead of `System ready.` She is the reason the error indicator is her eyes shifting direction rather than a red triangle. She is why the dock has a name (Luna Island) instead of just being "the dock."
 

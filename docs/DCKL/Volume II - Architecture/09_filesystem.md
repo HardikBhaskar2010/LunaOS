@@ -1,4 +1,4 @@
-# LunaOS — Filesystem Architecture
+# Mahina — Filesystem Architecture
 **Volume II · Chapter 9**
 **Classification:** Core Architecture — Filesystem Layout
 **Status:** Active · Reference for installer and package manager implementation
@@ -7,19 +7,19 @@
 
 ## Purpose
 
-This document specifies the LunaOS filesystem architecture: the directory hierarchy, the purpose and ownership of each directory, filesystem types used, mount strategy, and the rules governing where LunaOS components may place files.
+This document specifies the Mahina filesystem architecture: the directory hierarchy, the purpose and ownership of each directory, filesystem types used, mount strategy, and the rules governing where Mahina components may place files.
 
 This document is the authoritative reference for:
 - The installer's partition and directory setup
 - `lpkg`'s file installation paths
-- Any LunaOS service that reads or writes to the filesystem
+- Any Mahina service that reads or writes to the filesystem
 - AI coding agents determining where to place new files
 
 ---
 
 ## Overview
 
-LunaOS follows a filesystem hierarchy that extends and specializes the Linux FHS (Filesystem Hierarchy Standard) with LunaOS-specific conventions in `/etc/luna/`, `/var/lib/luna*`, `~/.luna/`, and `/usr/lib/luna*`.
+Mahina follows a filesystem hierarchy that extends and specializes the Linux FHS (Filesystem Hierarchy Standard) with Mahina-specific conventions in `/etc/luna/`, `/var/lib/luna*`, `~/.luna/`, and `/usr/lib/luna*`.
 
 The hierarchy is intentional. Every directory exists because something needs it. No directory is created speculatively.
 
@@ -29,7 +29,7 @@ The hierarchy is intentional. Every directory exists because something needs it.
 
 **One location per concern.** A given type of file has exactly one canonical location. Configuration is in `/etc/luna/`. User AI data is in `~/.luna/`. Package-installed files are in `/usr/`. This rule prevents the pattern where a file could be in three different places depending on how it was installed.
 
-**Documentation before creation.** Per Core Law VI (Documentation Is Code) and Core Law I (Own Every Layer): a directory added by a LunaOS component must be documented here before the component places files in it. If this document does not list a directory, that directory should not exist in a clean LunaOS install.
+**Documentation before creation.** Per Core Law VI (Documentation Is Code) and Core Law I (Own Every Layer): a directory added by a Mahina component must be documented here before the component places files in it. If this document does not list a directory, that directory should not exist in a clean Mahina install.
 
 **Separation of user data and system data.** System configuration (how the OS behaves) lives in `/etc/luna/`. User preferences (how the AI layer adapts to this user) live in `~/.luna/`. These are never co-mingled. An OS update may overwrite `/etc/luna/` defaults; it must never touch `~/.luna/`.
 
@@ -65,7 +65,7 @@ The hierarchy is intentional. Every directory exists because something needs it.
 ├── tmp/                         # Temporary files (tmpfs — cleared on boot)
 │
 ├── etc/
-│   ├── luna/                    # LunaOS system configuration (TOML)
+│   ├── luna/                    # Mahina system configuration (TOML)
 │   │   ├── hostname             # System hostname (plain text)
 │   │   ├── fstab.toml           # Filesystem mount table
 │   │   ├── modules.conf         # Kernel modules to load at boot (TOML)
@@ -99,11 +99,11 @@ The hierarchy is intentional. Every directory exists because something needs it.
 │   ├── sbin/                    # System executables (root-intended)
 │   │   └── luna-init            # PID 1 (also placed in /sbin/ for initramfs)
 │   ├── lib/
-│   │   └── luna/                # LunaOS internal libraries and data
+│   │   └── luna/                # Mahina internal libraries and data
 │   │       ├── lgp/             # LGP compositor resources [TODO — Volume III]
 │   │       └── themes/          # Theme data [TODO — Volume III]
 │   └── share/
-│       └── luna/                # LunaOS shared data
+│       └── luna/                # Mahina shared data
 │           ├── man/             # Man pages for all luna commands
 │           └── licenses/        # License texts for bundled components
 │
@@ -193,7 +193,7 @@ Must be a Decision Log entry before installer work begins.
 
 ### Configuration File Policy
 
-All LunaOS system configuration files:
+All Mahina system configuration files:
 - Live in `/etc/luna/`
 - Use TOML format (DL-008)
 - Are never auto-generated and never overwritten by software updates without user consent
@@ -340,12 +340,12 @@ Decision not yet finalized.
 
 ## AI Context
 
-An AI agent creating files in LunaOS must:
+An AI agent creating files in Mahina must:
 
 1. Check this document first. If the file type is listed in the installation paths tables, use the documented path. Do not create files in undocumented locations.
 2. **Default installation is per-user (`~/.local/`)**, not system-wide. System-wide requires `--system` flag and privilege escalation (DL-017).
 3. Never write files to `~/.luna/` except from `luna-ai-d`. Never write files to `/etc/luna/` except from `luna-init` or `lpkg`.
-4. Respect TOML as the configuration format for all LunaOS config files. See DL-008.
+4. Respect TOML as the configuration format for all Mahina config files. See DL-008.
 5. Service files belong in `/etc/luna/services/` with `.toml` extension.
 6. AppArmor profiles belong in `/etc/apparmor.d/`.
 7. Executables installed system-wide by `lpkg --system` go to `/usr/bin/` (user-facing) or `/usr/sbin/` (root-intended). Not `/usr/local/`.

@@ -1,4 +1,4 @@
-# LunaOS — Luna Island
+# Mahina — Luna Island
 **Volume III · Chapter 7**
 **Classification:** Core Architecture — Graphics & Presence
 **Status:** Canonical · This document defines the Luna Island surface specification
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-Luna Island is the **physical location of LUNA's presence on screen**. It is the one graphical element on the LunaOS desktop that LUNA owns and inhabits. It is not a widget, not a notification banner, not a status icon. It is the rendered body of LUNA as a presence.
+Luna Island is the **physical location of LUNA's presence on screen**. It is the one graphical element on the Mahina desktop that LUNA owns and inhabits. It is not a widget, not a notification banner, not a status icon. It is the rendered body of LUNA as a presence.
 
 This document specifies:
 - What Luna Island is and what it renders

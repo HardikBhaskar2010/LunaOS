@@ -1,4 +1,4 @@
-# LunaOS — Scheduler
+# Mahina — Scheduler
 **Volume II · Chapter 5**
 **Classification:** Core Architecture — Process Scheduling
 **Status:** Active · Reference for kernel config and resource management
@@ -7,13 +7,13 @@
 
 ## Purpose
 
-This document describes the LunaOS process scheduling architecture: the kernel scheduler configuration, process priority assignments, cgroup v2 hierarchy, and the policy that ensures interactive workloads (the desktop shell, LGP compositor, LUNA.AI UI) remain responsive under CPU pressure from background tasks (AI inference, package builds, downloads).
+This document describes the Mahina process scheduling architecture: the kernel scheduler configuration, process priority assignments, cgroup v2 hierarchy, and the policy that ensures interactive workloads (the desktop shell, LGP compositor, LUNA.AI UI) remain responsive under CPU pressure from background tasks (AI inference, package builds, downloads).
 
 ---
 
 ## Overview
 
-LunaOS runs a diverse process mix. The LGP compositor must deliver consistent frame pacing. The shell must respond to input within human perception thresholds. `luna-ai-d` and Ollama perform inference computations that can saturate CPU cores for seconds at a time. `lpkg` builds can consume all available cores.
+Mahina runs a diverse process mix. The LGP compositor must deliver consistent frame pacing. The shell must respond to input within human perception thresholds. `luna-ai-d` and Ollama perform inference computations that can saturate CPU cores for seconds at a time. `lpkg` builds can consume all available cores.
 
 Without scheduling policy, a build job or inference run starves the compositor and the desktop stutters. The scheduler document defines the policy that prevents this.
 
@@ -21,7 +21,7 @@ Without scheduling policy, a build job or inference run starves the compositor a
 
 ## Design Philosophy
 
-Three principles govern scheduling decisions in LunaOS:
+Three principles govern scheduling decisions in Mahina:
 
 **1. Interactive processes are never starved.** The LGP compositor, luna-shell, luna-bar, luna-island, and luna-notif must receive CPU time within one frame budget (16ms at 60Hz, 11ms at 90Hz) even when the system is under maximum CPU load from background tasks.
 
@@ -49,11 +49,11 @@ PREEMPT_RT (real-time preemption) would provide lower worst-case latency for the
 
 ### Cgroup v2 Hierarchy
 
-LunaOS uses cgroup v2 to organize processes into resource-bounded slices. `luna-init` creates and manages this hierarchy at boot.
+Mahina uses cgroup v2 to organize processes into resource-bounded slices. `luna-init` creates and manages this hierarchy at boot.
 
 ```
 /sys/fs/cgroup/
-└── luna.slice                        (LunaOS top-level slice)
+└── luna.slice                        (Mahina top-level slice)
     │
     ├── luna-compositor.slice          (LGP compositor — highest priority)
     │     └── lgp-compositor.service
@@ -130,7 +130,7 @@ The quota can be raised without changing the slice architecture.
 
 ### Memory Limits
 
-cgroup v2 also provides memory limits. LunaOS sets soft limits (memory.high) that trigger memory pressure signals, and hard limits (memory.max) that OOM-kill processes within the slice.
+cgroup v2 also provides memory limits. Mahina sets soft limits (memory.high) that trigger memory pressure signals, and hard limits (memory.max) that OOM-kill processes within the slice.
 
 | Slice | memory.high (soft limit) | memory.max (hard limit) | Notes |
 |---|---|---|---|
@@ -156,7 +156,7 @@ Decision Log entry before luna-ai-d implementation.
 
 ### Process Priority (nice values)
 
-In addition to cgroup weights, individual processes within a cgroup may be assigned nice values. The LGP compositor is the only LunaOS process that uses a negative nice value:
+In addition to cgroup weights, individual processes within a cgroup may be assigned nice values. The LGP compositor is the only Mahina process that uses a negative nice value:
 
 | Process | nice value | Rationale |
 |---|---|---|
@@ -183,7 +183,7 @@ CPU scheduling is only part of the picture. Disk I/O must also be bounded to pre
 ```
 TODO:
 Decision not yet finalized.
-Reason: LunaOS I/O scheduling policy has not been specified.
+Reason: Mahina I/O scheduling policy has not been specified.
 Relevant options:
   - cgroup v2 io.weight controller (proportional I/O weight, same model as cpu.weight)
   - BFQ I/O scheduler (per-process I/O fairness, good for desktop use)
@@ -294,13 +294,13 @@ Decision not yet finalized.
 
 ## AI Context
 
-An AI agent implementing LunaOS scheduling must understand:
+An AI agent implementing Mahina scheduling must understand:
 
 - Cgroup v2 is the resource management mechanism. Cgroup v1 is not used.
 - `luna-init` creates the cgroup hierarchy and assigns each service to a slice at start time.
 - The `luna-ai.slice` at boot contains only the **Presence Engine** (lightweight, < 100 MB). The 200-weight and CPU quota take effect meaningfully only once Ollama starts (on first LLM demand).
 - **Ollama does NOT run at boot (DL-021).** Do not design scheduling policy around Ollama being present at desktop-ready time.
-- The LGP compositor runs at nice -10. This is the only LunaOS process with a negative nice value.
+- The LGP compositor runs at nice -10. This is the only Mahina process with a negative nice value.
 - Ollama runs at nice +10 when active. The Presence Engine runs at default (nice 0).
 - `lpkg` build jobs run at nice +15. They must never impact desktop responsiveness.
 - All scheduling policy values above are initial estimates pending validation on reference hardware.

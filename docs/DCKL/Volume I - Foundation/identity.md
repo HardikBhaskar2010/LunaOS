@@ -1,13 +1,13 @@
-# LunaOS — Identity
+# Mahina — Identity
 **Volume I · Chapter 3**
 **Classification:** Foundation Document — Branding & Character
 **Status:** Canonical
 
 ---
 
-## What Is LunaOS
+## What Is Mahina
 
-LunaOS is a ground-up Linux-based operating system — custom kernel configuration, custom init system (`luna-init`), custom package manager (`lpkg`) — layered with a local-first AI presence named LUNA and a dark cyberpunk anime aesthetic that makes the machine feel alive.
+Mahina is a ground-up Linux-based operating system — custom kernel configuration, custom init system (`luna-init`), custom package manager (`lpkg`) — layered with a local-first AI presence named LUNA and a dark cyberpunk anime aesthetic that makes the machine feel alive.
 
 **Codename:** LUNA
 **Version nomenclature:** Moon phase names (Waxing → Full → Waning)
@@ -43,7 +43,7 @@ Not copied. Inspired.
 
 **From Cyberpunk Edgerunners:** The emotional rawness. Lucy's neon-lit desperation. David's stubbornness against a world that doesn't care. The pink-and-cyan palette that bleeds into the dark. The sense that beauty and danger occupy the same moment.
 
-LunaOS lives in this intersection. Dark backgrounds that feel like night. Accent colors that feel electric. Motion that feels intentional. A digital presence that feels like she has somewhere to be.
+Mahina lives in this intersection. Dark backgrounds that feel like night. Accent colors that feel electric. Motion that feels intentional. A digital presence that feels like she has somewhere to be.
 
 ### What This Means Visually
 
@@ -58,7 +58,7 @@ Typography philosophy:  Angular precision, not decorative flourish
 
 ## The LUNA Character
 
-LUNA is the AI layer of LunaOS. She is not a mascot. She is not a chatbot skin. She is the digital presence of the operating system.
+LUNA is the AI layer of Mahina. She is not a mascot. She is not a chatbot skin. She is the digital presence of the operating system.
 
 ### Personality Summary
 
@@ -127,20 +127,20 @@ Implementation: LGP LUNA_ISLAND protocol.
 ## Version Identity
 
 ```
-LunaOS Waxing Crescent  — 0.1.x    First boot in a VM. Shell alive.
-LunaOS First Quarter    — 0.2.x    Package manager works. Init system stable.
-LunaOS Waxing Gibbous   — 0.3.x    Desktop running. LUNA.AI daemon online.
-LunaOS Full Moon        — 1.0.0    Installable. Polished. Public release.
-LunaOS Waning Gibbous   — 1.1.x    Post-release refinement.
-LunaOS Last Quarter     — 1.5.x    Major feature cycle.
-LunaOS New Moon         — 2.0.0    Next generation — musl, custom compositor.
+Mahina Waxing Crescent  — 0.1.x    First boot in a VM. Shell alive.
+Mahina First Quarter    — 0.2.x    Package manager works. Init system stable.
+Mahina Waxing Gibbous   — 0.3.x    Desktop running. LUNA.AI daemon online.
+Mahina Full Moon        — 1.0.0    Installable. Polished. Public release.
+Mahina Waning Gibbous   — 1.1.x    Post-release refinement.
+Mahina Last Quarter     — 1.5.x    Major feature cycle.
+Mahina New Moon         — 2.0.0    Next generation — musl, custom compositor.
 ```
 
 ---
 
 ## Brand Voice
 
-When LunaOS communicates — in documentation, notifications, boot messages, or LUNA's dialogue — the voice follows these rules:
+When Mahina communicates — in documentation, notifications, boot messages, or LUNA's dialogue — the voice follows these rules:
 
 - **Direct.** Never verbose. Say what needs to be said.
 - **Precise.** Technical terms are fine. Jargon is fine. Ambiguity is not.
@@ -151,7 +151,7 @@ When LunaOS communicates — in documentation, notifications, boot messages, or 
 ### Canonical Boot Sequence Messages
 
 ```
-[kernel]       Booting LunaOS Waxing 0.1.0
+[kernel]       Booting Mahina Waxing 0.1.0
 [luna-init]    Stage 0: Kernel handed off — PID 1 alive
 [luna-init]    Stage 1: Filesystems mounted
 [luna-init]    Stage 2: Early hooks complete
@@ -165,7 +165,7 @@ These messages are real. They appear during boot. They are part of the product.
 
 ---
 
-## What LunaOS Is Not, Identity Edition
+## What Mahina Is Not, Identity Edition
 
 - Not an Arch reskin with anime wallpapers
 - Not a "feminine" OS — LUNA is not a gendered stereotype, she's a presence

@@ -2,9 +2,9 @@
 
 ## Purpose
 
-This document defines the official documentation workflow used to build and maintain **The Divine Collection of Knowledge of LunaOS (DCKL)**.
+This document defines the official documentation workflow used to build and maintain **The Divine Collection of Knowledge of Mahina (DCKL)**.
 
-Its purpose is to ensure documentation remains consistent, scalable, AI-friendly, and architecture-driven throughout the lifetime of the LunaOS project.
+Its purpose is to ensure documentation remains consistent, scalable, AI-friendly, and architecture-driven throughout the lifetime of the Mahina project.
 
 This workflow is mandatory for every documentation session.
 
@@ -18,7 +18,7 @@ Documentation is not generated after implementation.
 
 Documentation is part of the engineering process.
 
-Within LunaOS, documentation precedes implementation.
+Within Mahina, documentation precedes implementation.
 
 Architecture is documented before code is written.
 
@@ -117,7 +117,7 @@ AI documents architecture.
 
 # Documentation Department
 
-Claude operates as the LunaOS Documentation Department.
+Claude operates as the Mahina Documentation Department.
 
 Claude is not expected to brainstorm new architecture.
 
@@ -172,7 +172,7 @@ Reducing unnecessary context improves generation quality and conserves context w
 
 # Canonical Documents
 
-Canonical documents define LunaOS.
+Canonical documents define Mahina.
 
 They are immutable.
 
@@ -386,15 +386,15 @@ Additional documents should include:
 * Canonical Conflict Detection
 * Cross Reference Validation
 
-The long-term objective is for any future developer or AI coding agent to understand LunaOS completely by reading DCKL before writing code.
+The long-term objective is for any future developer or AI coding agent to understand Mahina completely by reading DCKL before writing code.
 
 ---
 
 # Final Principle
 
-The Divine Collection of Knowledge of LunaOS is not simply documentation.
+The Divine Collection of Knowledge of Mahina is not simply documentation.
 
-It is the engineering constitution of LunaOS.
+It is the engineering constitution of Mahina.
 
 The documentation defines the architecture.
 

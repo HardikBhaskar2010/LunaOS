@@ -1,4 +1,4 @@
-# LunaOS — Benchmarks & Performance Targets
+# Mahina — Benchmarks & Performance Targets
 **Volume VI · Chapter 04**
 **Classification:** Development Bible — Metrics
 **Status:** Canonical
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document defines the quantitative performance targets for LunaOS. 
+This document defines the quantitative performance targets for Mahina. 
 
 If a subsystem fails to meet these benchmarks on reference hardware, it is considered a bug and blocks the release.
 

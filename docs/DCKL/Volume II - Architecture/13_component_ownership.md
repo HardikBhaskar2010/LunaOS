@@ -1,4 +1,4 @@
-# LunaOS — Component Ownership Matrix
+# Mahina — Component Ownership Matrix
 **Volume II · Chapter 13**
 **Classification:** Core Architecture — Ownership Authority
 **Status:** Canonical · If ownership is unclear, this document decides it
@@ -77,7 +77,7 @@ Reader Rule:    Any component may read public state without
 
 **Owner: luna-shell**
 
-The clipboard is a shared memory region that one application writes to and another reads from. On LunaOS, the compositor (via luna-shell's request) holds the authoritative clipboard content.
+The clipboard is a shared memory region that one application writes to and another reads from. On Mahina, the compositor (via luna-shell's request) holds the authoritative clipboard content.
 
 ```
 State machine:
@@ -211,7 +211,7 @@ Session state machine:
 
 The accessibility tree is maintained by LunaGUI inside each application process. There is no separate accessibility daemon in v1.
 
-Per **DL-040**, LunaOS exposes accessibility information via **AT-SPI2**. v1 implements full keyboard navigation in all LunaGUI widgets. v1.5 targets an AT-SPI2 D-Bus bridge allowing external screen readers to interrogate the widget tree.
+Per **DL-040**, Mahina exposes accessibility information via **AT-SPI2**. v1 implements full keyboard navigation in all LunaGUI widgets. v1.5 targets an AT-SPI2 D-Bus bridge allowing external screen readers to interrogate the widget tree.
 
 ---
 

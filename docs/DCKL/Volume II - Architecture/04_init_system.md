@@ -1,4 +1,4 @@
-# LunaOS — Init System
+# Mahina — Init System
 **Volume II · Chapter 4**
 **Classification:** Core Architecture — System Initialization
 **Status:** Active · Reference for luna-init implementation
@@ -7,11 +7,11 @@
 
 ## Purpose
 
-This document specifies `luna-init` — the LunaOS PID 1 init system. It defines the service model, service file format, supervision behavior, shutdown sequencing, and the interface available to system administrators and AI coding agents.
+This document specifies `luna-init` — the Mahina PID 1 init system. It defines the service model, service file format, supervision behavior, shutdown sequencing, and the interface available to system administrators and AI coding agents.
 
 This document is the authoritative reference for:
 - Implementing `luna-init` in C
-- Writing service files for LunaOS components
+- Writing service files for Mahina components
 - Understanding how services are started, supervised, and stopped
 - Debugging service failures at the init level
 
@@ -45,7 +45,7 @@ Per Decision Log DL-002 and Core Law I (Own Every Layer): `luna-init` is written
 | runit | Excellent, but still someone else's init |
 | s6 | Excellent supervision model, but we'd be configuring a tool we didn't write |
 
-Writing `luna-init` means LunaOS owns PID 1 completely. Every behavior is documented here. Every bug is ours. This is the explicit tradeoff of Law I.
+Writing `luna-init` means Mahina owns PID 1 completely. Every behavior is documented here. Every bug is ours. This is the explicit tradeoff of Law I.
 
 ### Minimal PID 1 Scope
 
@@ -139,7 +139,7 @@ Service files are TOML documents stored in `/etc/luna/services/`. Each file desc
 # Required fields
 name        = "example"                    # Canonical service name. Must be unique.
 binary      = "/usr/bin/example"           # Absolute path to executable.
-description = "Example LunaOS service"    # One-line human description.
+description = "Example Mahina service"    # One-line human description.
 
 # Optional: arguments passed to the binary
 args = ["--config", "/etc/luna/example.toml"]
@@ -486,7 +486,7 @@ Decision not yet finalized.
 
 2. **LGP compositor service file name.** The compositor process name is not yet decided (referred to as `lgp-compositor` as a placeholder). Once Volume III / 01_lgp.md names the compositor binary, a service file must be written and added to the reference set.
 
-3. **Privilege separation model.** Which services run as root vs. the `luna` user vs. dedicated per-service users? The reference service files above use `user = "luna"` for `ollama` and `luna-ai-d`. A complete privilege matrix for all LunaOS services is needed before v1.
+3. **Privilege separation model.** Which services run as root vs. the `luna` user vs. dedicated per-service users? The reference service files above use `user = "luna"` for `ollama` and `luna-ai-d`. A complete privilege matrix for all Mahina services is needed before v1.
 
 4. **Emergency shell binary.** The binary dropped to on Stage 1/2 failure has not been decided. Must be statically linked and fit in the initramfs. See `02_boot_flow.md` Open Question 4.
 

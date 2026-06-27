@@ -1,4 +1,4 @@
-# LunaOS — AI Coding Guidelines
+# Mahina — AI Coding Guidelines
 **Volume VI · Chapter 02**
 **Classification:** Development Bible — Process Standards
 **Status:** Canonical
@@ -7,15 +7,15 @@
 
 ## Purpose
 
-This document defines the rules for AI coding agents (Claude Code, Codex, GitHub Copilot) operating within the LunaOS repository. 
+This document defines the rules for AI coding agents (Claude Code, Codex, GitHub Copilot) operating within the Mahina repository. 
 
-AI agents are powerful contributors, but they require strict architectural constraints to prevent drift, maintain the "documentation is code" philosophy, and preserve the vision of LunaOS.
+AI agents are powerful contributors, but they require strict architectural constraints to prevent drift, maintain the "documentation is code" philosophy, and preserve the vision of Mahina.
 
 ---
 
 ## The Prime Directive
 
-An AI coding agent operating in the LunaOS repository must **never invent architecture**.
+An AI coding agent operating in the Mahina repository must **never invent architecture**.
 
 If a feature requires a structural decision (e.g., choosing a protocol, selecting an IPC mechanism, defining a new layer, allocating a new cgroup), the AI must:
 1. Stop coding.

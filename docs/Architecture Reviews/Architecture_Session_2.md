@@ -6,7 +6,7 @@
 
 ### Decision
 
-LunaOS will adopt a **hybrid graphics architecture**.
+Mahina will adopt a **hybrid graphics architecture**.
 
 Applications will normally communicate through the LunaGUI toolkit while advanced applications may communicate directly with the Luna Graphics Protocol (LGP) where appropriate.
 
@@ -40,7 +40,7 @@ Filesystem implementation (Ext4 vs. Btrfs) remains under evaluation.
 
 **Status:** Approved
 
-LunaOS will initially follow the standard Linux UEFI partition layout.
+Mahina will initially follow the standard Linux UEFI partition layout.
 
 This preserves compatibility with existing firmware, installers, dual-boot environments, and recovery tooling.
 
@@ -79,7 +79,7 @@ The existing resolver provides stability while allowing future innovation.
 
 **Status:** Approved
 
-LunaOS will initially rely on the existing Linux time synchronization service.
+Mahina will initially rely on the existing Linux time synchronization service.
 
 Time synchronization is not considered a differentiating subsystem for Version 1 and therefore should prioritize reliability over reinvention.
 
@@ -123,7 +123,7 @@ Reliability takes precedence over partial installation.
 
 **Status:** Approved
 
-LunaOS will support:
+Mahina will support:
 
 * Official repositories
 * Community repositories
@@ -131,7 +131,7 @@ LunaOS will support:
 
 Creativity should not be artificially restricted.
 
-Instead of blocking software sources, LunaOS will provide:
+Instead of blocking software sources, Mahina will provide:
 
 * Signature verification
 * Reputation indicators
@@ -216,7 +216,7 @@ Long-term memory must remain entirely under user control.
 
 ---
 
-## DL-018 — LunaOS Success Criteria
+## DL-018 — Mahina Success Criteria
 
 **Status:** Canonical
 
@@ -227,4 +227,4 @@ Version 1.0 succeeds when:
 
 Neither goal may come at the expense of the other.
 
-Performance and Presence are equal pillars of LunaOS.
+Performance and Presence are equal pillars of Mahina.

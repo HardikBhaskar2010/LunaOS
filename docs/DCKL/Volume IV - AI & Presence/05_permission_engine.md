@@ -1,4 +1,4 @@
-# LunaOS — Permission Engine
+# Mahina — Permission Engine
 **Volume IV · Chapter 5**
 **Classification:** Core Architecture — AI & Presence
 **Status:** Canonical · Governs every capability LUNA requests from the user

@@ -1,4 +1,4 @@
-# LunaOS Documentation Maintenance Sprint — Final Report
+# Mahina Documentation Maintenance Sprint — Final Report
 **Date:** 2026-06-27
 **Sprint Goal:** Stage 0 Readiness — Resolve architectural drift and sync documentation with accepted decisions before implementation begins.
 
@@ -16,7 +16,7 @@ Volume VI (Development Bible) has been bootstrapped, providing the missing engin
 ## 2. Work Completed
 
 ### Phase 1: Critical Cleanup
-- **Purged Wayland/Hyprland references** from all Foundation documents. LunaOS uses the custom LGP compositor exclusively.
+- **Purged Wayland/Hyprland references** from all Foundation documents. Mahina uses the custom LGP compositor exclusively.
 - **Fixed DL numbering collision** in `10_decision_status_standard.md` (syncing with `decision_log.md`).
 
 ### Phase 2: Decision Propagation (AR-004)
@@ -50,7 +50,7 @@ While Stage 1 and Stage 2 are fully unblocked, the following decisions remain un
 
 ### 2. Package Manager Security (Volume V)
 - **Signing Algorithm:** The `lpkg` package signing mechanism (GPG vs ed25519) needs a firm DL entry.
-- **Hash Verification Source:** If models are downloaded via Ollama, LunaOS needs a secure way to verify the model hash to prevent tampering.
+- **Hash Verification Source:** If models are downloaded via Ollama, Mahina needs a secure way to verify the model hash to prevent tampering.
 
 ### 3. Installer Workflow (Volume V)
 - `06_installer.md` needs to be updated to integrate the Btrfs partition setup (DL-027) and the `observe.toml` privacy configuration step (DL-022) into the user flow.

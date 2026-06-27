@@ -1,4 +1,4 @@
-# LunaOS — Logging Architecture
+# Mahina — Logging Architecture
 **Volume II · Chapter 11**
 **Classification:** Core Architecture — Observability
 **Status:** Active · Reference for all component logging implementation
@@ -7,10 +7,10 @@
 
 ## Purpose
 
-This document specifies the LunaOS logging architecture: the logging strategy, log file locations, log formats, log levels, log rotation policy, and the rules governing which components log where and what they must log.
+This document specifies the Mahina logging architecture: the logging strategy, log file locations, log formats, log levels, log rotation policy, and the rules governing which components log where and what they must log.
 
 This document is the authoritative reference for:
-- Implementing logging in any LunaOS component
+- Implementing logging in any Mahina component
 - Diagnosing boot failures and service crashes
 - Building log analysis tools (`luna-bootprof`, future log viewer)
 - Understanding what is and is not recorded by the system
@@ -19,7 +19,7 @@ This document is the authoritative reference for:
 
 ## Overview
 
-LunaOS uses a **decentralized file-based logging model**. There is no centralized log daemon (no journald, no syslog-ng, no rsyslog). Each component writes its own log files to defined locations in `/var/log/luna*/` (system components) or `~/.luna/logs/` (user-visible AI logs).
+Mahina uses a **decentralized file-based logging model**. There is no centralized log daemon (no journald, no syslog-ng, no rsyslog). Each component writes its own log files to defined locations in `/var/log/luna*/` (system components) or `~/.luna/logs/` (user-visible AI logs).
 
 This design is consistent with Core Law I (Own Every Layer) — a central logging daemon is an upstream tool we would not fully control. File-based logs are simple, inspectable with any text tool, and have no hidden behavior.
 
@@ -27,13 +27,13 @@ This design is consistent with Core Law I (Own Every Layer) — a central loggin
 
 ## Design Philosophy
 
-**No centralized log daemon.** LunaOS does not run journald, syslog-ng, or rsyslog. Each component writes its own logs. The log format is standardized so that any LunaOS log file can be parsed by the same tools.
+**No centralized log daemon.** Mahina does not run journald, syslog-ng, or rsyslog. Each component writes its own logs. The log format is standardized so that any Mahina log file can be parsed by the same tools.
 
-**Logs are for operators, not metrics.** LunaOS logs record events relevant to debugging and diagnostics. They do not record usage metrics, behavioral analytics, or any data that could be used to profile the user. Logging is governed by Core Law V — the user owns everything on the machine, including the logs.
+**Logs are for operators, not metrics.** Mahina logs record events relevant to debugging and diagnostics. They do not record usage metrics, behavioral analytics, or any data that could be used to profile the user. Logging is governed by Core Law V — the user owns everything on the machine, including the logs.
 
 **User-facing AI logs are human-readable.** `~/.luna/logs/luna-ai-d.log` is a log the user may want to inspect to understand what LUNA.AI is doing. It uses plain English descriptions, not opaque codes. System logs may use more technical formats.
 
-**Log files are never transmitted.** No LunaOS service reads log files and sends them to a remote server. Crash logs, error logs, and boot logs stay on the machine. The user may share them manually if desired.
+**Log files are never transmitted.** No Mahina service reads log files and sends them to a remote server. Crash logs, error logs, and boot logs stay on the machine. The user may share them manually if desired.
 
 ---
 
@@ -58,7 +58,7 @@ This design is consistent with Core Law I (Own Every Layer) — a central loggin
 
 ### Log Format
 
-All LunaOS log files use a consistent structured format:
+All Mahina log files use a consistent structured format:
 
 ```
 [YYYY-MM-DDTHH:MM:SS.mmmZ] [LEVEL] [COMPONENT] message
@@ -117,13 +117,13 @@ DEBUG and TRACE logs are only emitted when a component is started with a `--log-
 
 ### Component Logging Requirements
 
-Every LunaOS component must log the following events at the specified level:
+Every Mahina component must log the following events at the specified level:
 
 **luna-init:**
 
 | Event | Level |
 |---|---|
-| PID 1 start — LunaOS version | INFO |
+| PID 1 start — Mahina version | INFO |
 | Each boot stage start and completion | INFO |
 | Each service start attempt | INFO |
 | Each service ready confirmation | INFO |
@@ -175,7 +175,7 @@ The user log is a filtered, human-readable view of AI behavior. It does not cont
 
 ### Log Rotation
 
-Log files are rotated by a LunaOS-provided utility (`luna-logrotate`, or by leveraging `logrotate` as an upstream tool):
+Log files are rotated by a Mahina-provided utility (`luna-logrotate`, or by leveraging `logrotate` as an upstream tool):
 
 ```
 TODO:
@@ -296,9 +296,9 @@ Decision not yet finalized.
 
 ## AI Context
 
-An AI agent implementing any LunaOS component must understand:
+An AI agent implementing any Mahina component must understand:
 
-- There is no centralized logging daemon. Each component writes its own log file. Do not write logs to syslog or journald — neither exists on LunaOS.
+- There is no centralized logging daemon. Each component writes its own log file. Do not write logs to syslog or journald — neither exists on Mahina.
 - All log files use the format: `[ISO8601_TIMESTAMP] [LEVEL] [COMPONENT] message`. Boot log uses `[MS_FROM_START] [STAGE] [COMPONENT] [LEVEL] message`.
 - Log file paths are defined in this document. Do not write logs to undocumented paths.
 - Default log level for most components is `WARN`. INFO and DEBUG must be explicitly requested. Verbose logging is never the default in production.

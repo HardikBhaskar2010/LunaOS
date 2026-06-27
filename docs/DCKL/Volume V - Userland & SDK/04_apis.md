@@ -1,22 +1,22 @@
-# LunaOS — Public APIs
+# Mahina — Public APIs
 **Volume V · Chapter 4**
 **Classification:** Core Architecture — Userland
-**Status:** Canonical · This document is the authoritative reference for all public LunaOS API surfaces
+**Status:** Canonical · This document is the authoritative reference for all public Mahina API surfaces
 
 ---
 
 ## Purpose
 
-This document defines every **public API** that LunaOS exposes to application developers. An API is "public" if it is designed to be used by third-party applications. Internal-only APIs (e.g., luna-ai-d's internal component interfaces) are not documented here.
+This document defines every **public API** that Mahina exposes to application developers. An API is "public" if it is designed to be used by third-party applications. Internal-only APIs (e.g., luna-ai-d's internal component interfaces) are not documented here.
 
-This document answers: "As an application developer, what can I call to interact with LunaOS?"
+This document answers: "As an application developer, what can I call to interact with Mahina?"
 
 ---
 
 ## Overview
 
 ```
-LunaOS public API surface — three layers:
+Mahina public API surface — three layers:
 
   LAYER 1: LGP Protocol (graphics, input, display)
     ← C API wrapping the LGP socket protocol
@@ -24,13 +24,13 @@ LunaOS public API surface — three layers:
     ← Required for: creating windows, receiving input
 
   LAYER 2: D-Bus APIs (system services)
-    ← Standard D-Bus interfaces to LunaOS system services
+    ← Standard D-Bus interfaces to Mahina system services
     ← Used by: applications that need system integration
     ← Optional: apps work without using D-Bus at all
 
   LAYER 3: LUNA SDK (high-level C/Python library)
     ← Wraps LGP + D-Bus in a developer-friendly API
-    ← Used by: most third-party LunaOS applications
+    ← Used by: most third-party Mahina applications
     ← Volume V/08 specifies the full SDK
 ```
 
@@ -350,7 +350,7 @@ Current versions (v1):
 ## API Stability Promise
 
 ```
-API stability contract for LunaOS v1.x:
+API stability contract for Mahina v1.x:
 
   STABLE (breaking changes require major version bump):
     - All method signatures in Layer 2 D-Bus APIs
@@ -390,13 +390,13 @@ Decision not yet finalized.
 
 1. **LGP C API formalization.** The LGP protocol is specified in Volume III/01, but the C header API (lgp.h) has not been written. The API signatures in this document are drafts. The actual header file must be the canonical source.
 
-2. **Accessibility API.** AT-SPI2 (DL-040) provides an accessibility bridge. The D-Bus interface for AT-SPI2 is a standard — but the LunaOS-specific extensions (if any) must be specified.
+2. **Accessibility API.** AT-SPI2 (DL-040) provides an accessibility bridge. The D-Bus interface for AT-SPI2 is a standard — but the Mahina-specific extensions (if any) must be specified.
 
 3. **IPC for non-D-Bus apps.** Some applications (games, legacy software) may not use D-Bus. Is there a simpler IPC mechanism (Unix socket, shared memory) for low-overhead notifications? Must be specified.
 
 4. **API authentication.** D-Bus methods like `Shell.Shutdown()` must require authentication. Who is allowed to call these? Currently: any process running as the logged-in user. Should there be capability-based access control on D-Bus method calls? Must be a Decision Log entry.
 
-5. **WebSocket bridge for web apps.** Should LunaOS provide a WebSocket bridge that web applications (running in the browser) can use to access D-Bus APIs? This would enable browser-based apps to integrate with LUNA's presence system. Must be a Decision Log entry.
+5. **WebSocket bridge for web apps.** Should Mahina provide a WebSocket bridge that web applications (running in the browser) can use to access D-Bus APIs? This would enable browser-based apps to integrate with LUNA's presence system. Must be a Decision Log entry.
 
 ---
 
@@ -404,7 +404,7 @@ Decision not yet finalized.
 
 - The three-layer API model (LGP, D-Bus, SDK) is intentional. Applications don't have to use all three. A game uses only LGP. A settings panel uses D-Bus only (via SDK). A full application uses all three.
 - The `org.lunaos.context` API is experimental — it allows apps to publish context to LUNA but the exact fields and behavior may change. Do not build critical features on top of it in v1.
-- The Notification API is freedesktop-compatible. This means existing Linux applications that use libnotify will work on LunaOS without modification — they send to `org.freedesktop.Notifications` and luna-notif implements that interface.
+- The Notification API is freedesktop-compatible. This means existing Linux applications that use libnotify will work on Mahina without modification — they send to `org.freedesktop.Notifications` and luna-notif implements that interface.
 - `Shell.CloseWindow()` sends a close request to the window — it does not force-kill the application. The application must handle the `LGP_EVENT_SURFACE_CLOSE` event and clean up gracefully. Force-kill is only available to the shell itself, not to third-party callers.
 - All API signatures in this document are drafts until the C headers and D-Bus introspection files are generated and published. When implementation begins, the headers become canonical.
 

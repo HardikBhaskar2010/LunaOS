@@ -1,19 +1,19 @@
-# LunaOS — Core Applications
+# Mahina — Core Applications
 **Volume V · Chapter 5**
 **Classification:** Core Architecture — Userland
-**Status:** Canonical · Defines the minimum set of applications shipped with LunaOS v1
+**Status:** Canonical · Defines the minimum set of applications shipped with Mahina v1
 
 ---
 
 ## Purpose
 
-This document defines the **core application set** — every application that ships with LunaOS as part of the base install. These are the applications users expect to find when they first boot into a LunaOS desktop.
+This document defines the **core application set** — every application that ships with Mahina as part of the base install. These are the applications users expect to find when they first boot into a Mahina desktop.
 
 Core applications are:
-- Maintained by the LunaOS project (not third-party)
+- Maintained by the Mahina project (not third-party)
 - Built using LunaGUI (consistent visual language)
 - Integrated with LUNA's presence system
-- Shipped in every LunaOS ISO
+- Shipped in every Mahina ISO
 
 ---
 
@@ -99,10 +99,10 @@ Toast display rules:
   Max simultaneous toasts: 5 (oldest dismissed to make room)
 ```
 
-### Notification Hints (LunaOS-specific)
+### Notification Hints (Mahina-specific)
 
 ```
-LunaOS-specific hints in the notification `hints` dict:
+Mahina-specific hints in the notification `hints` dict:
 
   "luna-category":   string — semantic category for LUNA context
                      Values: "build", "git", "system", "app", "message"
@@ -119,7 +119,7 @@ LunaOS-specific hints in the notification `hints` dict:
 
 ### Role
 
-luna-files is the LunaOS graphical file manager. It is the default handler for `inode/directory` MIME type.
+luna-files is the Mahina graphical file manager. It is the default handler for `inode/directory` MIME type.
 
 ### Layout
 
@@ -174,7 +174,7 @@ luna-files publishes to org.lunaos.context.Files:
 
 ### Role
 
-luna-settings is the unified settings application for LunaOS. It is the graphical interface for configuring the system.
+luna-settings is the unified settings application for Mahina. It is the graphical interface for configuring the system.
 
 ### Settings Sections (v1)
 
@@ -229,7 +229,7 @@ luna-settings navigation:
     └── Update settings
 
   ● About
-    ├── LunaOS version
+    ├── Mahina version
     ├── System information
     └── Hardware details
 ```
@@ -345,7 +345,7 @@ All core applications must have a complete `luna.toml` manifest:
 [package]
 name        = "luna-files"
 version     = "1.0.0"
-description = "LunaOS file manager"
+description = "Mahina file manager"
 license     = "MIT"
 
 [package.app]
@@ -368,7 +368,7 @@ TODO:
 Decision not yet finalized.
 ```
 
-1. **Browser.** LunaOS v1 does not ship a browser. Firefox is the recommended third-party browser (installable via lpkg). Should LunaOS ship a minimal browser as a core app? Must be a Decision Log entry.
+1. **Browser.** Mahina v1 does not ship a browser. Firefox is the recommended third-party browser (installable via lpkg). Should Mahina ship a minimal browser as a core app? Must be a Decision Log entry.
 
 2. **Image viewer.** No image viewer is specified. Should luna-files open images with a bundled image viewer or require a third-party app (e.g., Eye of GNOME)? Must be specified.
 
@@ -386,7 +386,7 @@ Decision not yet finalized.
 - luna-notif is the gatekeeper for all user-visible notifications. Do not add notification display logic to any other component — all notifications go through luna-notif.
 - luna-settings writes to TOML files. When a setting changes, the relevant daemon reads the updated TOML on its next configuration check (or via a D-Bus signal if immediate effect is needed). Do not write settings to any format other than TOML.
 - luna-lock is a **security boundary**. It runs as its own process, not as part of luna-shell. If luna-shell crashes while the screen is locked, luna-lock continues to protect the session. Never merge luna-lock into luna-shell.
-- The core application list is intentionally minimal. LunaOS is not trying to be a full desktop suite (GNOME/KDE). The core is: terminal, file manager, settings, text editor. Everything else is installable.
+- The core application list is intentionally minimal. Mahina is not trying to be a full desktop suite (GNOME/KDE). The core is: terminal, file manager, settings, text editor. Everything else is installable.
 
 ---
 

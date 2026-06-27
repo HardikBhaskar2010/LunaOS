@@ -1,4 +1,4 @@
-# LunaOS — Implementation Priority
+# Mahina — Implementation Priority
 **Volume I · Chapter 9**
 **Classification:** Foundation Document — Build Order Authority
 **Status:** Canonical · No component may be implemented before its prerequisites in this document
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document defines the **mandatory build order** for LunaOS. It answers the question: "What do we build first so the system can boot, and what comes after?"
+This document defines the **mandatory build order** for Mahina. It answers the question: "What do we build first so the system can boot, and what comes after?"
 
 Without this document, engineers will accidentally implement the Theme Engine before the Surface Manager, or the Animation Engine before DRM/KMS. This document prevents that.
 
@@ -17,7 +17,7 @@ This is not a roadmap. It is a dependency graph translated into phases.
 
 ## Overview
 
-LunaOS is built in five phases. Each phase produces a runnable milestone — something you can actually boot and test. No phase may begin until the previous phase's **required deliverables** are complete.
+Mahina is built in five phases. Each phase produces a runnable milestone — something you can actually boot and test. No phase may begin until the previous phase's **required deliverables** are complete.
 
 ```
 Phase 0 — Bare Metal
@@ -51,7 +51,7 @@ Phase 5 — Polish & Completeness
 ┌─────────────────────────────────────────────────────────────────┐
 │  PHASE 0 — BARE METAL                                            │
 │                                                                   │
-│  ① Linux kernel (LunaOS config)                                   │
+│  ① Linux kernel (Mahina config)                                   │
 │  ② libc (glibc v1)                                               │
 │  ③ limine bootloader                                              │
 │  ④ initramfs + root filesystem (ext4 or btrfs)                   │
@@ -172,7 +172,7 @@ Phase 5 — Polish & Completeness
 
 ### Phase 2 is the highest-risk phase
 
-Phase 2 is the first time LunaOS writes a pixel to screen using its own graphics stack. It has no upstream precedent to lean on — LGP is custom, DRM/KMS integration is custom, the GPU abstraction layer is custom. This phase will take the most engineering time relative to its visible output.
+Phase 2 is the first time Mahina writes a pixel to screen using its own graphics stack. It has no upstream precedent to lean on — LGP is custom, DRM/KMS integration is custom, the GPU abstraction layer is custom. This phase will take the most engineering time relative to its visible output.
 
 **The minimum Phase 2 deliverable is:** a compositor that can open a DRM device, configure a display mode via KMS, accept a single shm buffer from a client, and composite it to screen.
 
@@ -209,7 +209,7 @@ For each component, the phase in which it must be complete before the next phase
 
 | Component | Phase | Blocks |
 |---|---|---|
-| linux kernel (LunaOS config) | 0 | everything |
+| linux kernel (Mahina config) | 0 | everything |
 | limine | 0 | everything |
 | luna-init (Stages 0–3) | 0 | everything |
 | D-Bus | 1 | luna-ai-d IPC, compositor readiness signal |

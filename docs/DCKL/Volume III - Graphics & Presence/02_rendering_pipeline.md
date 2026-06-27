@@ -1,4 +1,4 @@
-# LunaOS — Rendering Pipeline
+# Mahina — Rendering Pipeline
 **Volume III · Chapter 2**
 **Classification:** Core Architecture — Graphics Implementation
 **Status:** Active · Depends on LGP wire format and GPU backend decisions
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document specifies the LunaOS rendering pipeline: the path from application-submitted pixel data to displayed pixels on the screen. It defines the stages of compositing, the GPU abstraction layer, the buffer lifecycle, and the frame timing model that produces the Living Interface motion quality.
+This document specifies the Mahina rendering pipeline: the path from application-submitted pixel data to displayed pixels on the screen. It defines the stages of compositing, the GPU abstraction layer, the buffer lifecycle, and the frame timing model that produces the Living Interface motion quality.
 
 This document is the authoritative reference for:
 - How frames are produced from submitted surface buffers
@@ -144,7 +144,7 @@ The compositor interacts with display hardware through the Linux kernel's DRM/KM
 
 ```c
 // Compositor startup — DRM device selection
-// LunaOS v1 assumes a single GPU. Multi-GPU is a post-v1 concern.
+// Mahina v1 assumes a single GPU. Multi-GPU is a post-v1 concern.
 int drm_fd = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
 if (drm_fd < 0) {
     // Try /dev/dri/card1 (secondary GPU)
@@ -296,7 +296,7 @@ v1 target: ARGB8888. HDR support is post-v1.
 
 At Stage 5 of boot, the framebuffer boot splash (rendered by `luna-init`) must transition to the compositor:
 
-Per **DL-043**, LunaOS accepts a brief visual transition (single black frame, ~16ms at 60Hz) between the luna-init framebuffer boot splash and the LGP compositor's first frame. No architectural complexity is introduced to eliminate this cut. The boot splash renderer (luna-init) stops rendering before the compositor takes over, and the lgp-compositor's first frame is its own rendered output.
+Per **DL-043**, Mahina accepts a brief visual transition (single black frame, ~16ms at 60Hz) between the luna-init framebuffer boot splash and the LGP compositor's first frame. No architectural complexity is introduced to eliminate this cut. The boot splash renderer (luna-init) stops rendering before the compositor takes over, and the lgp-compositor's first frame is its own rendered output.
 
 ---
 
@@ -339,12 +339,12 @@ Per **DL-043**, LunaOS accepts a brief visual transition (single black frame, ~1
 
 ## AI Context
 
-An AI agent implementing the LunaOS rendering pipeline must understand:
+An AI agent implementing the Mahina rendering pipeline must understand:
 
 - The compositor renders all surfaces. Application code never calls GPU APIs directly except through a CANVAS_SURFACE (and even then, the compositor composites the result).
 - The frame timing model is compositor-driven: wait for `LGP_FRAME_CALLBACK`, render, commit. Never render in a tight loop without a callback.
 - The GPU abstraction layer (`lgp-render`) separates Vulkan/OpenGL specifics from the compositor's compositing logic. If the GPU backend changes, only `lgp-render` changes — not the compositor's scene management code.
-- DRM is the kernel interface. The compositor opens `/dev/dri/card0`. No other LunaOS process opens the DRM device.
+- DRM is the kernel interface. The compositor opens `/dev/dri/card0`. No other Mahina process opens the DRM device.
 - Shm buffers (CPU rendering) require a CPU→GPU upload each frame. DMA-BUF (GPU rendering) is zero-copy. The compositor handles both transparently.
 - Budget violations are logged, not silently dropped. If a frame exceeds budget, it is logged at WARN. Repeated violations should trigger complexity reduction.
 - The animation engine runs in the compositor's render thread, not in a separate thread. It advances one frame per vsync.

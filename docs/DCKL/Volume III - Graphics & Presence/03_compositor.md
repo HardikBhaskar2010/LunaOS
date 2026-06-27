@@ -1,4 +1,4 @@
-# LunaOS — LGP Compositor
+# Mahina — LGP Compositor
 **Volume III · Chapter 3**
 **Classification:** Core Architecture — Compositor Implementation
 **Status:** Active · The compositor is the central component of the graphics stack
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document specifies the LGP compositor: the system component that owns all graphical output, manages surface lifetimes, routes input events, enforces Living Interface rules, and drives the rendering pipeline. The compositor is the most critical component in the LunaOS graphics stack. Every pixel on screen passes through it.
+This document specifies the LGP compositor: the system component that owns all graphical output, manages surface lifetimes, routes input events, enforces Living Interface rules, and drives the rendering pipeline. The compositor is the most critical component in the Mahina graphics stack. Every pixel on screen passes through it.
 
 This document is the authoritative reference for:
 - Compositor process architecture (single process, threading model)
@@ -130,7 +130,7 @@ The compositor is always shut down after shell components — a blank display du
 
 ### Crash Recovery & Reconnection Protocol (`lgp_ext_recovery_v1`)
 
-If `lgp-compositor` crashes (SIGSEGV, SIGABRT, or unexpected exit), the session is not lost. LunaOS enforces a strict state-reconciliation protocol.
+If `lgp-compositor` crashes (SIGSEGV, SIGABRT, or unexpected exit), the session is not lost. Mahina enforces a strict state-reconciliation protocol.
 
 ```
 luna-init supervision:
@@ -202,7 +202,7 @@ LGP defines compositor layers. Layer numbers determine absolute Z-order:
 Within a layer, surfaces are Z-ordered by their creation time (newer surfaces on top) unless an explicit sub-order is specified.
 
 Applications request a layer via `LGP_SET_LAYER`. The compositor validates that the requesting client is authorized to use the requested layer:
-- `LAYER_SHELL` and above: only clients authenticated as LunaOS system components
+- `LAYER_SHELL` and above: only clients authenticated as Mahina system components
 - `LAYER_APPLICATION` and `LAYER_WALLPAPER`: any client
 
 ### Input Routing

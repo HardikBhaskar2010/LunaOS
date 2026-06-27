@@ -1,4 +1,4 @@
-# LunaOS — Conversation Rules
+# Mahina — Conversation Rules
 **Volume IV · Chapter 6**
 **Classification:** Core Architecture — AI & Presence
 **Status:** Canonical · Specifies the complete rules for how LUNA conversations begin, proceed, and end
@@ -9,7 +9,7 @@
 
 This document specifies the **rules governing every LUNA conversation** — from the moment the user initiates contact to the moment the conversation ends and the results are written to memory.
 
-A "conversation" in LunaOS is any multi-turn exchange between the user and LUNA where the Inference Engine (LLM) is involved. This is distinct from:
+A "conversation" in Mahina is any multi-turn exchange between the user and LUNA where the Inference Engine (LLM) is involved. This is distinct from:
 - **Passive observations** — LUNA saying "Build failed. Want the diff?" — which are single messages from the Personality Engine with no LLM involved
 - **Expression state changes** — LUNA's Luna Island changing color/animation — which are purely visual, no text
 

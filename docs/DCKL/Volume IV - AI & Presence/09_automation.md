@@ -1,4 +1,4 @@
-# LunaOS — Automation Engine
+# Mahina — Automation Engine
 **Volume IV · Chapter 9**
 **Classification:** Core Architecture — AI & Presence
 **Status:** Canonical · Governs LUNA's ability to take actions on the user's behalf

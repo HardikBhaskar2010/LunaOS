@@ -1,4 +1,4 @@
-# LunaOS — Kernel/User Boundary
+# Mahina — Kernel/User Boundary
 **Volume II · Chapter 12**
 **Classification:** Core Architecture — Boundary Authority
 **Status:** Canonical · Every component's responsibility ends at the boundary defined here
@@ -7,12 +7,12 @@
 
 ## Purpose
 
-This document defines the **exact boundary** between every layer of LunaOS — from hardware firmware to user applications. It specifies what each layer is responsible for, what it is explicitly **not** responsible for, and which interface it exposes to the layer above it.
+This document defines the **exact boundary** between every layer of Mahina — from hardware firmware to user applications. It specifies what each layer is responsible for, what it is explicitly **not** responsible for, and which interface it exposes to the layer above it.
 
 This is the document that prevents layer violations: a userspace daemon reading kernel memory directly, a graphics library calling DRM/KMS, a compositor doing network I/O.
 
 This document is the authoritative reference for:
-- The five layers of LunaOS and their exact responsibilities
+- The five layers of Mahina and their exact responsibilities
 - The interface contracts between each adjacent pair of layers
 - What each layer is forbidden from doing
 - How responsibility transfers when a component crosses layers
@@ -22,7 +22,7 @@ This document is the authoritative reference for:
 
 ## Overview
 
-LunaOS has five layers. Each layer exposes exactly one interface to the layer above it and consumes exactly one interface from the layer below it.
+Mahina has five layers. Each layer exposes exactly one interface to the layer above it and consumes exactly one interface from the layer below it.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -89,7 +89,7 @@ LunaOS has five layers. Each layer exposes exactly one interface to the layer ab
 
 **Interface to Layer 1:** CPU instruction set (x86_64), hardware memory map, UEFI handoff, PCI device enumeration, interrupt lines, DMA channels.
 
-**LunaOS position:** LunaOS does not modify firmware. LunaOS does not flash GPU firmware. LunaOS reads UEFI runtime variables (e.g., for Secure Boot status) but does not write them except through a dedicated firmware interface tool (Phase 5, Luna Performance Lab experimental mode).
+**Mahina position:** Mahina does not modify firmware. Mahina does not flash GPU firmware. Mahina reads UEFI runtime variables (e.g., for Secure Boot status) but does not write them except through a dedicated firmware interface tool (Phase 5, Luna Performance Lab experimental mode).
 
 ---
 
@@ -193,7 +193,7 @@ LunaOS has five layers. Each layer exposes exactly one interface to the layer ab
 - luna-notif (notification daemon — an LGP client)
 - lpkg (package manager user-facing client)
 - Settings application
-- All built-in LunaOS applications
+- All built-in Mahina applications
 - File manager, text editor, terminal emulator, etc.
 
 **Does not own:**
@@ -315,7 +315,7 @@ NVMe storage (Layer 0)
 
 ## Boundary Violations — Explicit Prohibition List
 
-The following are **never permitted** in LunaOS code:
+The following are **never permitted** in Mahina code:
 
 | Action | Violates | Why |
 |---|---|---|

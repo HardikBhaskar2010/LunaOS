@@ -1,4 +1,4 @@
-# LunaOS — Linux Architecture
+# Mahina — Linux Architecture
 **Volume II · Chapter 3**
 **Classification:** Core Architecture — Kernel Configuration
 **Status:** Active · Reference for kernel build system
@@ -7,13 +7,13 @@
 
 ## Purpose
 
-This document specifies the LunaOS Linux kernel configuration: which kernel features are enabled, which are disabled, and the reasoning for each decision. It covers the kernel config philosophy, the `.config` maintenance process, and the kernel's role in the LunaOS system architecture.
+This document specifies the Mahina Linux kernel configuration: which kernel features are enabled, which are disabled, and the reasoning for each decision. It covers the kernel config philosophy, the `.config` maintenance process, and the kernel's role in the Mahina system architecture.
 
 ---
 
 ## Overview
 
-LunaOS uses the Linux 6.6.x LTS kernel (DL-009). The kernel configuration is not a stock distro config — it is a deliberately trimmed and tuned set of options chosen to support the LunaOS hardware target, LGP graphics stack, audio pipeline, and security posture while removing features that add complexity and attack surface without benefit.
+Mahina uses the Linux 6.6.x LTS kernel (DL-009). The kernel configuration is not a stock distro config — it is a deliberately trimmed and tuned set of options chosen to support the Mahina hardware target, LGP graphics stack, audio pipeline, and security posture while removing features that add complexity and attack surface without benefit.
 
 The config file `kernel/.config` is tracked in git. Every non-default option has a corresponding comment in `kernel/.config.notes` explaining why it was set that way.
 
@@ -40,7 +40,7 @@ A trimmed kernel produces:
 - Faster boot (fewer modules to initialize)
 - Intentional architecture (every running component is known)
 
-The tradeoff is reduced hardware compatibility. LunaOS v1 targets a defined hardware set. Users on unsupported hardware will encounter missing driver issues. This is documented and expected.
+The tradeoff is reduced hardware compatibility. Mahina v1 targets a defined hardware set. Users on unsupported hardware will encounter missing driver issues. This is documented and expected.
 
 ---
 
@@ -52,7 +52,7 @@ The tradeoff is reduced hardware compatibility. LunaOS v1 targets a defined hard
 kernel/
 ├── .config              # Active kernel config (tracked in git)
 ├── .config.notes        # Human-readable explanations per option
-├── patches/             # LunaOS-specific patches (empty at project start)
+├── patches/             # Mahina-specific patches (empty at project start)
 ├── build.sh             # Build script: make -j$(nproc) all
 └── install.sh           # Install vmlinuz + modules to /boot
 ```
@@ -238,13 +238,13 @@ Full security architecture is documented in `08_security.md`.
 
 | Option | Value | Reason |
 |---|---|---|
-| `CONFIG_VIRTIO` | `y` | VirtIO for running LunaOS in VMs during development |
+| `CONFIG_VIRTIO` | `y` | VirtIO for running Mahina in VMs during development |
 | `CONFIG_VIRTIO_PCI` | `y` | VirtIO PCI transport |
 | `CONFIG_VIRTIO_NET` | `y` | VirtIO network |
 | `CONFIG_VIRTIO_BLOCK` | `y` | VirtIO block |
 | `CONFIG_KVM_GUEST` | `y` | KVM guest support for development VMs |
 
-VirtIO options are included because LunaOS development is done in virtual machines before bare-metal testing. They do not add meaningful overhead on physical hardware and do not need to be disabled for release.
+VirtIO options are included because Mahina development is done in virtual machines before bare-metal testing. They do not add meaningful overhead on physical hardware and do not need to be disabled for release.
 
 ### Power Management
 
@@ -331,7 +331,7 @@ Decision not yet finalized.
 
 ## AI Context
 
-An AI agent building LunaOS or modifying the kernel configuration must understand:
+An AI agent building Mahina or modifying the kernel configuration must understand:
 
 - The kernel config is in `kernel/.config` and is version-controlled. Do not use a stock distro `.config`.
 - Every option has a note in `kernel/.config.notes`. Adding or changing an option requires adding or updating its note in the same commit.

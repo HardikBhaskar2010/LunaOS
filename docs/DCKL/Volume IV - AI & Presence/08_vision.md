@@ -1,4 +1,4 @@
-# LunaOS — Vision Module
+# Mahina — Vision Module
 **Volume IV · Chapter 8**
 **Classification:** Core Architecture — AI & Presence
 **Status:** Canonical · Vision is post-v1; this document specifies the v1 stub architecture and the v2 full vision system
@@ -12,7 +12,7 @@ This document specifies the **Vision Module** — the optional system that enabl
 Vision is a powerful capability with significant privacy implications. It is:
 - **Not in v1** — stub only, always disabled
 - **Planned for v2** — opt-in, local model, explicit permission required
-- **Never mandatory** — LunaOS works fully without vision
+- **Never mandatory** — Mahina works fully without vision
 
 ---
 

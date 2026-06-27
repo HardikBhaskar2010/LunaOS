@@ -1,13 +1,13 @@
-# LunaOS — LunaGUI Toolkit
+# Mahina — LunaGUI Toolkit
 **Volume III · Chapter 4**
 **Classification:** Core Architecture — Application Interface
-**Status:** Active · Primary development interface for all LunaOS applications
+**Status:** Active · Primary development interface for all Mahina applications
 
 ---
 
 ## Purpose
 
-This document specifies the **LunaGUI toolkit**: the standard application interface for LunaOS. LunaGUI is the layer that application developers use to build graphical applications. It sits above the Luna Graphics Protocol (LGP) and provides widgets, layout, rendering, and animation APIs that automatically comply with Living Interface rules without requiring developers to know LGP's wire format.
+This document specifies the **LunaGUI toolkit**: the standard application interface for Mahina. LunaGUI is the layer that application developers use to build graphical applications. It sits above the Luna Graphics Protocol (LGP) and provides widgets, layout, rendering, and animation APIs that automatically comply with Living Interface rules without requiring developers to know LGP's wire format.
 
 This document is the authoritative reference for:
 - LunaGUI's architectural position in the graphics stack
@@ -46,17 +46,17 @@ The toolkit is the compliance layer. Application developers get safety for free.
 
 ### Widgets are opinionated
 
-LunaGUI widgets have a defined visual appearance that follows the active LunaOS theme. Applications do not fully style their own widgets. They can:
+LunaGUI widgets have a defined visual appearance that follows the active Mahina theme. Applications do not fully style their own widgets. They can:
 - Set semantic color state (operational, warning, critical) on widgets
 - Apply supported size and spacing variants
 - Use the canvas rendering API for custom content within a widget's client area
 
 Applications cannot:
-- Arbitrarily restyle a button to look like something outside the LunaOS design system
+- Arbitrarily restyle a button to look like something outside the Mahina design system
 - Use colors that have no semantic equivalent for system-semantic surfaces
 - Add motion types not in the Motion Vocabulary to widget transitions
 
-This is intentional. Visual consistency across LunaOS applications is a system property, not an application property.
+This is intentional. Visual consistency across Mahina applications is a system property, not an application property.
 
 ### LunaGUI is not Electron
 
@@ -134,12 +134,12 @@ B: Box model layout (like CSS Flexbox / Android LinearLayout)
    - Nestable box containers achieve most layouts
    - Simpler to implement; less expressive for edge cases
 
-C: Custom LunaOS layout model
-   - Designed specifically for LunaOS's design vocabulary
+C: Custom Mahina layout model
+   - Designed specifically for Mahina's design vocabulary
    - Requires more design work before implementation
 
 Recommendation: Start with Box model layout (B) for v1 — it handles the
-vast majority of LunaOS application layouts and is fast to implement.
+vast majority of Mahina application layouts and is fast to implement.
 Constraint-based layout can be added in v1.5.
 Must be a Decision Log entry before toolkit implementation begins.
 ```
@@ -196,7 +196,7 @@ The following widget types are the v1 LunaGUI primitive set:
 ```
 TODO:
 Widget set above is a proposed v1 primitive set. Final list requires
-design review against the LunaOS design system before implementation.
+design review against the Mahina design system before implementation.
 Add to Volume III / 04_lunagui.md when finalized.
 ```
 
@@ -314,7 +314,7 @@ LunaGUI ships with a default system font. The default font is:
 ```
 TODO:
 Decision not yet finalized.
-Reason: The LunaOS default typeface has not been selected.
+Reason: The Mahina default typeface has not been selected.
 Requirements: Open-source license, Latin + extended Latin + CJK support,
 screen-optimized hinting, no telemetry (local font files only).
 Candidates: Inter, Noto Sans, IBM Plex Sans.
@@ -328,7 +328,7 @@ visual/audio identity decisions.
 ```
 TODO:
 Decision not yet finalized.
-Reason: LunaOS accessibility architecture has not been specified.
+Reason: Mahina accessibility architecture has not been specified.
 Requirements:
   - Screen reader support (accessibility tree exposed from widget tree)
   - Keyboard navigation for all interactive widgets
@@ -341,7 +341,7 @@ Screen reader and reduced-motion support: v1.5 target.
 
 ### Language Bindings
 
-LunaGUI's primary implementation is in **C** (the primary LunaOS implementation language). Higher-level bindings will be provided for:
+LunaGUI's primary implementation is in **C** (the primary Mahina implementation language). Higher-level bindings will be provided for:
 
 | Language | Status | Notes |
 |---|---|---|
@@ -378,7 +378,7 @@ Application developers should choose based on this guide:
 | Game (main viewport) | | ✅ CANVAS_SURFACE |
 | GPU compute visualizer | | ✅ CANVAS_SURFACE |
 | Terminal emulator | ✅ (with LunaCanvas for terminal area) | |
-| LunaOS shell component | LunaGUI or direct LGP (privileged) | |
+| Mahina shell component | LunaGUI or direct LGP (privileged) | |
 
 The rule: **if it's application chrome (menus, windows, controls), use LunaGUI. If it's a continuous GPU render surface (game viewport, video frame, custom renderer), use direct-LGP CANVAS_SURFACE.**
 
@@ -417,7 +417,7 @@ Decision not yet finalized.
 
 4. **Language binding generation strategy.** bindgen + Cython vs. hand-written. Must be a Decision Log entry when binding work begins.
 
-5. **Widget set finalization.** The v1 primitive list above is a proposal. Requires design review against the LunaOS design system.
+5. **Widget set finalization.** The v1 primitive list above is a proposal. Requires design review against the Mahina design system.
 
 6. **Accessibility architecture.** Screen reader, reduced-motion mode, high-contrast. v1 minimum: keyboard navigation. Must be scoped before v1.5 planning.
 
@@ -435,7 +435,7 @@ An AI agent building a LunaGUI application must understand:
 - Use `LunaAnimation.FadeIn`, `LunaAnimation.SlideIn`, etc. for transitions. Do not specify custom easing curves. The toolkit enforces budget ceilings — if you set `duration: 500` on a `FadeIn`, it will be clamped to 200ms.
 - All event callbacks run on the main thread. Do not perform blocking operations inside event callbacks. Spawn background threads and use `LunaMainQueue.post()` to deliver results.
 - `LunaCanvas` inside a LunaGUI application is not the same as a direct-LGP `CANVAS_SURFACE`. It is composited as part of the `APPLICATION_WINDOW` surface. Direct-LGP `CANVAS_SURFACE` is only for applications that don't use LunaGUI at all (or for a specific standalone render surface within a LunaGUI app).
-- LunaGUI is not Electron, Flutter, or GTK. Do not import WebKit, V8, or any browser engine. Do not use GTK or Qt libraries — they are not part of LunaOS.
+- LunaGUI is not Electron, Flutter, or GTK. Do not import WebKit, V8, or any browser engine. Do not use GTK or Qt libraries — they are not part of Mahina.
 - Widget tree manipulation (adding/removing widgets, changing state) is safe from the main thread only. Do not mutate the widget tree from a background thread.
 - For text-heavy custom content (code editors, terminal output), use `LunaCanvas` with the Canvas text rendering API, not a large number of `LunaLabel` widgets. Labels are for UI text; Canvas is for document/terminal text rendering.
 

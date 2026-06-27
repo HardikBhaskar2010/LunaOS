@@ -1,4 +1,4 @@
-# LunaOS — Networking Architecture
+# Mahina — Networking Architecture
 **Volume II · Chapter 10**
 **Classification:** Core Architecture — Network Stack
 **Status:** Active · Reference for network service implementation
@@ -7,23 +7,23 @@
 
 ## Purpose
 
-This document specifies the LunaOS networking architecture: the network stack, interface management, DNS configuration, firewall policy, network-related services, and the rules governing what network traffic LunaOS initiates automatically versus what requires explicit user action.
+This document specifies the Mahina networking architecture: the network stack, interface management, DNS configuration, firewall policy, network-related services, and the rules governing what network traffic Mahina initiates automatically versus what requires explicit user action.
 
 ---
 
 ## Overview
 
-LunaOS uses a standard Linux network stack managed by NetworkManager in userspace. The design priority for networking is: **user-initiated traffic only**. LunaOS never initiates outbound connections without the user's knowledge or explicit instruction. This is a direct consequence of Core Law II (Local First) and Core Law V (User Owns the Machine).
+Mahina uses a standard Linux network stack managed by NetworkManager in userspace. The design priority for networking is: **user-initiated traffic only**. Mahina never initiates outbound connections without the user's knowledge or explicit instruction. This is a direct consequence of Core Law II (Local First) and Core Law V (User Owns the Machine).
 
 ---
 
 ## Design Philosophy
 
-**No automatic outbound traffic.** After a clean boot, LunaOS initiates no outbound network connections automatically. NetworkManager may probe for connectivity (DHCP, DNS), but no LunaOS service contacts remote servers, calls home, checks for updates, or sends telemetry. All outbound traffic from LunaOS infrastructure requires explicit user instruction.
+**No automatic outbound traffic.** After a clean boot, Mahina initiates no outbound network connections automatically. NetworkManager may probe for connectivity (DHCP, DNS), but no Mahina service contacts remote servers, calls home, checks for updates, or sends telemetry. All outbound traffic from Mahina infrastructure requires explicit user instruction.
 
-**Cloud is opt-in (Law II).** The network exists because the user may want it — for package updates, cloud bridge AI queries, file downloads. It does not exist to serve LunaOS's infrastructure needs.
+**Cloud is opt-in (Law II).** The network exists because the user may want it — for package updates, cloud bridge AI queries, file downloads. It does not exist to serve Mahina's infrastructure needs.
 
-**Internal IPC is localhost-only.** All LunaOS inter-process communication that uses TCP/IP is bound to `127.0.0.1`. No LunaOS service opens a port on a network interface. See `07_ipc.md` and `08_security.md`.
+**Internal IPC is localhost-only.** All Mahina inter-process communication that uses TCP/IP is bound to `127.0.0.1`. No Mahina service opens a port on a network interface. See `07_ipc.md` and `08_security.md`.
 
 ---
 
@@ -117,7 +117,7 @@ NetworkManager configuration lives in `/etc/NetworkManager/`:
 TODO:
 Decision not yet finalized.
 Reason: NetworkManager uses its own keyfile format, not TOML.
-DL-008 specifies TOML for all LunaOS configuration files.
+DL-008 specifies TOML for all Mahina configuration files.
 NetworkManager's keyfile format is not TOML-compatible.
 Options:
   A: Accept NetworkManager's keyfile format as an upstream exception (Law I permits
@@ -134,7 +134,7 @@ This must be a documented exception in the Decision Log.
 ```ini
 [main]
 plugins = keyfile
-dns = none               # LunaOS manages DNS separately (via Unbound — TODO)
+dns = none               # Mahina manages DNS separately (via Unbound — TODO)
 
 [connection]
 wifi.powersave = 2       # Disable Wi-Fi power saving for lower latency
@@ -146,7 +146,7 @@ level = WARN
 
 ### Interface Naming
 
-LunaOS uses kernel-assigned interface names (e.g., `eth0`, `wlan0`) rather than predictable network interface names (`enp3s0`, `wlp2s0`). Predictable naming requires `udev` rules and adds complexity without a clear benefit for the LunaOS use case.
+Mahina uses kernel-assigned interface names (e.g., `eth0`, `wlan0`) rather than predictable network interface names (`enp3s0`, `wlp2s0`). Predictable naming requires `udev` rules and adds complexity without a clear benefit for the Mahina use case.
 
 ```
 TODO:
@@ -155,7 +155,7 @@ Reason: Interface naming convention (kernel names vs. predictable names) has
 not been formally decided.
 Predictable names are the modern default and NetworkManager works well with them.
 Kernel names are simpler and require no udev rules.
-Since LunaOS does not use udev (udevd would be a system service dependency —
+Since Mahina does not use udev (udevd would be a system service dependency —
 check whether devtmpfs is sufficient), predictable names may not be achievable
 without additional tooling.
 This must be resolved as part of the device management architecture.
@@ -183,7 +183,7 @@ BBR congestion control (`net.ipv4.tcp_congestion_control = bbr`) provides better
 
 ### Outbound Traffic Policy
 
-This table defines exactly what outbound network traffic LunaOS initiates and under what conditions:
+This table defines exactly what outbound network traffic Mahina initiates and under what conditions:
 
 | Traffic | Initiator | Trigger | User Control |
 |---|---|---|---|
@@ -196,7 +196,7 @@ This table defines exactly what outbound network traffic LunaOS initiates and un
 | Cloud bridge AI | luna-ai-d | `luna bridge --send` (manual) | ✅ Manual, explicit opt-in |
 | Crash reports | — | Never | ❌ Does not exist |
 | Telemetry | — | Never | ❌ Does not exist |
-| Auto-updates | — | Never | ❌ LunaOS never auto-updates |
+| Auto-updates | — | Never | ❌ Mahina never auto-updates |
 
 ```
 TODO:
@@ -209,12 +209,12 @@ The user may disable NTP via config if desired, but it is on by default.
 
 ### LAN and Local Network
 
-LunaOS makes no assumptions about the local network topology. It does not:
+Mahina makes no assumptions about the local network topology. It does not:
 - Run mDNS/Avahi by default (zero-configuration networking — opt-in)
 - Run SSH server by default (must be explicitly installed and enabled)
 - Run any other listening service on network interfaces
 
-After a clean install, `nmap` scanning the LunaOS host from another machine on the LAN should show no open ports.
+After a clean install, `nmap` scanning the Mahina host from another machine on the LAN should show no open ports.
 
 ---
 
@@ -243,7 +243,7 @@ After a clean install, `nmap` scanning the LunaOS host from another machine on t
 
 4. **Interface naming.** Kernel names vs. predictable names. Depends on udev/devtmpfs device management decision.
 
-5. **udev.** Whether LunaOS runs udevd or relies on devtmpfs alone has not been decided.
+5. **udev.** Whether Mahina runs udevd or relies on devtmpfs alone has not been decided.
 
 6. **NetworkManager TOML exception.** If NetworkManager’s keyfile format is accepted as an upstream exception to DL-008, this must be documented in the Decision Log.
 
@@ -251,17 +251,17 @@ After a clean install, `nmap` scanning the LunaOS host from another machine on t
 
 ## AI Context
 
-An AI agent implementing LunaOS networking must understand:
+An AI agent implementing Mahina networking must understand:
 
-- After a clean boot with no user interaction, LunaOS initiates no outbound connections except DHCP and DNS (required for network functionality). Everything else is user-triggered.
-- No LunaOS service opens a port on a network interface. `localhost:7734` and `localhost:11434` are loopback only. External port scans of a LunaOS host show no open ports.
+- After a clean boot with no user interaction, Mahina initiates no outbound connections except DHCP and DNS (required for network functionality). Everything else is user-triggered.
+- No Mahina service opens a port on a network interface. `localhost:7734` and `localhost:11434` are loopback only. External port scans of a Mahina host show no open ports.
 - The firewall is loaded before NetworkManager in the service startup order. This is mandatory — do not change this order.
 - `luna-ai-d` never makes outbound calls except (a) localhost, and (b) cloud bridge via explicit user command. If implementing luna-ai-d, do not add any automatic outbound calls.
 - The NTP strategy is undecided. Do not implement a background NTP sync without a Decision Log entry. Until decided, the clock is set from hwclock at boot.
 - DNS resolution depends on whether Unbound is adopted. Until that decision is made, NetworkManager writes to `/etc/resolv.conf` directly. Do not hardcode DNS resolver paths.
 - NTP runs automatically (DL-015). This is an accepted infrastructure outbound connection alongside DHCP and DNS. It is not a violation of the “no automatic outbound” policy.
 - DNS uses NetworkManager passthrough to `/etc/resolv.conf` (DL-014). No local Unbound daemon runs in v1.
-- Auto-updates do not exist in LunaOS. Any code that schedules automatic downloads or package updates is a violation of Core Law V.
+- Auto-updates do not exist in Mahina. Any code that schedules automatic downloads or package updates is a violation of Core Law V.
 
 ---
 

@@ -1,4 +1,4 @@
-# LunaOS — Voice Module
+# Mahina — Voice Module
 **Volume IV · Chapter 7**
 **Classification:** Core Architecture — AI & Presence
 **Status:** Canonical · Voice is disabled by default in v1; this document specifies v1 architecture and v1.5 full implementation
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document specifies the **Voice Module** — the optional system that enables LUNA to speak and listen. Voice is not core to LunaOS v1 (DL-041), but it is architected correctly from the start so that v1.5 voice activation is an extension, not a rewrite.
+This document specifies the **Voice Module** — the optional system that enables LUNA to speak and listen. Voice is not core to Mahina v1 (DL-041), but it is architected correctly from the start so that v1.5 voice activation is an extension, not a rewrite.
 
 This document specifies:
 - The v1 voice stubs (disabled, but present in the codebase)
@@ -52,7 +52,7 @@ Voice Module — two directions:
 
 ## v1 Status: Disabled with Stubs
 
-In LunaOS v1, the Voice Module exists in the codebase as **stubs** — the interfaces are defined, the permission gates are in place, but no actual TTS or STT processing occurs.
+In Mahina v1, the Voice Module exists in the codebase as **stubs** — the interfaces are defined, the permission gates are in place, but no actual TTS or STT processing occurs.
 
 ```c
 // v1 stub implementation in luna-ai-d/voice/voice_module.c

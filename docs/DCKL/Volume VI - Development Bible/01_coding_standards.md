@@ -1,4 +1,4 @@
-# LunaOS — Coding Standards
+# Mahina — Coding Standards
 **Volume VI · Chapter 01**
 **Classification:** Development Bible — Engineering Standards
 **Status:** Canonical · Code that violates these standards will not be merged
@@ -7,9 +7,9 @@
 
 ## Purpose
 
-This document defines the C and Rust coding standards for LunaOS. It ensures that the entire repository reads as if it were written by a single engineer.
+This document defines the C and Rust coding standards for Mahina. It ensures that the entire repository reads as if it were written by a single engineer.
 
-LunaOS targets resource-constrained hardware (v1). Memory efficiency, deterministic execution, and extreme clarity are favored over cleverness.
+Mahina targets resource-constrained hardware (v1). Memory efficiency, deterministic execution, and extreme clarity are favored over cleverness.
 
 ---
 
@@ -18,7 +18,7 @@ LunaOS targets resource-constrained hardware (v1). Memory efficiency, determinis
 - **Systems & Graphics (Stage 0–3):** C17
 - **AI Runtime (Stage 4):** C17 (v1), Rust (v2 migration)
 - **Tooling:** Shell, Python (v1 build scripts)
-- **C++ is forbidden** in the LunaOS base system.
+- **C++ is forbidden** in the Mahina base system.
 
 ---
 
@@ -34,7 +34,7 @@ LunaOS targets resource-constrained hardware (v1). Memory efficiency, determinis
 
 ### 2. Memory Management
 
-LunaOS strictly prohibits haphazard dynamic allocation in hot paths.
+Mahina strictly prohibits haphazard dynamic allocation in hot paths.
 
 - **Hot Paths:** The compositor render loop and LGP message parser must not call `malloc()` or `free()`. Memory must be pre-allocated or pooled.
 - **Ownership:** Every `malloc()` must have a clearly documented owner responsible for `free()`. If a function returns allocated memory, its name must imply allocation (e.g., `alloc`, `create`, `duplicate`).

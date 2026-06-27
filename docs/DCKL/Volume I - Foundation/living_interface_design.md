@@ -1,4 +1,4 @@
-# LunaOS — Living Interface Design
+# Mahina — Living Interface Design
 **Volume I · Chapter 7**
 **Classification:** Foundation Document — Design Principle
 **Status:** Canonical · Implementation deferred to Volume III
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document defines **Living Interface** as a design discipline: the contract that every visual surface in LunaOS — not only LUNA — must satisfy in order to communicate real system state through motion, color, and form.
+This document defines **Living Interface** as a design discipline: the contract that every visual surface in Mahina — not only LUNA — must satisfy in order to communicate real system state through motion, color, and form.
 
 This document does **not** specify:
 
@@ -32,7 +32,7 @@ This document is the bridge between:
 
 ## Overview
 
-LunaOS's founding premise, per `vision.md`, is **presence instead of features**. A Living Interface is the mechanism by which "presence" becomes observable rather than aspirational.
+Mahina's founding premise, per `vision.md`, is **presence instead of features**. A Living Interface is the mechanism by which "presence" becomes observable rather than aspirational.
 
 A surface is "living" when:
 
@@ -111,7 +111,7 @@ A surface without eyes or a Live2D model obviously cannot use Priority 1. But it
 | State change animation | ≤ 400ms |
 | Complex narrative motion (boot splash) | ≤ 2000ms |
 
-Living Interface treats this table as binding on **every** animated element in LunaOS, not only Luna Island. Volume III implementation documents (Compositor, Animation Engine, Theme Engine) must cite this table rather than redefine it.
+Living Interface treats this table as binding on **every** animated element in Mahina, not only Luna Island. Volume III implementation documents (Compositor, Animation Engine, Theme Engine) must cite this table rather than redefine it.
 
 ### The Color Semantic Contract and Motion Vocabulary are closed sets
 
@@ -198,7 +198,7 @@ Decision not yet finalized.
 
 Specifically unresolved:
 
-1. **Scope of enforcement.** Does Living Interface apply only to LunaOS-native chrome (Luna Island, system notifications, system-level surfaces), or does it extend to third-party application windows running on LunaOS? No canonical document currently answers this.
+1. **Scope of enforcement.** Does Living Interface apply only to Mahina-native chrome (Luna Island, system notifications, system-level surfaces), or does it extend to third-party application windows running on Mahina? No canonical document currently answers this.
 2. **Accessibility / reduced-motion mode.** The Motion Vocabulary and Animation Budget are locked under Law III. It is not yet decided how (or whether) a reduced-motion accessibility mode can coexist with a "locked" vocabulary, since disabling motion would mean some states stop being communicated entirely.
 3. **Degradation on low-power hardware.** No minimum hardware spec for Living Interface motion has been decided. Related to DL-007 (musl migration, v2) but not addressed by it.
 4. **Non-Luna-Island surfaces.** `identity.md` specs Luna Island in detail. No other surface (window borders, generic notification cards, settings app, lock screen) has been specified. Whether these surfaces are in scope for Volume III's first pass or deferred is undecided.
@@ -209,7 +209,7 @@ Specifically unresolved:
 
 This document is a **conceptual contract**, not a buildable spec. An AI coding agent should not attempt to generate Compositor, LGP, Animation Engine, or Theme Engine code directly from this document.
 
-Before implementing any animated, colored, or state-expressing UI element on LunaOS, an AI agent must:
+Before implementing any animated, colored, or state-expressing UI element on Mahina, an AI agent must:
 
 1. Check the element's intended meaning against the Color Semantic Contract and Motion Vocabulary in `00_Foundation/core_laws.md` (Law III). Do not introduce a new color or motion type — if the needed signal doesn't exist in either table, stop and flag it as requiring the amendment process, do not invent one.
 2. Check the element's animation duration against the Animation Budget table in the same document. An animation that cannot fit its class's ceiling must be redesigned, not shipped over-budget.

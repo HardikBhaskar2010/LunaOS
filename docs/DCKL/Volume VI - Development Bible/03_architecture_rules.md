@@ -1,4 +1,4 @@
-# LunaOS — Architecture Rules
+# Mahina — Architecture Rules
 **Volume VI · Chapter 03**
 **Classification:** Development Bible — Design Standards
 **Status:** Canonical
@@ -7,14 +7,14 @@
 
 ## Purpose
 
-This document outlines the hard rules for system architecture. While the Core Laws (`Volume I / 04_core_laws.md`) define the philosophical goals of LunaOS, these rules define the engineering mechanics.
+This document outlines the hard rules for system architecture. While the Core Laws (`Volume I / 04_core_laws.md`) define the philosophical goals of Mahina, these rules define the engineering mechanics.
 
 ---
 
 ## The Rules
 
 ### 1. The Single Owner Rule
-Every capability, file, or resource in LunaOS has exactly one process that owns it.
+Every capability, file, or resource in Mahina has exactly one process that owns it.
 - **Rule:** Do not write to a file or socket owned by another process.
 - **Enforcement:** `Volume II / 13_component_ownership.md` is the canonical reference.
 

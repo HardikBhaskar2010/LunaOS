@@ -1,18 +1,18 @@
-# LunaOS — Installer
+# Mahina — Installer
 **Volume V · Chapter 6**
 **Classification:** Core Architecture — Userland
-**Status:** Canonical · Specifies the LunaOS installation process from ISO boot to first login
+**Status:** Canonical · Specifies the Mahina installation process from ISO boot to first login
 
 ---
 
 ## Purpose
 
-This document specifies the **LunaOS installer** — the process that takes a user from a bootable LunaOS ISO to a fully installed, configured system ready for first boot.
+This document specifies the **Mahina installer** — the process that takes a user from a bootable Mahina ISO to a fully installed, configured system ready for first boot.
 
-The installer is the first impression of LunaOS for new users. It must be:
+The installer is the first impression of Mahina for new users. It must be:
 - **Fast** — nobody wants to wait 30 minutes to install an OS
 - **Safe** — it must not destroy data without explicit confirmation
-- **Beautiful** — consistent with LunaOS visual language
+- **Beautiful** — consistent with Mahina visual language
 - **Smart** — LUNA is present during installation (in a limited capacity)
 
 ---
@@ -83,10 +83,10 @@ Welcome screen layout:
   │                                                               │
   │                      ●  LUNA online.                         │
   │                                                               │
-  │               Welcome to LunaOS                              │
+  │               Welcome to Mahina                              │
   │          A living operating system.                          │
   │                                                               │
-  │                    [ Install LunaOS ]                        │
+  │                    [ Install Mahina ]                        │
   │                    [ Try without installing ]                │
   │                    [ Advanced options ]                      │
   │                                                               │
@@ -137,12 +137,12 @@ Disk Selection:
   └──────────────────────────────────────────────────────────┘
 
   Partitioning mode:
-  ● Automatic (recommended) — LunaOS manages partitioning
+  ● Automatic (recommended) — Mahina manages partitioning
     Creates: EFI (512MB) + Root Btrfs (remaining space)
   ○ Manual — Advanced users only
   ○ Install alongside existing OS — Dual boot (v1.5)
 
-  [ ⚠ Erase sdb and install LunaOS ]   [ Back ]   [ Next ]
+  [ ⚠ Erase sdb and install Mahina ]   [ Back ]   [ Next ]
 ```
 
 **Safety rules:**
@@ -159,7 +159,7 @@ Partition plan (review before writing):
 
   ┌─────────────────────────────────────────────────────────┐
   │  Partition 1  EFI System Partition   512 MB  FAT32      │
-  │  Partition 2  LunaOS Root            255 GB  Btrfs      │
+  │  Partition 2  Mahina Root            255 GB  Btrfs      │
   └─────────────────────────────────────────────────────────┘
 
   Btrfs subvolumes:
@@ -218,7 +218,7 @@ Partition plan (review before writing):
 ### Screen 9: Installation Progress
 
 ```
-  Installing LunaOS...
+  Installing Mahina...
 
   ┌──────────────────────────────────────────────────────────┐
   │  ████████████████░░░░░░░░░░░░░░░░  52%                   │
@@ -275,7 +275,7 @@ Installation payload:
     bash
     base library stack
 
-  LunaOS system: ~600 MB
+  Mahina system: ~600 MB
     luna-init
     lgp-compositor
     luna-ai-d
@@ -316,7 +316,7 @@ limine configuration written to EFI:
 
   DEFAULT_ENTRY=lunaos
 
-  :LunaOS
+  :Mahina
       PROTOCOL=linux
       KERNEL_PATH=boot:///boot/vmlinuz-linux
       MODULE_PATH=boot:///boot/initramfs-linux.img
@@ -332,7 +332,7 @@ Error scenarios and responses:
 
   Insufficient disk space (< 5 GB free):
     → Block disk selection with error message
-    → "LunaOS requires at least 5 GB of free space."
+    → "Mahina requires at least 5 GB of free space."
 
   Disk write failure during installation:
     → Installation halts immediately
@@ -387,7 +387,7 @@ Decision not yet finalized.
 
 ## AI Context
 
-- The installer is the **first impression**. If it looks wrong, the user's confidence in LunaOS is damaged before the OS is even running. The installer must use full LunaGUI and Luna Dark visual language — not a minimal installer theme.
+- The installer is the **first impression**. If it looks wrong, the user's confidence in Mahina is damaged before the OS is even running. The installer must use full LunaGUI and Luna Dark visual language — not a minimal installer theme.
 - LUNA's role in the installer is **guidance, not decision-making**. LUNA suggests, the user decides. Never make LUNA auto-select a disk or confirm a dangerous action.
 - The "Erase" disk action is **irreversible**. The confirmation flow must make this crystal clear. The final button must say "Erase [disk identifier] and Install" — never just "Install" or "OK".
 - The AI model download is **optional** at install time and must always have a "Skip" path. Network may not be available. The system must be fully functional without the AI model (just without LLM conversations).

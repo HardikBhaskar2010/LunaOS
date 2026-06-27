@@ -1,4 +1,4 @@
-# LunaOS — Presence Engine
+# Mahina — Presence Engine
 **Volume IV · Chapter 1**
 **Classification:** Core Architecture — AI & Presence
 **Status:** Canonical · This is the authoritative specification for the Presence Engine component of luna-ai-d
@@ -9,7 +9,7 @@
 
 This document specifies the **Presence Engine** — the component of `luna-ai-d` that is always running, always observing, and always deciding how LUNA should present herself to the user.
 
-The Presence Engine is what makes LunaOS feel **alive without being intrusive**. It observes the user's context, determines which mode LUNA should be in, and produces expression decisions that luna-island renders. It does all of this without the LLM — the Presence Engine is lightweight, fast, and always on.
+The Presence Engine is what makes Mahina feel **alive without being intrusive**. It observes the user's context, determines which mode LUNA should be in, and produces expression decisions that luna-island renders. It does all of this without the LLM — the Presence Engine is lightweight, fast, and always on.
 
 Without this document, there is no definition of what the Presence Engine actually does moment to moment, what it observes, how it makes decisions, or what outputs it produces.
 

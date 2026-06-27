@@ -1,13 +1,13 @@
-# LunaOS — Contributing Guidelines
+# Mahina — Contributing Guidelines
 **Volume VI · Chapter 08**
 **Classification:** Development Bible — Community
 **Status:** Canonical
 
 ---
 
-## Welcome to LunaOS
+## Welcome to Mahina
 
-LunaOS is an ambitious project: an operating system built from scratch, designed around local AI presence, running on Linux.
+Mahina is an ambitious project: an operating system built from scratch, designed around local AI presence, running on Linux.
 
 We welcome contributions, but because we are building a cohesive system rather than a collection of disparate tools, we have strict architectural rules. This document explains how to contribute successfully.
 

@@ -1,4 +1,4 @@
-# LunaOS — Implementation Roadmap
+# Mahina — Implementation Roadmap
 **Volume VII · The Build Checklist**
 **Classification:** Living Document — Updated as items are completed
 **Status:** Active · This is the daily work order
@@ -37,10 +37,10 @@ Legend:
 - [ ] Host toolchain: cross-compiler for x86_64-linux-gnu (GCC or Clang)
 - [ ] Security Tooling: AddressSanitizer and UndefinedBehaviorSanitizer integrated for Debug builds
 - [ ] Static Analysis: `clang-tidy` integration established in CI pipeline
-- [ ] QEMU/KVM virtual machine configured for LunaOS development
+- [ ] QEMU/KVM virtual machine configured for Mahina development
 - [ ] KVM machine profile: 4 cores, 4 GB RAM, virtio disk, virtio-vga
 - [ ] Build system chosen (Makefile, Meson, or custom) and scaffolded
-- [ ] Git repository initialized and remote pushed (`https://github.com/HardikBhaskar2010/LunaOS.git`)
+- [ ] Git repository initialized and remote pushed (`https://github.com/HardikBhaskar2010/Mahina.git`)
 - [ ] Directory layout decided: `src/`, `boot/`, `docs/`, `packages/`, `scripts/`
 
 **Done when:** `git clone` + `make` produces a bootable image.
@@ -51,7 +51,7 @@ Legend:
 
 - [ ] limine version pinned
 - [ ] limine EFI binary placed at `/boot/efi/EFI/BOOT/BOOTX64.EFI` (DL-012)
-- [ ] `limine.cfg` written with LunaOS kernel entry
+- [ ] `limine.cfg` written with Mahina kernel entry
 - [ ] Boot entry: kernel path, initramfs path, kernel command line
 - [ ] Kernel command line baseline: `root=/dev/... rw quiet`
 - [ ] EFI System Partition: FAT32, mounted at `/boot/efi`
@@ -105,7 +105,7 @@ Legend:
 ### 0.5 — C Runtime (libc)
 
 - [ ] glibc version pinned (v1 — musl migration is v2 per DL-007)
-- [ ] glibc compiled for LunaOS target
+- [ ] glibc compiled for Mahina target
 - [ ] Dynamic linker path configured: `/lib/ld-linux-x86-64.so.2`
 - [ ] Basic POSIX test: hello world C program compiles, links, and runs on target
 
@@ -126,7 +126,7 @@ Legend:
 - [ ] Signal handling: SIGCHLD (reap children), SIGTERM (shutdown), SIGINT (reboot)
 - [ ] luna-init reaches a shell (busybox ash or bash) at Stage 3 exit
 
-**Done when:** QEMU shows the LunaOS boot log and drops to an interactive root shell.
+**Done when:** QEMU shows the Mahina boot log and drops to an interactive root shell.
 
 ---
 
@@ -278,7 +278,7 @@ Legend:
 
 - [ ] `src/luna-splash/` created (minimal C binary, no dynamic allocation)
 - [ ] Boot splash rendered by `luna-splash` (started in Stage 3)
-- [ ] Splash: LUNA Void background + LunaOS wordmark (bitmap, no font rendering needed)
+- [ ] Splash: LUNA Void background + Mahina wordmark (bitmap, no font rendering needed)
 - [ ] Splash displays from Stage 3 until compositor starts in Stage 5
 - [ ] Transition: `luna-init` kills `luna-splash` (SIGTERM), then starts `lgp-compositor` which claims the framebuffer
 - [ ] Boot splash respects Animation Budget: transition ≤ 300ms
@@ -301,7 +301,7 @@ Legend:
 
 ## STAGE 3 — Living Desktop
 
-> **Exit criterion:** A real desktop with a shell, a status bar, LUNA presence visible, and interactive windows. First time LunaOS looks like an operating system.
+> **Exit criterion:** A real desktop with a shell, a status bar, LUNA presence visible, and interactive windows. First time Mahina looks like an operating system.
 
 ### 3.1 — LGP Protocol: Full Implementation
 
@@ -517,7 +517,7 @@ Legend:
 
 ## STAGE 5 — Polish & Completeness
 
-> **Exit criterion:** LunaOS is a complete v1 operating system. A real user could daily-drive it.
+> **Exit criterion:** Mahina is a complete v1 operating system. A real user could daily-drive it.
 
 ### 5.1 — Luna Performance Lab
 

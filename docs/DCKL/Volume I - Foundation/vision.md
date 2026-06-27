@@ -1,23 +1,23 @@
-# LunaOS — Vision
+# Mahina — Vision
 **Volume I · Chapter 1**
 **Classification:** Foundation Document
 **Status:** Canonical · Living Document
 
 ---
 
-## Why LunaOS Exists
+## Why Mahina Exists
 
 Computing has become comfortable. Comfortable in the worst way — predictable, corporate, and hollow.
 
 Every modern operating system optimizes for the same thing: **feature delivery**. GNOME delivers features. Windows delivers features. macOS delivers a carefully curated set of features wrapped in aluminum. None of them deliver *presence*.
 
-LunaOS exists to answer a different question:
+Mahina exists to answer a different question:
 
 > What if your operating system felt like it was alive?
 
 Not alive in the science-fiction, HAL-9000 sense. Alive in the way a great workshop feels alive — where every tool is in the right place, where the environment knows what you're working on, where you never have to fight the space you're in.
 
-LunaOS is built from the Linux kernel upward. Custom init. Custom package manager. Every layer owned, understood, and intentional. Layered on top of that foundation: a local-first AI named LUNA who watches, learns, and helps — only when it makes sense.
+Mahina is built from the Linux kernel upward. Custom init. Custom package manager. Every layer owned, understood, and intentional. Layered on top of that foundation: a local-first AI named LUNA who watches, learns, and helps — only when it makes sense.
 
 This is not a reskin. This is not a rice. This is an operating system with a point of view.
 
@@ -37,16 +37,16 @@ None of them answer the real question.
 
 **The real question:** Can an OS feel like a collaborator instead of a tool?
 
-LunaOS says yes. And it proves it at every layer.
+Mahina says yes. And it proves it at every layer.
 
 ---
 
-## What LunaOS Actually Promises
+## What Mahina Actually Promises
 
 Not marketing promises. Concrete ones:
 
 **1. You will understand every part of it.**
-Every component in LunaOS was either written by you or explicitly chosen by you. There are no mystery services, no opaque daemons, no black boxes. If it runs on LunaOS, you know why.
+Every component in Mahina was either written by you or explicitly chosen by you. There are no mystery services, no opaque daemons, no black boxes. If it runs on Mahina, you know why.
 
 **2. Your AI runs on your hardware.**
 LUNA.AI uses Phi-3 Mini or Qwen2.5 via Ollama. No API keys. No subscriptions. No cloud dependency for core intelligence. Your data never leaves your machine unless you explicitly send it.
@@ -58,13 +58,13 @@ The NEON/DARK Protocol is not a theme. It is a visual language. Colors carry mea
 LUNA.AI watches workflow patterns — with your permission, for your apps, on your terms — and surfaces help only when it's confident. It learns your dev rituals, your communication patterns, your repetitive sequences, and makes them effortless.
 
 **5. You own it completely.**
-LunaOS will never phone home without your explicit instruction. Will never push updates that change your machine's behavior. Will never serve ads, collect telemetry, or compromise your session for any reason.
+Mahina will never phone home without your explicit instruction. Will never push updates that change your machine's behavior. Will never serve ads, collect telemetry, or compromise your session for any reason.
 
 ---
 
-## The Ideal LunaOS User
+## The Ideal Mahina User
 
-LunaOS is built for one person first: the person who built it.
+Mahina is built for one person first: the person who built it.
 
 Then for anyone who has ever looked at their desktop and thought:
 
@@ -86,11 +86,11 @@ If that's you, this OS was made for you.
 Version names follow moon phases:
 
 ```
-LunaOS Waxing    — 0.1.x    First light. Booting. Alive.
-LunaOS Quarter   — 0.5.x    Half the vision realized.
-LunaOS Gibbous   — 0.9.x    Nearly full. Release candidate.
-LunaOS Full      — 1.0.0    Complete. The first full moon.
-LunaOS Waning    — 1.x.x    Post-release. Growing past perfection.
+Mahina Waxing    — 0.1.x    First light. Booting. Alive.
+Mahina Quarter   — 0.5.x    Half the vision realized.
+Mahina Gibbous   — 0.9.x    Nearly full. Release candidate.
+Mahina Full      — 1.0.0    Complete. The first full moon.
+Mahina Waning    — 1.x.x    Post-release. Growing past perfection.
 ```
 
 Boot message: `LUNA online.`
@@ -102,15 +102,15 @@ These cost nothing and they mean everything.
 
 ## What Success Looks Like
 
-LunaOS succeeds when:
+Mahina succeeds when:
 
 - Someone installs it on hardware they don't own and it just works
 - Someone watches the boot animation and immediately wants to know how it was made
 - LUNA.AI surfaces the right suggestion at the right moment and the user thinks: *how did it know?*
 - Someone forks the LBUILD repo and submits a package for software we've never heard of
-- A developer opens a fresh LunaOS session and feels like their machine is actually on their side
+- A developer opens a fresh Mahina session and feels like their machine is actually on their side
 
-LunaOS fails if:
+Mahina fails if:
 - It's just another anime rice with nothing under the hood
 - The AI is annoying instead of helpful
 - It only runs on the developer's exact hardware

@@ -1,4 +1,4 @@
-# LunaOS — Boot Flow
+# Mahina — Boot Flow
 **Volume II · Chapter 2**
 **Classification:** Core Architecture — Boot Sequence
 **Status:** Active · Reference for luna-init implementation
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document specifies the complete LunaOS boot sequence from UEFI firmware handoff to a fully operational desktop with LUNA.AI online. It defines stage boundaries, success criteria per stage, timing targets, error handling behavior, and the user-visible boot experience.
+This document specifies the complete Mahina boot sequence from UEFI firmware handoff to a fully operational desktop with LUNA.AI online. It defines stage boundaries, success criteria per stage, timing targets, error handling behavior, and the user-visible boot experience.
 
 This document is the authoritative reference for:
 - `luna-init` boot stage implementation
@@ -19,7 +19,7 @@ This document is the authoritative reference for:
 
 ## Overview
 
-LunaOS boots in seven stages. Each stage is a discrete, verifiable state. Failure in any stage produces a defined error behavior rather than an unhandled crash. The user-visible boot animation is synchronized to stage transitions per the Motion Vocabulary (`core_laws.md` Law III).
+Mahina boots in seven stages. Each stage is a discrete, verifiable state. Failure in any stage produces a defined error behavior rather than an unhandled crash. The user-visible boot animation is synchronized to stage transitions per the Motion Vocabulary (`core_laws.md` Law III).
 
 **Total target boot time to desktop: under 8 seconds on reference hardware.**
 
@@ -128,7 +128,7 @@ limine is configured in `/boot/limine.cfg`:
 # /boot/limine.cfg
 TIMEOUT=1
 
-:LunaOS
+:Mahina
 PROTOCOL=linux
 KERNEL_PATH=boot:///vmlinuz-lunaos
 CMDLINE=root=/dev/sda1 rw quiet splash
@@ -262,7 +262,7 @@ All motion types above are from the locked Motion Vocabulary. No other motion ty
 
 **Framebuffer-to-compositor handoff:**
 
-Per DL-043, LunaOS accepts a brief visual transition (single black frame, ~16ms at 60Hz) between the `luna-splash` framebuffer boot splash and the LGP compositor's first frame.
+Per DL-043, Mahina accepts a brief visual transition (single black frame, ~16ms at 60Hz) between the `luna-splash` framebuffer boot splash and the LGP compositor's first frame.
 - `luna-init` spawns `luna-splash` at Stage 3.
 - `luna-init` sends SIGTERM to `luna-splash` before the compositor takes over in Stage 5.
 - The lgp-compositor's first frame is its own rendered output.
@@ -367,7 +367,7 @@ All boot events are written to `/var/log/luna-init/boot.log` in structured forma
 Example:
 
 ```
-[0000] [0] [luna-init]           [INFO] PID 1 alive. LunaOS Waxing 0.1.0
+[0000] [0] [luna-init]           [INFO] PID 1 alive. Mahina Waxing 0.1.0
 [0120] [1] [luna-init]           [INFO] Root filesystem mounted
 [0145] [2] [luna-init]           [INFO] /proc /sys /dev mounted
 [0340] [3] [luna-init]           [INFO] Hostname: lunabox. Clock synced.

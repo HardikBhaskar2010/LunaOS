@@ -1,4 +1,4 @@
-# LunaOS — Decision Status Standard
+# Mahina — Decision Status Standard
 **Volume I · Chapter 10**
 **Classification:** Foundation Document — Process Standard
 **Status:** Canonical · All decision log entries must comply with this standard going forward
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document defines the **Decision Status system**: a required status field on every architectural decision in LunaOS. Without statuses, a Decision Log becomes a graveyard of old decisions with no way to know which ones are still in force, which were superseded, and which are being reconsidered.
+This document defines the **Decision Status system**: a required status field on every architectural decision in Mahina. Without statuses, a Decision Log becomes a graveyard of old decisions with no way to know which ones are still in force, which were superseded, and which are being reconsidered.
 
 This standard applies to:
 - All entries in `decision_log.md`
@@ -130,7 +130,7 @@ The following is the canonical status assignment for all existing Decision Log e
 | DL-021 | AI Runtime Architecture — Two Independent Systems | ✅ Accepted |
 | DL-022 | Context Service | ✅ Accepted |
 | DL-023 | Persistent Memory | ✅ Accepted |
-| DL-024 | LunaOS Success Criteria | ✅ Accepted |
+| DL-024 | Mahina Success Criteria | ✅ Accepted |
 | DL-025 | LGP Wire Format — TLV Binary | ✅ Accepted |
 | DL-026 | GPU Backend Strategy — Staged Implementation | ✅ Accepted |
 | DL-027 | Root Filesystem — Btrfs | ✅ Accepted |

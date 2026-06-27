@@ -1,4 +1,4 @@
-# LunaOS — Memory Engine
+# Mahina — Memory Engine
 **Volume IV · Chapter 4**
 **Classification:** Core Architecture — AI & Presence
 **Status:** Canonical · This document specifies how LUNA remembers across sessions
@@ -100,7 +100,7 @@ Last updated: 2026-06-27
 
 ## User Profile
 - Primary languages: C, Python
-- Main projects: LunaOS (lunagui, lgp-compositor, luna-ai-d)
+- Main projects: Mahina (lunagui, lgp-compositor, luna-ai-d)
 - Preferred shell: bash
 - Work schedule: typically 09:00–22:00 IST, breaks infrequent
 - Pushes to git: usually between 18:00–20:00
@@ -183,7 +183,7 @@ def read_current_session(session_id: str) -> list[dict]:
 
 ```python
 SUMMARIZATION_PROMPT = """
-You are summarizing a LunaOS session for LUNA's persistent memory.
+You are summarizing a Mahina session for LUNA's persistent memory.
 Be extremely concise. Focus on:
 1. What the user was working on (project names, file names if significant)
 2. Any notable events (errors, crashes, long operations)
@@ -395,7 +395,7 @@ Decision not yet finalized.
 
 ## AI Context
 
-- Memory is the most **privacy-sensitive** component in all of LunaOS. Every line of code that touches `workflow.db` or `persistent_summary.enc` must be reviewed with extreme care.
+- Memory is the most **privacy-sensitive** component in all of Mahina. Every line of code that touches `workflow.db` or `persistent_summary.enc` must be reviewed with extreme care.
 - The persistent summary is injected into every LLM system prompt. Keep it under 8,000 tokens. An oversized summary consumes the LLM's context window and degrades conversation quality.
 - Summarization uses the LLM exactly **once per session**, during shutdown. The Memory Engine never calls the LLM during an active session. If you find yourself writing code that calls the LLM from the Memory Engine during a session, you have the architecture wrong.
 - The atomic write pattern (`write to .tmp → rename`) is mandatory for all persistent memory writes. A partial write to `persistent_summary.enc` would corrupt it permanently. The rename is atomic on all POSIX filesystems.

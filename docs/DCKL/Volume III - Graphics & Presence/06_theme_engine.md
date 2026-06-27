@@ -1,19 +1,19 @@
-# LunaOS — Theme Engine
+# Mahina — Theme Engine
 **Volume III · Chapter 6**
 **Classification:** Core Architecture — Visual Identity System
-**Status:** Active · Governs all visual appearance within LunaOS
+**Status:** Active · Governs all visual appearance within Mahina
 
 ---
 
 ## Purpose
 
-This document specifies the LunaOS Theme Engine: the system that controls the visual appearance of every LunaOS surface — colors, typography, spacing, corner radii, shadow styles, and icon sets — while operating strictly within the boundaries of the Color Semantic Contract and the living_interface_design.md principles.
+This document specifies the Mahina Theme Engine: the system that controls the visual appearance of every Mahina surface — colors, typography, spacing, corner radii, shadow styles, and icon sets — while operating strictly within the boundaries of the Color Semantic Contract and the living_interface_design.md principles.
 
 This document is the authoritative reference for:
 - The theme data format and schema
 - How the Color Resolver maps semantic color codes to actual hex values
 - What themes can and cannot change
-- The default LunaOS theme ("Luna Dark")
+- The default Mahina theme ("Luna Dark")
 - The theme switching mechanism
 - Third-party and user-created theme constraints
 - The relationship between themes and the locked Color Semantic Contract
@@ -50,22 +50,22 @@ The Color Semantic Contract locks the *meanings* of five colors. It does not per
 
 ### Themes express a visual identity, not a new design system
 
-A LunaOS theme is not a complete re-skin that can make LunaOS look like Windows or macOS. It is a surface-level visual identity that works within LunaOS's design vocabulary. The structural elements — which surfaces exist, which ones appear on top, which motions are used — are determined by the OS, not the theme.
+A Mahina theme is not a complete re-skin that can make Mahina look like Windows or macOS. It is a surface-level visual identity that works within Mahina's design vocabulary. The structural elements — which surfaces exist, which ones appear on top, which motions are used — are determined by the OS, not the theme.
 
-This is a deliberate constraint. LunaOS's "presence" identity comes partly from visual consistency. A theme that completely replaces the design system undermines the consistency that makes LUNA's expressions meaningful.
+This is a deliberate constraint. Mahina's "presence" identity comes partly from visual consistency. A theme that completely replaces the design system undermines the consistency that makes LUNA's expressions meaningful.
 
 ### The default theme is the canonical reference
 
-The default theme ("Luna Dark") defines the canonical hex values that all other LunaOS documentation refers to when it says "LUNA Green (#2EFF8A)" etc. If a user applies a different theme, those hex values change on their screen — but the semantic meaning does not.
+The default theme ("Luna Dark") defines the canonical hex values that all other Mahina documentation refers to when it says "LUNA Green (#2EFF8A)" etc. If a user applies a different theme, those hex values change on their screen — but the semantic meaning does not.
 
 ### Dark mode is the default
 
-LunaOS ships dark mode as the default. Light mode is an alternative theme. Per the non_negotiables: "Motion Creates Presence." LUNA's expressions are designed for dark backgrounds — the eye animations, color semantic signals, and particle effects are all tuned for dark surfaces.
+Mahina ships dark mode as the default. Light mode is an alternative theme. Per the non_negotiables: "Motion Creates Presence." LUNA's expressions are designed for dark backgrounds — the eye animations, color semantic signals, and particle effects are all tuned for dark surfaces.
 
 ```
 TODO:
 Decision not yet finalized.
-Reason: Whether LunaOS ships a light mode theme as a built-in option in v1
+Reason: Whether Mahina ships a light mode theme as a built-in option in v1
 has not been formally decided. The non-negotiables establish dark as the default.
 Light mode is a high-requested feature for users in bright environments.
 Must be a Decision Log entry. Recommendation: ship both in v1.
@@ -77,15 +77,15 @@ Must be a Decision Log entry. Recommendation: ship both in v1.
 
 ### Theme Data Format
 
-LunaOS themes are defined in TOML files (DL-008 — TOML is the system configuration format):
+Mahina themes are defined in TOML files (DL-008 — TOML is the system configuration format):
 
 ```toml
 # /usr/share/luna/themes/luna-dark/theme.toml
-# Official LunaOS default theme — Luna Dark
+# Official Mahina default theme — Luna Dark
 
 [meta]
 name        = "Luna Dark"
-author      = "LunaOS Project"
+author      = "Mahina Project"
 version     = "1.0"
 base        = "dark"    # "dark" or "light" — affects default contrast assumptions
 license     = "MIT"
@@ -336,12 +336,12 @@ Icon naming follows a flat namespace: `{category}-{name}`. Size variants are aut
 ```
 TODO:
 Decision not yet finalized.
-Reason: The LunaOS icon set has not been created. A v1 system needs at minimum:
+Reason: The Mahina icon set has not been created. A v1 system needs at minimum:
   - Application icons for built-in applications
   - System icons (close, minimize, settings, wifi, battery, notification, etc.)
   - File type icons
   - Status icons (health states, network states, etc.)
-Whether LunaOS creates original icons or adapts an existing open-source
+Whether Mahina creates original icons or adapts an existing open-source
 icon set (e.g., Fluent UI icons, Phosphor icons) has not been decided.
 Original icons are preferred for visual identity. Must be a design Decision.
 ```
@@ -397,7 +397,7 @@ Decision not yet finalized.
 
 3. **Default typeface.** Inter / Noto Sans / IBM Plex Sans. Must be a Decision Log entry (shared with `04_lunagui.md` Open Question 2).
 
-4. **Icon set.** Original LunaOS icons vs. adapted open-source set. Must be a design decision before v1 UI development begins.
+4. **Icon set.** Original Mahina icons vs. adapted open-source set. Must be a design decision before v1 UI development begins.
 
 5. **User theme directory.** `~/.luna/themes/` is proposed. Consistent with the `~/.luna/` user data pattern. Confirm this is the right location.
 
@@ -409,7 +409,7 @@ Decision not yet finalized.
 
 ## AI Context
 
-An AI agent implementing UI components for LunaOS must understand:
+An AI agent implementing UI components for Mahina must understand:
 
 - Never hardcode hex color values in UI code. Always use `LunaTheme.current().colors.*` for themed colors, or `LGP_SET_SEMANTIC_COLOR` semantic codes for protocol-level color declarations.
 - The five semantic colors have fixed meanings. LUNA Green = healthy/success. LUNA Pink = critical/danger. LUNA Amber = warning. LUNA White = neutral. LUNA Void = inactive. Do not use LUNA Green for decorative purposes — it communicates operational status.

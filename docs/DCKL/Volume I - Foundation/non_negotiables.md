@@ -1,4 +1,4 @@
-# LunaOS Non-Negotiable Decisions
+# Mahina Non-Negotiable Decisions
 
 These decisions are FINAL.
 

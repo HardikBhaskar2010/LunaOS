@@ -1,4 +1,4 @@
-# LunaOS — Architecture Overview
+# Mahina — Architecture Overview
 **Volume II · Chapter 1**
 **Classification:** Core Architecture — System Design
 **Status:** Active · Canonical Reference
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document provides the structural overview of the LunaOS software stack. It defines how every major subsystem relates to every other subsystem, establishes the communication topology, and serves as the entry point for all Volume II technical documentation.
+This document provides the structural overview of the Mahina software stack. It defines how every major subsystem relates to every other subsystem, establishes the communication topology, and serves as the entry point for all Volume II technical documentation.
 
 Every subsequent Volume II document describes one subsystem in detail. This document describes the whole.
 
@@ -15,7 +15,7 @@ Every subsequent Volume II document describes one subsystem in detail. This docu
 
 ## Overview
 
-LunaOS is a Linux-based operating system built from intentional component choices with no inherited base distribution. Every layer — from bootloader to desktop shell — was selected or written explicitly for this project.
+Mahina is a Linux-based operating system built from intentional component choices with no inherited base distribution. Every layer — from bootloader to desktop shell — was selected or written explicitly for this project.
 
 ### Non-Negotiable Constraints
 
@@ -33,7 +33,7 @@ The following architectural constraints are permanently fixed and may never be o
 | LUNA is a Digital Presence | ✅ Required | `non_negotiables.md`, `identity.md` |
 | Motion communicates state | ✅ Required | `non_negotiables.md`, Core Law III |
 
-Any document, AI agent, or contributor that introduces Wayland, Hyprland, GNOME, or KDE into LunaOS documentation or code violates project law. These are not subject to discussion or future decision log entries.
+Any document, AI agent, or contributor that introduces Wayland, Hyprland, GNOME, or KDE into Mahina documentation or code violates project law. These are not subject to discussion or future decision log entries.
 
 ---
 
@@ -45,11 +45,11 @@ The architecture derives directly from the Core Laws and the documentation hiera
 Vision → Philosophy → Core Laws → Identity → Architecture → Subsystems → Implementation → Code
 ```
 
-Every architectural decision is recorded in `decision_log.md`. No subsystem may be added to LunaOS without a corresponding Decision Log entry answering: what does it do, why this choice, what does it touch, what maintains it.
+Every architectural decision is recorded in `decision_log.md`. No subsystem may be added to Mahina without a corresponding Decision Log entry answering: what does it do, why this choice, what does it touch, what maintains it.
 
 **Key design constraints from Core Laws:**
 
-1. **Own Every Layer (Law I).** No mystery processes. Every process running on LunaOS was explicitly started by `luna-init` or is a direct child of an explicitly started process.
+1. **Own Every Layer (Law I).** No mystery processes. Every process running on Mahina was explicitly started by `luna-init` or is a direct child of an explicitly started process.
 
 2. **Local First (Law II).** Every core feature works without internet connectivity. AI inference is local. Cloud is opt-in only.
 
@@ -130,7 +130,7 @@ The kernel configuration is tracked in `kernel/.config` with comments in `kernel
 
 ### Layer 4 — Graphics, LGP, and LunaGUI
 
-The LunaOS graphics stack is built around two related but distinct components (DL-004R — hybrid graphics architecture):
+The Mahina graphics stack is built around two related but distinct components (DL-004R — hybrid graphics architecture):
 
 **Luna Graphics Protocol (LGP):** The foundational graphics protocol between the compositor and all graphical clients. Exposes the Color Semantic Contract, Motion Vocabulary, and Animation Budget as protocol-level primitives. Advanced applications may use LGP directly.
 
@@ -150,7 +150,7 @@ This volume documents the architectural roles without specifying formats.
 What is decided (DL-004R):
 - LGP is the graphics protocol. No Wayland protocol is used.
 - LunaGUI is the standard application toolkit, built on LGP.
-- A custom LunaOS-written compositor is the rendering target.
+- A custom Mahina-written compositor is the rendering target.
 - Luna Island is a native compositor surface.
 - Advanced applications may use LGP directly without LunaGUI.
 
@@ -161,7 +161,7 @@ What is not yet decided:
 
 ### Layer 5 — Userland Shell
 
-The LunaOS desktop shell is a set of independent processes coordinated through defined IPC channels.
+The Mahina desktop shell is a set of independent processes coordinated through defined IPC channels.
 
 | Component | Role |
 |---|---|
@@ -271,7 +271,7 @@ All decisions are recorded in `decision_log.md`. Decisions affecting architectur
 | DL-010 | luna-ai-d on localhost:7734 |
 | DL-021 | AI Runtime: Presence Engine (boot) and LLM Inference Engine (lazy) |
 
-Note: DL-004 is superseded by DL-004R (Architecture Review Meeting #2). The graphics architecture is hybrid: LunaGUI for standard applications, direct LGP for advanced applications. A custom LunaOS compositor is the rendering target. This is now formally recorded in `decision_log.md`.
+Note: DL-004 is superseded by DL-004R (Architecture Review Meeting #2). The graphics architecture is hybrid: LunaGUI for standard applications, direct LGP for advanced applications. A custom Mahina compositor is the rendering target. This is now formally recorded in `decision_log.md`.
 
 Note: DL-021 (AI Runtime) splits LUNA into Presence Engine (boot-time) and LLM Inference Engine (lazy). Ollama is not a boot-time service.
 
@@ -322,7 +322,7 @@ Full timing targets per stage are in `02_boot_flow.md`.
 
 ### Rolling Release
 
-LunaOS follows a rolling release model. There are no periodic major version freezes after v1.0. Packages update continuously. System updates are manual (`lpkg update` — never automatic). Breaking changes require a new DCKL major version entry.
+Mahina follows a rolling release model. There are no periodic major version freezes after v1.0. Packages update continuously. System updates are manual (`lpkg update` — never automatic). Breaking changes require a new DCKL major version entry.
 
 ---
 
@@ -361,7 +361,7 @@ Decision not yet finalized.
 
 ## AI Context
 
-An AI agent implementing LunaOS must observe these constraints absolutely:
+An AI agent implementing Mahina must observe these constraints absolutely:
 
 - **No Wayland.** No Hyprland. No GNOME. No KDE. These are non-negotiable. Any document, code, or configuration referencing these systems violates project law and must be rejected.
 - **LGP is the graphics protocol.** Until Volume III / 01_lgp.md defines LGP, no graphics protocol implementation decisions may be made. Mark all graphics IPC as TODO.

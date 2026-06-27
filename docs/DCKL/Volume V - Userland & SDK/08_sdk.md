@@ -1,15 +1,15 @@
-# LunaOS — Developer SDK
+# Mahina — Developer SDK
 **Volume V · Chapter 8**
 **Classification:** Core Architecture — Userland
-**Status:** Canonical · This document specifies the LunaOS SDK for third-party application developers
+**Status:** Canonical · This document specifies the Mahina SDK for third-party application developers
 
 ---
 
 ## Purpose
 
-This document specifies the **LunaOS SDK** — the high-level developer toolkit for building applications that feel native to LunaOS. The SDK wraps the LGP API and D-Bus system services into a developer-friendly library so that application developers can focus on their app logic, not on protocol implementation.
+This document specifies the **Mahina SDK** — the high-level developer toolkit for building applications that feel native to Mahina. The SDK wraps the LGP API and D-Bus system services into a developer-friendly library so that application developers can focus on their app logic, not on protocol implementation.
 
-The SDK answers: "I want to build a LunaOS app. Where do I start?"
+The SDK answers: "I want to build a Mahina app. Where do I start?"
 
 ---
 
@@ -59,7 +59,7 @@ SDK language support:
   Planned:    Rust (v1.5 — safe, modern systems language)
 
   Not planned: JavaScript/TypeScript, Java, Kotlin, Swift
-               (contradicts LunaOS lean philosophy)
+               (contradicts Mahina lean philosophy)
 ```
 
 ---
@@ -69,7 +69,7 @@ SDK language support:
 ### LunaApp (C API)
 
 ```c
-// Every LunaOS application starts here.
+// Every Mahina application starts here.
 
 #include <luna/sdk.h>
 
@@ -103,7 +103,7 @@ typedef struct luna_app_config {
 ### Application Lifecycle
 
 ```c
-// Minimal LunaOS application
+// Minimal Mahina application
 
 #include <luna/sdk.h>
 
@@ -494,7 +494,7 @@ Decision not yet finalized.
 - All SDK widgets **auto-apply the active theme**. Do not expose per-widget color parameters — that breaks the theming system. If a widget needs a color, it uses a semantic token from the theme.
 - Context publishing via `luna_context_*` is **always opt-in**. The app's `luna.toml` must grant the relevant permissions, and the user's `observe.toml` must include the app. Never publish context without checking permissions first.
 - The SDK wraps LGP and D-Bus. It does not replace them. If an application needs something the SDK doesn't expose, it can call the LGP API and D-Bus directly — the SDK is additive, not restrictive.
-- LUNA Assist integration (`luna_assist_register`) is a first-class SDK feature. Every application that has meaningful context (editors, IDEs, document viewers) should implement it. This is what makes the LunaOS ecosystem feel alive.
+- LUNA Assist integration (`luna_assist_register`) is a first-class SDK feature. Every application that has meaningful context (editors, IDEs, document viewers) should implement it. This is what makes the Mahina ecosystem feel alive.
 
 ---
 

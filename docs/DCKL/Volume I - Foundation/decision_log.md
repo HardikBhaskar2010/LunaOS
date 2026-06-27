@@ -1,4 +1,4 @@
-# LunaOS — Decision Log
+# Mahina — Decision Log
 **Volume I · Chapter 6**
 **Classification:** Foundation Document — Architecture Record
 **Status:** Append-only. Decisions are never deleted, only superseded.
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document records every significant architectural, design, or strategic decision made during LunaOS development. It exists so that:
+This document records every significant architectural, design, or strategic decision made during Mahina development. It exists so that:
 
 1. Future contributors understand *why* things are the way they are
 2. AI tools (Claude Code, etc.) have full context when making changes
@@ -45,7 +45,7 @@ What does this lock in or rule out?
 **Status:** ACCEPTED — Constitutional (see Core Laws)
 
 ### Question
-Should LunaOS base on an existing distribution (Arch, Debian, Void) or build fully from scratch?
+Should Mahina base on an existing distribution (Arch, Debian, Void) or build fully from scratch?
 
 ### Options Considered
 - **Arch Linux base** — Maximum flexibility, AUR available, familiar
@@ -57,7 +57,7 @@ Should LunaOS base on an existing distribution (Arch, Debian, Void) or build ful
 Linux From Scratch approach. No upstream base.
 
 ### Reasoning
-The entire premise of LunaOS is that every layer is owned and understood. Using Arch or Debian would mean inheriting thousands of decisions we didn't make and can't fully account for. Specifically:
+The entire premise of Mahina is that every layer is owned and understood. Using Arch or Debian would mean inheriting thousands of decisions we didn't make and can't fully account for. Specifically:
 - We want to write `luna-init` — using Arch would mean coexisting with or replacing systemd, not starting clean
 - We want to control the kernel config precisely — distro kernels include hundreds of drivers and options we don't need
 - The narrative of "built from scratch" is central to the project's identity
@@ -76,7 +76,7 @@ The entire premise of LunaOS is that every layer is owned and understood. Using 
 **Status:** ACCEPTED
 
 ### Question
-Which init system should LunaOS use?
+Which init system should Mahina use?
 
 ### Options Considered
 - **systemd** — Industry standard, feature-complete, complex
@@ -138,7 +138,7 @@ Python for v1. Rust rewrite planned for v2 if performance matters.
 **Status:** ACCEPTED
 
 ### Question
-Which Wayland compositor strategy for LunaOS?
+Which Wayland compositor strategy for Mahina?
 
 ### Options Considered
 - **Write custom compositor from scratch using wlroots**
@@ -158,7 +158,7 @@ Ship Hyprland for v1. Build wlroots-based custom compositor for v2.
 
 ### Consequences
 - v1 has a Hyprland dependency — must write LBUILD for it
-- Hyprland config changes can break LunaOS shell behavior
+- Hyprland config changes can break Mahina shell behavior
 - IPC socket path is Hyprland-specific — abstraction layer needed for v2 migration
 - Custom compositor in v2 is not optional — it's needed for Luna Island proper layer implementation
 
@@ -170,7 +170,7 @@ Ship Hyprland for v1. Build wlroots-based custom compositor for v2.
 **Status:** ACCEPTED — GRUB2 deferred
 
 ### Question
-Which bootloader for LunaOS?
+Which bootloader for Mahina?
 
 ### Options Considered
 - **GRUB2** — Universal, extensive theming examples, complex config
@@ -229,7 +229,7 @@ Ollama for v1. llama.cpp direct for v2 if overhead is measurable.
 **Status:** ACCEPTED — phased migration
 
 ### Question
-Which C library for LunaOS userspace?
+Which C library for Mahina userspace?
 
 ### Options Considered
 - **glibc** — Maximum binary compatibility, heavy, complex
@@ -265,7 +265,7 @@ What config format for luna-init service files, lpkg manifests, luna.toml?
 - **JSON** — Not human-writable
 
 ### Decision
-TOML for all LunaOS config files.
+TOML for all Mahina config files.
 
 ### Reasoning
 - YAML's whitespace sensitivity causes hard-to-debug errors
@@ -322,7 +322,7 @@ Should LUNA address the user by: system username | user-set name | never | syste
 **Target:** Before v1 beta
 
 ### [DL-P02] Sound design
-Does LunaOS have UI sounds? Boot chime? Notification audio?
+Does Mahina have UI sounds? Boot chime? Notification audio?
 **Target:** Before v1 release
 
 ### [DL-P03] Default wallpaper
@@ -360,7 +360,7 @@ Phase 2 (booting to desktop) for early community vs. Phase 4 (polished) for big 
 What graphics architecture model serves both simple application developers and high-performance software?
 
 ### Decision
-LunaOS adopts a **hybrid graphics architecture**:
+Mahina adopts a **hybrid graphics architecture**:
 - Standard applications communicate through the **LunaGUI toolkit**
 - Advanced applications may communicate directly with the **Luna Graphics Protocol (LGP)**
 
@@ -384,7 +384,7 @@ LunaOS adopts a **hybrid graphics architecture**:
 **Source:** Discussion_Session_2.md (was numbered DL-005 internally)
 
 ### Question
-What filesystem strategy for the LunaOS root partition?
+What filesystem strategy for the Mahina root partition?
 
 ### Decision
 The root filesystem must prioritize **maximum performance** and **simple recovery**.
@@ -414,12 +414,12 @@ Manual snapshots remain available at any time.
 **Source:** Discussion_Session_2.md (was numbered DL-006 internally)
 
 ### Decision
-LunaOS follows the **standard Linux UEFI partition layout** for the EFI System Partition (ESP).
+Mahina follows the **standard Linux UEFI partition layout** for the EFI System Partition (ESP).
 
 ### Reasoning
 - Preserves compatibility with existing firmware, dual-boot environments, and recovery tooling
 - Reduces installer complexity
-- Future internal directory structures within LunaOS may differ, but the ESP remains standards-compliant
+- Future internal directory structures within Mahina may differ, but the ESP remains standards-compliant
 
 ### Consequences
 - ESP is FAT32, mounted at `/boot/efi` (standard location)
@@ -479,7 +479,7 @@ A future **LunaDNS** service may replace it after sufficient architectural resea
 **Source:** Discussion_Session_2.md (was numbered DL-009 internally)
 
 ### Decision
-LunaOS uses the **existing Linux time synchronization service** (chrony or ntpd — standard upstream tool).
+Mahina uses the **existing Linux time synchronization service** (chrony or ntpd — standard upstream tool).
 
 Time synchronization is not a differentiating subsystem for v1.
 
@@ -579,7 +579,7 @@ Reliability takes precedence over partial installation.
 **Source:** Discussion_Session_2.md (was numbered DL-013 internally)
 
 ### Decision
-LunaOS supports:
+Mahina supports:
 - Official repositories
 - Community repositories
 - Third-party repositories
@@ -592,7 +592,7 @@ Security is achieved through **verification, not limitation**:
 - User warnings
 
 ### Reasoning
-- Blocking software sources artificially restricts what LunaOS can run
+- Blocking software sources artificially restricts what Mahina can run
 - Verification-based security provides protection without reducing capability
 - Community and third-party repos are essential for a living ecosystem
 
@@ -686,7 +686,7 @@ Only approved data sources may be observed. No hidden monitoring.
 - Aligns with Core Law II Privacy Sub-Law (deny-by-default observation) and Core Law IV (Silence Before Suggestion)
 
 ### Consequences
-- The LunaOS installer must include an observation permission configuration step
+- The Mahina installer must include an observation permission configuration step
 - `~/.luna/config/observe.toml` is populated during installation, not during first run
 - The installer UI must clearly communicate what each observation permission does
 - "Context service" = the Presence Engine's context awareness component (DL-021)
@@ -724,7 +724,7 @@ Long-term memory remains entirely under user control.
 
 ---
 
-## [DL-024] LunaOS Success Criteria
+## [DL-024] Mahina Success Criteria
 
 **Date:** Architecture Review Meeting #2
 **Status:** CANONICAL
@@ -737,7 +737,7 @@ Version 1.0 succeeds when:
 
 Neither goal may come at the expense of the other.
 
-**Performance and Presence are equal pillars of LunaOS.**
+**Performance and Presence are equal pillars of Mahina.**
 
 ### Consequences
 - Every architectural and implementation decision is evaluated against both criteria simultaneously
@@ -757,7 +757,7 @@ Neither goal may come at the expense of the other.
 The Luna Graphics Protocol uses **TLV (Type-Length-Value)** binary framing for all wire messages. Each message consists of a 1-byte type field, a 4-byte length field, and an N-byte payload. No external serialization framework is required.
 
 ### Rationale
-LGP must be dependency-free, easy to debug in C, and simple to evolve. TLV provides append-compatible message evolution, excellent hex-dump debuggability, and a minimal parser footprint. Schema-driven alternatives (Cap'n Proto, FlatBuffers) add build-time dependencies that contradict LunaOS's local-first, minimal-dependency philosophy.
+LGP must be dependency-free, easy to debug in C, and simple to evolve. TLV provides append-compatible message evolution, excellent hex-dump debuggability, and a minimal parser footprint. Schema-driven alternatives (Cap'n Proto, FlatBuffers) add build-time dependencies that contradict Mahina's local-first, minimal-dependency philosophy.
 
 ### Consequences
 - All compositor and client implementations encode/decode LGP messages using the TLV format
@@ -798,7 +798,7 @@ Separating "compositor protocol works" (Stage 2) from "GPU backend works" (Stage
 **Supersedes:** DL-011 (was Experimental/Provisional)
 
 ### Decision
-LunaOS uses **Btrfs** as the root filesystem. ext4 is not the primary target.
+Mahina uses **Btrfs** as the root filesystem. ext4 is not the primary target.
 
 Automatic Btrfs snapshots are created before:
 - System updates
@@ -808,7 +808,7 @@ Automatic Btrfs snapshots are created before:
 Manual snapshots remain available at any time.
 
 ### Rationale
-The snapshot requirement is a first-class LunaOS feature, not an afterthought. Btrfs delivers native snapshots, copy-on-write, and rollback capability that align with LunaOS's recovery architecture. ext4 cannot deliver these natively. DL-011 was Provisional pending this confirmation — it is now superseded.
+The snapshot requirement is a first-class Mahina feature, not an afterthought. Btrfs delivers native snapshots, copy-on-write, and rollback capability that align with Mahina's recovery architecture. ext4 cannot deliver these natively. DL-011 was Provisional pending this confirmation — it is now superseded.
 
 ### Consequences
 - Installer partitions the root filesystem as Btrfs
@@ -826,7 +826,7 @@ The snapshot requirement is a first-class LunaOS feature, not an afterthought. B
 **Supersedes:** DL-P05 (pending — was recommending Inter)
 
 ### Decision
-**Bitcount** is the canonical LunaOS system font for personality-forward contexts:
+**Bitcount** is the canonical Mahina system font for personality-forward contexts:
 - Boot screen
 - Login
 - Dock
@@ -835,16 +835,16 @@ The snapshot requirement is a first-class LunaOS feature, not an afterthought. B
 - Branding
 - Major UI headings
 
-For dense reading contexts (documentation, terminals, editors, productivity applications), LunaOS uses optimized companion fonts selected for readability. The companion font is to be determined in a future design decision.
+For dense reading contexts (documentation, terminals, editors, productivity applications), Mahina uses optimized companion fonts selected for readability. The companion font is to be determined in a future design decision.
 
 ### Architectural Principle (from AR-004)
 > Personality where it matters. Readability where it matters.
 
 ### Rationale
-Bitcount provides LunaOS with a distinctive visual identity that no other operating system shares. Generic screen fonts (Inter, Noto) would produce a desktop that looks like any other Linux distribution. The split usage policy ensures personality never comes at the expense of readability for extended reading tasks.
+Bitcount provides Mahina with a distinctive visual identity that no other operating system shares. Generic screen fonts (Inter, Noto) would produce a desktop that looks like any other Linux distribution. The split usage policy ensures personality never comes at the expense of readability for extended reading tasks.
 
 ### Consequences
-- Bitcount font files ship with LunaOS base install
+- Bitcount font files ship with Mahina base install
 - `LunaTheme.current().typography.family_display` = "Bitcount"
 - A separate `typography.family_reading` token will hold the companion font (pending DL entry)
 - Volume III / 06_theme_engine.md typeface section updated to Bitcount
@@ -879,7 +879,7 @@ FreeType + HarfBuzz is the industry standard for Linux text rendering. It provid
 LunaGUI v1 uses a **flexbox-style box model** layout engine: horizontal and vertical containers with grow/shrink semantics. Constraint-based layout may be introduced in v1.5 or later.
 
 ### Rationale
-The flexbox model handles the vast majority of LunaOS application layouts (settings panels, file managers, status bars, dialogs) with minimal implementation complexity. A constraint solver is significantly harder to implement correctly and debug, and is not required for v1 UI targets.
+The flexbox model handles the vast majority of Mahina application layouts (settings panels, file managers, status bars, dialogs) with minimal implementation complexity. A constraint solver is significantly harder to implement correctly and debug, and is not required for v1 UI targets.
 
 ### Consequences
 - `LunaPanel` widget supports `direction: horizontal | vertical`, `gap`, `align`, `justify` properties
@@ -917,7 +917,7 @@ D-Bus is already running at Stage 4. Using it for the compositor readiness signa
 The LGP compositor uses **libinput** for all input device management.
 
 ### Rationale
-LunaOS will not reimplement years of touchpad compatibility, pointer acceleration, gesture recognition, and device quirk handling. libinput provides all of this and allows engineering effort to focus on LunaOS-specific components. Raw evdev is not a viable alternative for a complete OS.
+Mahina will not reimplement years of touchpad compatibility, pointer acceleration, gesture recognition, and device quirk handling. libinput provides all of this and allows engineering effort to focus on Mahina-specific components. Raw evdev is not a viable alternative for a complete OS.
 
 ### Consequences
 - `libinput` is a first-party dependency of lgp-compositor
@@ -934,7 +934,7 @@ LunaOS will not reimplement years of touchpad compatibility, pointer acceleratio
 **Supersedes:** DL-P08 (pending)
 
 ### Decision
-The LunaOS clipboard is implemented as **LGP protocol extension `lgp_ext_clipboard_v1`**. The compositor owns clipboard state. Clipboard access is governed by the Permission Engine. Applications never communicate clipboard data directly with one another.
+The Mahina clipboard is implemented as **LGP protocol extension `lgp_ext_clipboard_v1`**. The compositor owns clipboard state. Clipboard access is governed by the Permission Engine. Applications never communicate clipboard data directly with one another.
 
 ### Rationale
 Clipboard ownership by the compositor is architecturally consistent — the compositor already routes input and surfaces. Applications declaring clipboard ownership do so via LGP, and the compositor brokers read requests. This model prevents clipboard snooping by third-party applications without explicit permission.
@@ -1003,7 +1003,7 @@ luna-init should not render graphics. luna-shell is lower-trust and could theore
 **Supersedes:** DL-013 (was Draft — criteria defined, choice pending)
 
 ### Decision
-LunaOS v1 uses **wpa_supplicant** as the Wi-Fi authentication backend, managed by NetworkManager. Migration to iwd may be reconsidered after broader hardware validation in a future release.
+Mahina v1 uses **wpa_supplicant** as the Wi-Fi authentication backend, managed by NetworkManager. Migration to iwd may be reconsidered after broader hardware validation in a future release.
 
 ### Rationale
 Maximum hardware compatibility is the highest networking priority for v1. wpa_supplicant has broader device support than iwd on current Linux hardware. The NetworkManager integration for wpa_supplicant is mature and well-tested.
@@ -1042,7 +1042,7 @@ Graphical clients use the LGP channel they already have open. Non-graphical serv
 **Session:** AR-004
 
 ### Decision
-LunaOS uses a **swapfile + zram** combination with the following memory hierarchy:
+Mahina uses a **swapfile + zram** combination with the following memory hierarchy:
 1. RAM (primary)
 2. zram (compressed RAM — first swap tier)
 3. Swapfile at `/swapfile` (second swap tier, disk-backed)
@@ -1064,10 +1064,10 @@ Swapfile is simpler than a dedicated swap partition (resizable, no repartitionin
 **Supersedes:** DL-P15 (pending — was recommending shipping both light and dark)
 
 ### Decision
-LunaOS Version 1 ships **Luna Dark only**. Light mode is intentionally postponed to a future release.
+Mahina Version 1 ships **Luna Dark only**. Light mode is intentionally postponed to a future release.
 
 ### Rationale
-Dark mode is LunaOS's visual identity. LUNA's expressions, Island behavior, motion language, semantic color semantics, and particle effects are designed for dark environments. Shipping a light mode in v1 that has not received the same design attention would undermine the coherence of the visual identity. Light mode will be added when it can be designed to the same standard.
+Dark mode is Mahina's visual identity. LUNA's expressions, Island behavior, motion language, semantic color semantics, and particle effects are designed for dark environments. Shipping a light mode in v1 that has not received the same design attention would undermine the coherence of the visual identity. Light mode will be added when it can be designed to the same standard.
 
 ### Consequences
 - Theme picker in v1 shows Luna Dark as the only built-in option
@@ -1083,13 +1083,13 @@ Dark mode is LunaOS's visual identity. LUNA's expressions, Island behavior, moti
 **Supersedes:** DL-P12 (pending)
 
 ### Decision
-LunaOS exposes accessibility information via **AT-SPI2** (Assistive Technology Service Provider Interface v2). Existing Linux screen readers (Orca, etc.) work without modification.
+Mahina exposes accessibility information via **AT-SPI2** (Assistive Technology Service Provider Interface v2). Existing Linux screen readers (Orca, etc.) work without modification.
 
 **v1 minimum:** Full keyboard navigation in all LunaGUI widgets.
 **v1.5 target:** AT-SPI2 bridge allowing external screen readers to interrogate the widget tree.
 
 ### Rationale
-Accessibility is a first-class requirement. Using the AT-SPI2 standard means existing assistive technology works without LunaOS-specific modifications. A custom protocol would require screen reader developers to implement LunaOS-specific support — an unacceptable barrier.
+Accessibility is a first-class requirement. Using the AT-SPI2 standard means existing assistive technology works without Mahina-specific modifications. A custom protocol would require screen reader developers to implement Mahina-specific support — an unacceptable barrier.
 
 ### Consequences
 - LunaGUI v1 implements keyboard navigation for all interactive widgets (Tab, Shift-Tab, Enter, Space)
@@ -1157,7 +1157,7 @@ A fixed 6 GB cap was a documentation estimate that does not account for model va
 **Session:** AR-004
 
 ### Decision
-LunaOS Version 1 accepts a **brief visual transition** (single black frame, ~16ms at 60Hz) between the luna-init framebuffer boot splash and the LGP compositor's first frame. No architectural complexity is introduced to eliminate this cut.
+Mahina Version 1 accepts a **brief visual transition** (single black frame, ~16ms at 60Hz) between the luna-init framebuffer boot splash and the LGP compositor's first frame. No architectural complexity is introduced to eliminate this cut.
 
 ### Rationale
 Eliminating the cut requires the compositor to start before Stage 4 system services are complete — a bootstrapping problem that creates more complexity than it solves. One frame of black at 60Hz is perceptually imperceptible. Visual polish of the boot transition can be improved in a future release without affecting system architecture.

@@ -1,13 +1,13 @@
-# LunaOS — Animation Engine
+# Mahina — Animation Engine
 **Volume III · Chapter 5**
 **Classification:** Core Architecture — Motion System
-**Status:** Active · The animation engine is what makes LunaOS feel alive
+**Status:** Active · The animation engine is what makes Mahina feel alive
 
 ---
 
 ## Purpose
 
-This document specifies the LunaOS Animation Engine: the compositor-resident system that drives all motion on screen, enforces the Animation Budget, and translates Motion Vocabulary class declarations into per-frame surface transforms.
+This document specifies the Mahina Animation Engine: the compositor-resident system that drives all motion on screen, enforces the Animation Budget, and translates Motion Vocabulary class declarations into per-frame surface transforms.
 
 This document is the authoritative reference for:
 - How the animation engine integrates with the rendering pipeline
@@ -21,7 +21,7 @@ This document is the authoritative reference for:
 
 ## Overview
 
-The Animation Engine runs inside the LGP compositor (not as a separate process). It advances once per frame, driven by the compositor's vsync-aligned frame clock. It is the component that makes LunaOS feel alive — every surface transition, every LUNA expression change, every notification appearance is driven by the animation engine.
+The Animation Engine runs inside the LGP compositor (not as a separate process). It advances once per frame, driven by the compositor's vsync-aligned frame clock. It is the component that makes Mahina feel alive — every surface transition, every LUNA expression change, every notification appearance is driven by the animation engine.
 
 The animation engine has one fundamental constraint it must never violate: **no animation may exceed its class ceiling from the Animation Budget table in `core_laws.md` Law III.** This constraint is enforced by auto-completion — an animation that reaches its ceiling is snapped to its final state in the next frame, regardless of its intended visual arc.
 

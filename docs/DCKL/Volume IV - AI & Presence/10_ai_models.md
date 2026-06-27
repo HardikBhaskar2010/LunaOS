@@ -1,13 +1,13 @@
-# LunaOS — AI Models
+# Mahina — AI Models
 **Volume IV · Chapter 10**
 **Classification:** Core Architecture — AI & Presence
-**Status:** Canonical · This document defines which AI models LunaOS uses, how they are managed, and how LUNA handles resource constraints
+**Status:** Canonical · This document defines which AI models Mahina uses, how they are managed, and how LUNA handles resource constraints
 
 ---
 
 ## Purpose
 
-This document specifies the **AI model layer** of LunaOS: which models are used for language understanding, which for vision, which for voice, how they are installed and updated, how resource limits are enforced, and how LUNA behaves when models are unavailable.
+This document specifies the **AI model layer** of Mahina: which models are used for language understanding, which for vision, which for voice, how they are installed and updated, how resource limits are enforced, and how LUNA behaves when models are unavailable.
 
 This is the document that answers: "What is LUNA actually running under the hood, and why?"
 
@@ -16,10 +16,10 @@ This is the document that answers: "What is LUNA actually running under the hood
 ## Overview
 
 ```
-AI model landscape in LunaOS:
+AI model landscape in Mahina:
 
   ┌────────────────────────────────────────────────────────┐
-  │  LunaOS AI Model Stack                                  │
+  │  Mahina AI Model Stack                                  │
   │                                                          │
   │  ┌──────────────────────────────────────────────────┐   │
   │  │  Language Models (LLM)                           │   │
@@ -147,7 +147,7 @@ These targets must be validated on the minimum recommended hardware:
 
 ## Model Security
 
-To prevent supply-chain attacks via compromised LLM models, LunaOS enforces strict hash pinning. Ollama is not trusted to validate its own downloads independently.
+To prevent supply-chain attacks via compromised LLM models, Mahina enforces strict hash pinning. Ollama is not trusted to validate its own downloads independently.
 
 ```
 Model Hash Verification Flow:
@@ -161,7 +161,7 @@ Model Hash Verification Flow:
   7. Before Ollama can load the model into RAM, `lpkg` performs a hash check against the downloaded blob.
   8. If the hash fails, `lpkg` deletes the blob and logs a FATAL security error.
 
-  This ensures that only models explicitly verified and signed by the LunaOS core team can be executed by the AI Runtime.
+  This ensures that only models explicitly verified and signed by the Mahina core team can be executed by the AI Runtime.
 ```
 
 ---
@@ -348,7 +348,7 @@ DEGRADED mode behavior:
 ```
 Model update rules:
 
-  LunaOS does NOT auto-update AI models.
+  Mahina does NOT auto-update AI models.
   Rationale: Model updates can change behavior significantly.
              The user should control when a model changes.
 
@@ -450,11 +450,11 @@ Decision not yet finalized.
 
 2. **Model download on first boot.** If no model is installed, LUNA downloads phi3:mini automatically. This requires internet access during first boot. The installer must inform the user of this requirement. What happens if first boot is offline? Must be documented in the installer spec (Volume V/06).
 
-3. **AVX2 requirement.** llama.cpp performs best with AVX2. Older CPUs without AVX2 will run extremely slowly. Should LunaOS require AVX2 as a minimum hardware feature? Must be a hardware requirements Decision Log entry.
+3. **AVX2 requirement.** llama.cpp performs best with AVX2. Older CPUs without AVX2 will run extremely slowly. Should Mahina require AVX2 as a minimum hardware feature? Must be a hardware requirements Decision Log entry.
 
 4. **Model disk quota.** Users can install multiple large models. The Context Engine should monitor disk usage and warn when model storage exceeds a threshold. Currently specified as a TODO — must be implemented in lpkg or luna-settings.
 
-5. **Model hash verification source.** Who maintains the trusted hash list for model verification? If Ollama's hash is compromised, LunaOS would download a malicious model. Consider: pin model hashes in LunaOS's own package manifest. Must be a security Decision Log entry.
+5. **Model hash verification source.** Who maintains the trusted hash list for model verification? If Ollama's hash is compromised, Mahina would download a malicious model. Consider: pin model hashes in Mahina's own package manifest. Must be a security Decision Log entry.
 
 ---
 
@@ -462,7 +462,7 @@ Decision not yet finalized.
 
 - The LLM is **not always running**. It starts lazily when the first conversation is initiated (DL-042). The Presence Engine, Context Engine, and template-based responses work without the LLM.
 - DEGRADED mode is a real state that must be tested. Do not write code that assumes Ollama is always available. Every path through the Inference Engine must handle the "Ollama is down" case.
-- The default model (Phi-3 Mini) is small for a reason: LunaOS targets hardware real people have (8GB RAM laptops). A model that requires 16GB to run is not a default model.
+- The default model (Phi-3 Mini) is small for a reason: Mahina targets hardware real people have (8GB RAM laptops). A model that requires 16GB to run is not a default model.
 - Ollama's REST API is the only interface to the LLM. Never spawn llama.cpp or any model binary directly from luna-ai-d. The process isolation Ollama provides is a security feature.
 - Model updates change behavior. If a new model version makes LUNA sound different, that's a behavioral change that the user should control. Hence no auto-update.
 

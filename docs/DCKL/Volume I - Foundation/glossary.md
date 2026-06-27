@@ -1,4 +1,4 @@
-# LunaOS — Glossary
+# Mahina — Glossary
 **Volume I · Chapter 8**
 **Classification:** Foundation Document — Reference
 **Status:** Canonical · Append-only as new terms are introduced
@@ -45,9 +45,9 @@ Reuse identical wording everywhere thereafter
 
 | Term | Definition | Source |
 |---|---|---|
-| **LunaOS** | The ground-up Linux-based OS this project builds. Not a distro reskin. | `identity.md` |
+| **Mahina** | The ground-up Linux-based OS this project builds. Not a distro reskin. | `identity.md` |
 | **LUNA** | The OS's local-first AI presence. Not an assistant, not a mascot — the OS's digital presence. | `identity.md`, `vision.md` |
-| **DCKL** | "The Divine Collection of Knowledge of LunaOS" — the name of this documentation project. | System prompt / project structure |
+| **DCKL** | "The Divine Collection of Knowledge of Mahina" — the name of this documentation project. | System prompt / project structure |
 | **Luna Kitsune** | Project author identity, Hardik Bhaskar. | All Foundation docs |
 
 ### LUNA-Specific
@@ -79,14 +79,14 @@ Reuse identical wording everywhere thereafter
 | **Color Semantic Contract** | The five locked colors (Blue, Purple, Pink, Green, Amber) and their fixed meanings. | `core_laws.md` Law III |
 | **Motion Vocabulary** | The nine locked motion types (glitch flicker, scanline sweep, etc.) and their fixed meanings. | `core_laws.md` Law III |
 | **Animation Budget** | The locked duration ceilings per interaction class (click ≤100ms, etc.). | `core_laws.md` Law III |
-| **NEON/DARK Protocol** | The name given in `philosophy.md` to LunaOS's visual language. **No technical specification exists yet** — distinct from, and possibly the precursor naming for, Volume III's "Visual Language" document. | `philosophy.md` — TODO, see Open Questions |
+| **NEON/DARK Protocol** | The name given in `philosophy.md` to Mahina's visual language. **No technical specification exists yet** — distinct from, and possibly the precursor naming for, Volume III's "Visual Language" document. | `philosophy.md` — TODO, see Open Questions |
 
 ### Process & Records
 
 | Term | Definition | Source |
 |---|---|---|
 | **DL-XXX** | Decision Log entry notation, e.g. `DL-001`. Append-only; superseded entries are marked, never deleted. | `decision_log.md` |
-| **Moon phase versioning** | LunaOS version names follow lunar phases (Waxing Crescent → Full Moon → Waning → New Moon). | `identity.md`, `vision.md` |
+| **Moon phase versioning** | Mahina version names follow lunar phases (Waxing Crescent → Full Moon → Waning → New Moon). | `identity.md`, `vision.md` |
 | **Core Laws** | The six constitutional constraints in `core_laws.md` (Own Every Layer, Local First, Aesthetic Is Functional, Silence Before Suggestion, User Owns the Machine, Documentation Is Code). | `core_laws.md` — see Open Questions for naming discrepancy |
 
 ---
@@ -111,7 +111,7 @@ TODO:
 Decision not yet finalized.
 ```
 
-1. **"Three Laws" vs. "Core Laws" naming discrepancy.** `philosophy.md` titles its section "The Three Laws of LunaOS" and enumerates exactly three (Own Every Layer, Local First — Cloud When Useful, Aesthetic Is Functional). `core_laws.md` is titled "Core Laws" and enumerates **six** laws using the same Law I–III names plus three additional ones (Silence Before Suggestion, The User Owns the Machine, Documentation Is Code). This document does not resolve the discrepancy — per project rules, canonical documents are not rewritten here. Flagging for human resolution: is `core_laws.md` an authorized expansion of `philosophy.md`'s three laws (in which case `philosophy.md` should eventually be marked superseded-in-part), or are these two distinct laws documents serving different purposes? Until resolved, any AI agent reading both documents should treat `core_laws.md`'s six laws as the operative, enforceable set, since it is the more recent and more detailed of the two — but should not silently treat `philosophy.md` as outdated without human confirmation.
+1. **"Three Laws" vs. "Core Laws" naming discrepancy.** `philosophy.md` titles its section "The Three Laws of Mahina" and enumerates exactly three (Own Every Layer, Local First — Cloud When Useful, Aesthetic Is Functional). `core_laws.md` is titled "Core Laws" and enumerates **six** laws using the same Law I–III names plus three additional ones (Silence Before Suggestion, The User Owns the Machine, Documentation Is Code). This document does not resolve the discrepancy — per project rules, canonical documents are not rewritten here. Flagging for human resolution: is `core_laws.md` an authorized expansion of `philosophy.md`'s three laws (in which case `philosophy.md` should eventually be marked superseded-in-part), or are these two distinct laws documents serving different purposes? Until resolved, any AI agent reading both documents should treat `core_laws.md`'s six laws as the operative, enforceable set, since it is the more recent and more detailed of the two — but should not silently treat `philosophy.md` as outdated without human confirmation.
 2. **NEON/DARK Protocol vs. Visual Language (Volume III).** `philosophy.md` names a "NEON/DARK Protocol" as the visual language. Volume III's planned table of contents lists a separate "Visual Language" document. Whether these are the same artifact under two names, or two different things, is undecided.
 3. **LGP naming only.** "Luna Graphics Protocol" appears only as a document title in the project structure. No document has yet defined what it protocols *between* (application ↔ compositor? compositor ↔ GPU? LUNA ↔ compositor?).
 
