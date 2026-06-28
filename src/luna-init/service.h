@@ -115,6 +115,7 @@ typedef struct {
     int             restart_count;    /* current restart attempt count */
     long long       start_time_ms;    /* boot_ms when last started */
     long long       stop_time_ms;     /* boot_ms when last stopped */
+    long long       scheduled_start_ms; /* boot_ms when allowed to start (for restart delay) */
 
     /* Dependency graph indices */
     int  dep_indices[SERVICE_MAX_DEPS];   /* indices into service table */

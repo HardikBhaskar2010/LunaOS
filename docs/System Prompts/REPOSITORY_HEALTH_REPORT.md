@@ -51,29 +51,24 @@ Strong for a Stage 0 OS project. Held back by test coverage, the security identi
 
 ### Risk: Blocking supervisor during service startup
 
-**Severity: Medium**
+**Severity: ✅ Resolved**
 **Location:** `supervisor.c:supervisor_start_all()`, called synchronously from `main.c` Stage 4
 
-The supervisor calls `wait_for_ready()` which blocks the calling thread for up to `ready_timeout_ms` (default 5000ms per service). During Stage 4, luna-init's main thread is fully blocked — the epoll event loop does not run. This means:
-- SIGCHLD from a dying service during startup is not processed until after all services have started
-- If a service dies immediately and its restart logic fires (via `reaper_on_exit()`), this doesn't happen until after supervisor_start_all() returns
-- A slow or hung service effectively freezes the entire init system for up to `ready_timeout_ms`
-
-**Assessment:** Acceptable for Stage 0 where services don't actually run. Must be redesigned for Stage 4+ with real services. The epoll-driven architecture suggests this will need to become async — services spawned and then registered in the event loop for readiness polling, not blocking.
+**Assessment:** Resolved. The supervisor has been refactored to an asynchronous state machine (`supervisor_pump()`) driven by a timerfd in the epoll event loop. Services start asynchronously without blocking PID 1.
 
 ### Risk: No cgroup assignment in supervisor
 
-**Severity: Medium-High (for production)**
+**Severity: ✅ Resolved**
 **Location:** `supervisor.c:spawn_service()`
 
-The architecture documents (`kernel/.config.notes`, `Volume II / 04_init_system.md`) reference cgroup v2 slices for service isolation: `luna-compositor.slice` (weight 800), `luna-shell.slice` (400), `luna-system.slice` (300), `luna-ai.slice` (200). The kernel config enables cgroups and cgroup scheduling. But the supervisor never creates cgroup directories or assigns processes to cgroups after fork(). This is a known gap for Stage 0, but represents a significant architecture gap that will require a dedicated implementation milestone before Stage 4.
+**Assessment:** Resolved. `mount_early()` now mounts `/sys/fs/cgroup`. `spawn_service()` successfully creates `/sys/fs/cgroup/luna-system.slice/<service>.service` and assigns the child PID to `cgroup.procs` immediately after fork().
 
 ### Risk: Blocking readiness check during restart (reaper_on_exit)
 
-**Severity: Low-Medium**
-**Location:** `supervisor.c:reaper_on_exit()` calls `sleep_ms()` + `spawn_service()` + `wait_for_ready()`
+**Severity: ✅ Resolved**
+**Location:** `supervisor.c:reaper_on_exit()`
 
-`reaper_on_exit()` is called from within the SIGCHLD handler path (epoll → signalfd read → reaper_reap_all → reaper_on_exit). It calls `sleep_ms(restart_delay_ms)` which blocks the event loop for up to `restart_delay_ms` (default 1000ms). Then it calls `wait_for_ready()` which can block for another `ready_timeout_ms`. During a cascading service failure scenario (multiple services failing simultaneously), this can cause the event loop to block for many seconds, preventing shutdown commands from being processed.
+**Assessment:** Resolved. `reaper_on_exit()` no longer calls `sleep_ms()` or blocks. It sets `state = SERVICE_STATE_PENDING` and calculates a `scheduled_start_ms` timestamp, which the async `supervisor_pump()` uses to delay the restart.
 
 ### Risk: luna-splash process not waited after splash_stop()
 
@@ -84,10 +79,10 @@ The architecture documents (`kernel/.config.notes`, `Volume II / 04_init_system.
 
 ### Risk: DL-P04 (License decision) marked Pending in decision_log
 
-**Severity: Low (administrative)**
+**Severity: ✅ Resolved**
 **Location:** `docs/DCKL/Volume I - Foundation/decision_log.md`
 
-The decision_log contains `DL-P04` marked as pending: "MIT vs. GPL v3, Current leaning: MIT." However, all source files already use the MIT License, and `LICENSE`, `COPYRIGHT.md` are both MIT. The pending entry is stale. This should be closed with a proper DL entry (suggested: DL-052) to maintain the Decision Log's completeness.
+**Assessment:** Resolved. DL-P04 was successfully closed and superseded by DL-052 (MIT License).
 
 ---
 

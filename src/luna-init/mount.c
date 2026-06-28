@@ -147,6 +147,9 @@ mount_result_t mount_early(void) {
     r = do_mount("devtmpfs","/dev",  "devtmpfs", "");
     if (r == MOUNT_ERR_FATAL) return r;
 
+    /* Mount cgroup2 for service isolation (not fatal if it fails in Stage 0) */
+    do_mount("cgroup2", "/sys/fs/cgroup", "cgroup2", "");
+
     return MOUNT_OK;
 }
 

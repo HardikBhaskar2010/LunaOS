@@ -36,13 +36,13 @@
 | TOML parser (toml.c) | ✅ Complete | Custom C17. 64KB limit. strings/ints/bools/arrays/array-tables. Fuzz-tested. |
 | Service parser (service.c) | ✅ Complete | All TOML fields parsed incl. identity user/group (not enforced). |
 | Dependency graph (depgraph.c) | ✅ Complete | Kahn's algorithm. Cycle detection with service name reporting. |
-| Service supervisor (supervisor.c) | ✅ Complete | Fork+exec, readiness polling (file/socket), restart policy, SIGKILL timeout. |
+| Service supervisor (supervisor.c) | ✅ Complete | Async state machine, cgroup v2 assignment, restart policy. |
 | Readiness: READY_FILE | ✅ Complete | stat() poll until file exists. |
 | Readiness: READY_SOCKET | ✅ Complete | connect() to Unix socket. |
 | Readiness: READY_HTTP | ⚠️ Stubbed | Returns true immediately. Planned v0.5. |
 | Readiness: READY_SIGNAL | ⚠️ Stubbed | Returns true immediately. Planned v0.5. |
 | Identity enforcement | ✅ Complete | run_user/run_group parsed, setuid/setgid called before execve(). |
-| Mount manager (mount.c) | ✅ Complete | Parses fstab.toml [[mount]] entries. Critical/non-critical error handling. |
+| Mount manager (mount.c) | ✅ Complete | Parses fstab.toml [[mount]] entries. Mounts /sys/fs/cgroup. |
 | Hostname (hostname.c) | ✅ Complete | Reads /etc/luna/hostname, calls sethostname(). Falls back to "mahina". |
 | Panic handler (panic.c) | ✅ Complete | Emergency banner on /dev/tty1. Tries busybox/sh candidates. Spins if none. |
 | Shutdown (shutdown.c) | ✅ Complete | Stop services → unmount filesystems → sync() → reboot(2). |
@@ -53,18 +53,18 @@
 | Runtime log switch | ✅ Complete | luna_log_switch_to_runtime() called before entering Stage 0 interactive shell. |
 | inotify reload | ✅ Complete | inotify watch on services dir triggers reload on any changes. |
 
-**Next Task:** Fix identity enforcement (setuid/setgid in supervisor) and implement lua_log_switch_to_runtime() call.
-**Estimated Complexity:** Medium (setuid/setgid requires parsing /etc/passwd + /etc/group or using getpwnam/getgrnam)
+**Next Task:** None. Core init architecture is feature-complete for Phase 0/1.
+**Estimated Complexity:** N/A
 
 ---
 
 ### luna-splash — Boot Graphics Engine
 
-**Status:** ✅ COMPLETE (functional, one cosmetic gap)
-**Completion:** ~85%
+**Status:** ✅ COMPLETE
+**Completion:** 100%
 **Current Milestone:** Phase 1 / Boot Aesthetics
 **Dependencies:** /dev/fb0 framebuffer, Linux DRM_FBDEV_EMULATION kernel config
-**Blockers:** None (cosmetic only)
+**Blockers:** None
 **Test Coverage:** Zero unit tests.
 **Documentation Coverage:** Partially (ROADMAP.md; no dedicated DCKL chapter)
 
@@ -74,17 +74,16 @@
 | Bitmap font (font8x16.h) | ✅ Complete | 256-glyph 8×16 embedded font. Covers ASCII. |
 | Text rendering | ✅ Complete | render_text(), render_text_centered(). |
 | Progress bar | ✅ Complete | render_progress(msg, percent). Filled rectangle. |
-| Screen clear | ✅ Complete | render_clear(COLOR_BG). O(W×H) pixel loop — functional, not fast. |
-| Block char logo | ❌ Gap | render_logo() loop body is empty. Falls back to "MAHINA" text. |
+| Screen clear | ✅ Complete | Fast memory filling via pointer arithmetic loop. |
+| Block char logo | ✅ Complete | Custom UTF-8 parsing to render specific block characters dynamically. |
 | IPC reader (ipc.c) | ✅ Complete | Pipe FD, "PERCENT\|MSG\n" protocol, buffered line reader. |
 | Signal handling (main.c) | ✅ Complete | SIGTERM/SIGINT via signalfd in epoll loop. |
 | luna-splash launch | ✅ Complete | Launched by splash_start() in luna-init. |
-| Fallback path | ❌ Bug | Tries ./build/luna-splash (wrong). Should be ./build/luna-splash/luna-splash. |
+| Fallback path | ✅ Complete | Fixed to ./build/luna-splash/luna-splash. |
 | compositor handoff | ⬜ Future | Documented as 1-frame black cut (DL-043). Requires compositor (Phase 2). |
 
-**Next Task:** Fix fallback path. Implement block character logo rendering.
-**Estimated Complexity:** Low (path fix = 1 line; logo requires rasterizing Unicode block chars which 8×16 font doesn't support — may need custom bitmap logo instead)
-
+**Next Task:** None. Core bringup complete. Wait for Phase 2 for compositor handoff.
+**Estimated Complexity:** N/A
 ---
 
 ### luna-init-ctl — Control CLI

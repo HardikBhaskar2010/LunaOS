@@ -179,65 +179,104 @@ static pid_t spawn_service(service_t *svc) {
     svc->state          = SERVICE_STATE_STARTING;
     svc->start_time_ms  = now_ms();
 
+    /* Assign to cgroup */
+    char cgroup_dir[256];
+    snprintf(cgroup_dir, sizeof(cgroup_dir), "/sys/fs/cgroup/luna-system.slice/%s.service", svc->name);
+    mkdir("/sys/fs/cgroup/luna-system.slice", 0755); /* Ignore error if exists */
+    mkdir(cgroup_dir, 0755);                         /* Ignore error if exists */
+    
+    char procs_file[512];
+    snprintf(procs_file, sizeof(procs_file), "%s/cgroup.procs", cgroup_dir);
+    int fd = open(procs_file, O_WRONLY);
+    if (fd >= 0) {
+        char pid_str[32];
+        int len = snprintf(pid_str, sizeof(pid_str), "%d\n", (int)pid);
+        write(fd, pid_str, len);
+        close(fd);
+    } else {
+        LUNA_WARN(COMP, "Could not assign service '%s' to cgroup (open failed: %s)", svc->name, strerror(errno));
+    }
+
     LUNA_INFO(COMP, "Started service '%s' (PID %d)", svc->name, (int)pid);
     return pid;
 }
 
-/* ─── Wait for readiness ─────────────────────────────────────────────────── */
+/* ─── Async Supervisor Pump ──────────────────────────────────────────────── */
 
-static bool wait_for_ready(service_t *svc) {
-    if (svc->ready_method == READY_NONE) {
-        svc->state = SERVICE_STATE_RUNNING;
-        LUNA_INFO(COMP, "Service '%s' ready (no readiness check)", svc->name);
-        return true;
-    }
+void supervisor_pump(void) {
+    long long now = now_ms();
 
-    long long start = now_ms();
-    while (now_ms() - start < svc->ready_timeout_ms) {
-        if (supervisor_check_ready(svc, start)) {
-            svc->state = SERVICE_STATE_RUNNING;
-            LUNA_INFO(COMP, "Service '%s' ready (%lld ms)",
-                      svc->name, now_ms() - start);
-            return true;
+    /* 1. Check readiness of STARTING services */
+    for (int i = 0; i < g_service_count; i++) {
+        service_t *svc = &g_services[i];
+        if (svc->state == SERVICE_STATE_STARTING) {
+            long long start = svc->start_time_ms;
+            if (svc->ready_method == READY_NONE) {
+                svc->state = SERVICE_STATE_RUNNING;
+                LUNA_INFO(COMP, "Service '%s' ready (no readiness check)", svc->name);
+            } else if (supervisor_check_ready(svc, start)) {
+                svc->state = SERVICE_STATE_RUNNING;
+                LUNA_INFO(COMP, "Service '%s' ready (%lld ms)", svc->name, now - start);
+            } else if (now - start >= svc->ready_timeout_ms) {
+                svc->state = SERVICE_STATE_DEGRADED;
+                LUNA_ERROR(COMP, "Service '%s' readiness timeout (%d ms) — DEGRADED", svc->name, svc->ready_timeout_ms);
+            }
         }
-        sleep_ms(100); /* poll every 100ms */
     }
 
-    LUNA_ERROR(COMP, "Service '%s' readiness timeout (%d ms) — DEGRADED",
-               svc->name, svc->ready_timeout_ms);
-    svc->state = SERVICE_STATE_DEGRADED;
-    return false;
+    /* 2. Try to start PENDING services if dependencies are met */
+    bool progressed = true;
+    while (progressed) {
+        progressed = false;
+        for (int i = 0; i < g_service_count; i++) {
+            service_t *svc = &g_services[i];
+            if (svc->state == SERVICE_STATE_PENDING) {
+                if (now < svc->scheduled_start_ms) continue;
+
+                bool can_start = true;
+                for (int j = 0; j < svc->after_count; j++) {
+                    service_t *dep = service_find(svc->after[j]);
+                    if (dep && dep->state != SERVICE_STATE_RUNNING && dep->state != SERVICE_STATE_DEGRADED) {
+                        can_start = false;
+                        break;
+                    }
+                }
+
+                if (can_start) {
+                    pid_t pid = spawn_service(svc);
+                    if (pid < 0 && svc->state != SERVICE_STATE_DEGRADED) {
+                        svc->state = SERVICE_STATE_DEGRADED;
+                    }
+                    progressed = true;
+                }
+            }
+        }
+    }
+}
+
+bool supervisor_is_boot_complete(void) {
+    for (int i = 0; i < g_service_count; i++) {
+        if (g_services[i].state == SERVICE_STATE_PENDING || 
+            g_services[i].state == SERVICE_STATE_STARTING) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /* ─── Public API ─────────────────────────────────────────────────────────── */
 
 int supervisor_start_all(void) {
-    int order[SERVICE_MAX_COUNT];
-    int count = depgraph_topo_sort(order, SERVICE_MAX_COUNT);
-    if (count < 0) return -1;
-
-    for (int i = 0; i < count; i++) {
-        service_t *svc = &g_services[order[i]];
-
-        if (svc->state == SERVICE_STATE_DEGRADED) continue; /* already marked */
-
-        LUNA_INFO(COMP, "Starting service [%d/%d]: %s", i + 1, count, svc->name);
-
-        pid_t pid = spawn_service(svc);
-        if (pid < 0) {
-            /* spawn_service already marked DEGRADED if binary missing */
-            if (svc->state != SERVICE_STATE_DEGRADED) {
-                svc->state = SERVICE_STATE_DEGRADED;
-            }
-            LUNA_ERROR(COMP, "Service '%s' could not be started — DEGRADED",
-                       svc->name);
-            continue;
+    /* Initialize scheduled start times and set to PENDING */
+    for (int i = 0; i < g_service_count; i++) {
+        g_services[i].scheduled_start_ms = 0;
+        if (g_services[i].state != SERVICE_STATE_DEGRADED) {
+            g_services[i].state = SERVICE_STATE_PENDING;
         }
-
-        /* Wait for readiness before moving to next service */
-        wait_for_ready(svc);
     }
-
+    
+    LUNA_INFO(COMP, "Starting %d services asynchronously...", g_service_count);
+    supervisor_pump();
     return 0;
 }
 
@@ -253,12 +292,11 @@ int supervisor_start_one(const char *name) {
         return 0;
     }
 
-    svc->state         = SERVICE_STATE_PENDING;
-    svc->restart_count = 0;
+    svc->state              = SERVICE_STATE_PENDING;
+    svc->restart_count      = 0;
+    svc->scheduled_start_ms = 0;
 
-    pid_t pid = spawn_service(svc);
-    if (pid < 0) return -1;
-    wait_for_ready(svc);
+    supervisor_pump();
     return 0;
 }
 
@@ -345,7 +383,6 @@ void reaper_on_exit(pid_t pid, int exit_code, bool by_signal) {
               svc->name, svc->restart_count, svc->restart_attempts,
               svc->restart_delay_ms);
 
-    sleep_ms(svc->restart_delay_ms);
-    spawn_service(svc);
-    wait_for_ready(svc);
+    svc->state = SERVICE_STATE_PENDING;
+    svc->scheduled_start_ms = now_ms() + svc->restart_delay_ms;
 }

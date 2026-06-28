@@ -21,16 +21,26 @@
 #include <sys/types.h>
 
 /*
- * supervisor_start_all() — Start all services in dependency order.
+ * supervisor_start_all() — Start all services in dependency order (Async).
  *
- * Reads the topological order from depgraph_topo_sort().
- * Starts services sequentially (parallelism deferred to v0.5).
- * Waits for readiness per each service's ready_method before starting the next.
- *
- * Returns 0 if all services started (or were marked DEGRADED gracefully).
- * Returns -1 on unrecoverable error.
+ * This now simply sets up the initial state for the async pump.
  */
 int supervisor_start_all(void);
+
+/*
+ * supervisor_pump() — Event loop tick for the supervisor.
+ *
+ * Checks readiness of STARTING services, and spawns PENDING services
+ * whose dependencies are met and scheduled time has arrived.
+ */
+void supervisor_pump(void);
+
+/*
+ * supervisor_is_boot_complete() — Check if all services have finished starting.
+ *
+ * Returns true if no services are in PENDING or STARTING state.
+ */
+bool supervisor_is_boot_complete(void);
 
 /*
  * supervisor_start_one() — Start a single service by name.

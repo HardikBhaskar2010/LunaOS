@@ -46,6 +46,7 @@
 #include <sys/epoll.h>
 #include <sys/inotify.h>
 #include <sys/stat.h>
+#include <sys/timerfd.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -204,38 +205,16 @@ int main(void) {
         epoll_ctl(epfd, EPOLL_CTL_ADD, inotify_fd, &ev);
     }
 
-    /* ═══ Stages 5, 6, 7: Skeletons — not implemented in v0.1 ═══════════
-     *
-     * Stage 5: LGP compositor (Volume III — not yet designed)
-     * Stage 6: Shell layer (luna-shell, luna-bar, luna-island) — v0.5
-     * Stage 7: LUNA AI layer (luna-ai-d, Ollama lazy) — v0.9
-     *
-     * These stages are intentionally empty in Stage 0.
-     * DO NOT add graphics, AI, or shell code here.
-     */
-
-    LUNA_INFO("luna-init", "Stage 0 (v0.1) boot complete. "
-              "Stages 5-7 pending future milestones.");
-    splash_stop();
-    
-    luna_log_switch_to_runtime();
-
-    /* ═══ Print welcome banner and drop to shell in Stage 0 ══════════════
-     *
-     * In v0.5+ this path is replaced by:
-     *   Stage 6: luna-shell start
-     *   login manager: luna-lock
-     * For Stage 0, we drop to an interactive root shell.
-     */
-    console_print_welcome();
-
-    /* Fork a child to run the shell — luna-init stays alive as PID 1
-     * to continue reaping zombies and running the event loop. */
-    pid_t shell_pid = fork();
-    if (shell_pid == 0) {
-        /* Child: become the interactive shell */
-        console_drop_to_shell();
-        _exit(0); /* console_drop_to_shell execs — this line should not run */
+    int timer_fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
+    if (timer_fd >= 0) {
+        struct itimerspec ts = {
+            .it_interval = {0, 100000000}, /* 100ms */
+            .it_value    = {0, 100000000}
+        };
+        timerfd_settime(timer_fd, 0, &ts, NULL);
+        ev.events  = EPOLLIN;
+        ev.data.fd = timer_fd;
+        epoll_ctl(epfd, EPOLL_CTL_ADD, timer_fd, &ev);
     }
 
     /* ═══ Main event loop ═════════════════════════════════════════════════ */
@@ -243,6 +222,7 @@ int main(void) {
     LUNA_INFO("luna-init", "Entering main event loop");
 
     struct epoll_event events[EPOLL_MAX_EVENTS];
+    bool boot_complete = false;
 
     while (!g_shutting_down) {
         int nfds = epoll_wait(epfd, events, EPOLL_MAX_EVENTS, -1);
@@ -303,12 +283,30 @@ int main(void) {
                 /* Service definitions changed */
                 char buf[4096] __attribute__((aligned(__alignof__(struct inotify_event))));
                 ssize_t len;
-                while ((len = read(inotify_fd, buf, sizeof(buf))) > 0) {
-                    /* Consume all events */
-                }
+                while ((len = read(inotify_fd, buf, sizeof(buf))) > 0) {}
                 LUNA_INFO("luna-init", "Service directory changed, reloading definitions");
                 service_load_all(SERVICES_DIR);
                 depgraph_build();
+            } else if (fd == timer_fd) {
+                uint64_t expirations;
+                if (read(timer_fd, &expirations, sizeof(expirations)) > 0) {
+                    supervisor_pump();
+                }
+            }
+        }
+
+        /* Check for boot completion asynchronously */
+        if (!boot_complete && supervisor_is_boot_complete()) {
+            boot_complete = true;
+            LUNA_INFO("luna-init", "Stage 0 (v0.1) boot complete. Stages 5-7 pending.");
+            splash_stop();
+            luna_log_switch_to_runtime();
+            console_print_welcome();
+            
+            pid_t shell_pid = fork();
+            if (shell_pid == 0) {
+                console_drop_to_shell();
+                _exit(0);
             }
         }
     }
@@ -316,6 +314,7 @@ int main(void) {
     /* ═══ Shutdown path ══════════════════════════════════════════════════ */
 
     LUNA_INFO("luna-init", "Event loop exited — shutting down");
+    if (timer_fd >= 0) close(timer_fd);
     if (inotify_fd >= 0) close(inotify_fd);
     ctl_server_close(ctl_fd);
     signal_close(sigfd);

@@ -75,8 +75,9 @@ static inline void put_pixel(int x, int y, uint32_t color) {
 
 void render_clear(uint32_t color) {
     for (int y = 0; y < screen_h; y++) {
+        uint32_t *row = fb_mem + (y * line_length / 4);
         for (int x = 0; x < screen_w; x++) {
-            put_pixel(x, y, color);
+            row[x] = color;
         }
     }
 }
@@ -126,24 +127,66 @@ void render_logo(void) {
         NULL
     };
     
-    for (int i = 0; logo[i] != NULL; i++) {
-        /* This isn't perfect since block characters aren't in our 8x16 font array.
-         * For stage 0 bringup, we just print the text "MAHINA".
-         */
+    for (int y_idx = 0; logo[y_idx] != NULL; y_idx++) {
+        const char *p = logo[y_idx];
+        int cur_x = (screen_w - 46 * 8) / 2;
+        int cur_y = center_y + y_idx * 16;
+        
+        while (*p) {
+            if (*p == ' ') {
+                cur_x += 8;
+                p++;
+            } else if ((unsigned char)*p == 0xE2) {
+                /* Basic UTF-8 parsing for the specific block chars used in the logo.
+                 * █ = E2 96 88
+                 * ╗ = E2 95 97
+                 * ║ = E2 95 91
+                 * ╔ = E2 95 94
+                 * ═ = E2 95 90
+                 * ╚ = E2 95 9A
+                 * ╝ = E2 95 9D
+                 */
+                if (p[1] == (char)0x96 && p[2] == (char)0x88) {
+                    /* Full block */
+                    for (int cy = 0; cy < 16; cy++) {
+                        uint32_t *row = fb_mem + ((cur_y + cy) * line_length / 4);
+                        for (int cx = 0; cx < 8; cx++) row[cur_x + cx] = COLOR_BRAND;
+                    }
+                } else if (p[1] == (char)0x95) {
+                    /* Line drawing chars: for Stage 0, just draw them as partial blocks */
+                    char t = p[2];
+                    int start_x = (t == (char)0x97 || t == (char)0x9D) ? 0 : 2;
+                    int end_x   = (t == (char)0x94 || t == (char)0x9A) ? 8 : 6;
+                    int start_y = (t == (char)0x9A || t == (char)0x9D) ? 0 : 4;
+                    int end_y   = (t == (char)0x97 || t == (char)0x94) ? 16 : 12;
+                    
+                    if (t == (char)0x90) { start_y = 6; end_y = 10; start_x = 0; end_x = 8; } /* ═ */
+                    if (t == (char)0x91) { start_x = 2; end_x = 6; start_y = 0; end_y = 16; } /* ║ */
+                    
+                    for (int cy = start_y; cy < end_y; cy++) {
+                        uint32_t *row = fb_mem + ((cur_y + cy) * line_length / 4);
+                        for (int cx = start_x; cx < end_x; cx++) row[cur_x + cx] = COLOR_BRAND;
+                    }
+                }
+                cur_x += 8;
+                p += 3;
+            } else {
+                p++;
+            }
+        }
     }
     
-    /* Fallback to simple text logo */
-    render_text_centered(center_y, "MAHINA", COLOR_BRAND);
-    render_text_centered(center_y + 32, "Initializing System", COLOR_TEXT);
+    render_text_centered(center_y + 120, "Initializing System", COLOR_TEXT);
 }
 
 void render_progress(const char *msg, int percent) {
     int center_y = screen_h / 2 + 20;
     
-    /* Clear the area first (simple brute force) */
+    /* Clear the area first */
     for (int y = center_y; y < center_y + 60; y++) {
+        uint32_t *row = fb_mem + (y * line_length / 4);
         for (int x = 0; x < screen_w; x++) {
-            put_pixel(x, y, COLOR_BG);
+            row[x] = COLOR_BG;
         }
     }
     
@@ -156,15 +199,17 @@ void render_progress(const char *msg, int percent) {
     int bar_y = center_y + 30;
     
     for (int y = bar_y; y < bar_y + bar_h; y++) {
+        uint32_t *row = fb_mem + (y * line_length / 4);
         for (int x = bar_x; x < bar_x + bar_w; x++) {
-            put_pixel(x, y, COLOR_BAR_BG);
+            row[x] = COLOR_BAR_BG;
         }
     }
     
     int fill_w = (bar_w * percent) / 100;
     for (int y = bar_y; y < bar_y + bar_h; y++) {
+        uint32_t *row = fb_mem + (y * line_length / 4);
         for (int x = bar_x; x < bar_x + fill_w; x++) {
-            put_pixel(x, y, COLOR_BRAND);
+            row[x] = COLOR_BRAND;
         }
     }
 }
