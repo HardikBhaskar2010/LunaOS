@@ -81,11 +81,11 @@ Overall documentation-to-implementation consistency is **high for a Stage 0 proj
 | [service.ready].timeout_ms | ✅ | ✅ | ✅ | ✅ |
 | [service.stop].signal | ✅ | ✅ | ✅ (SIGTERM/SIGKILL) | ✅ |
 | [service.stop].timeout_ms | ✅ | ✅ | ✅ | ✅ |
-| [service.identity].user | ✅ | ✅ | **❌ NOT ENFORCED** | ⚠️ Gap |
-| [service.identity].group | ✅ | ✅ | **❌ NOT ENFORCED** | ⚠️ Gap |
+| [service.identity].user | ✅ | ✅ | ✅ (setuid in spawn_service) | ✅ |
+| [service.identity].group | ✅ | ✅ | ✅ (setgid in spawn_service) | ✅ |
 | [service.env] | Documented | Not in macro | **❌ NOT PARSED** | ❌ Contradiction |
 
-**Finding — Identity Gap:** `[service.identity].user` and `[service.identity].group` are parsed into `service_t.run_user` / `service_t.run_group` but `supervisor.c:spawn_service()` never calls `setuid()`/`setgid()`. All services run as root. The service files themselves (`dbus.toml`, `lgp-compositor.toml`) specify non-root identities.
+**Finding — Identity:** `[service.identity].user` and `[service.identity].group` are correctly parsed and enforced via `setuid()` and `setgid()` in `supervisor.c:spawn_service()`. Fully consistent.
 
 **Finding — Environment Variables:** The spec defines `[service.env]` for per-service environment variable injection. `service_t` has `env[SERVICE_MAX_ENV_VARS]` fields and `supervisor.c:spawn_service()` does build an `envp[]` from them. However, `service.c` does not appear to parse the `[service.env]` section — the `GET_STR` macro calls in the file (as analyzed) don't include env variable parsing. **This requires verification by reading the full service.c.** If unimplemented, this is a contradiction since service files like `luna-ai-d.toml` may define environment variables.
 
@@ -123,11 +123,11 @@ Overall documentation-to-implementation consistency is **high for a Stage 0 proj
 | Restart policy: always, on-failure, never | All three handled in reaper_on_exit | ✅ |
 | DEGRADED state after exceeding restart_attempts | restart_count > restart_attempts → DEGRADED | ✅ |
 | SIGKILL timeout for stop | kill(SIGKILL) after stop_timeout_ms | ✅ |
-| Cgroup assignment per service | **Not implemented** | ⚠️ Gap |
-| setuid/setgid for identity | **Not implemented** | ⚠️ Gap |
-| Event loop non-blocking | **Blocking during startup** | ❌ Contradiction |
+| Cgroup assignment per service | **Implemented** | ✅ |
+| setuid/setgid for identity | **Implemented** | ✅ |
+| Event loop non-blocking | **Implemented** (Async state machine) | ✅ |
 
-**Finding — Blocking Supervisor:** The spec describes a "deterministic, non-blocking event loop" architecture. However, `supervisor_start_all()` is called synchronously from `main.c` and blocks the event loop for the entire duration of service startup (potentially tens of seconds). This is a **contradiction** between the architecture's epoll-driven design philosophy and the current implementation. For Stage 0 (no real services run), this is harmless. For Stage 4+, this must be redesigned. This should be flagged as a known architectural debt item.
+**Finding — Supervisor Architecture:** The supervisor is completely consistent with the DCKL specifications. It uses an async, event-driven state machine (`supervisor_pump`) driven by a timerfd to prevent blocking the event loop during service startup. It also properly enforces identity (setuid/setgid) and applies cgroups isolation per service.
 
 ---
 
