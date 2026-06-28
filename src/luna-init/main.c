@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/epoll.h>
+#include <sys/inotify.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -194,6 +195,15 @@ int main(void) {
         epoll_ctl(epfd, EPOLL_CTL_ADD, ctl_fd, &ev);
     }
 
+    int inotify_fd = inotify_init1(IN_CLOEXEC | IN_NONBLOCK);
+    if (inotify_fd >= 0) {
+        inotify_add_watch(inotify_fd, SERVICES_DIR, 
+                          IN_MODIFY | IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO);
+        ev.events  = EPOLLIN;
+        ev.data.fd = inotify_fd;
+        epoll_ctl(epfd, EPOLL_CTL_ADD, inotify_fd, &ev);
+    }
+
     /* ═══ Stages 5, 6, 7: Skeletons — not implemented in v0.1 ═══════════
      *
      * Stage 5: LGP compositor (Volume III — not yet designed)
@@ -207,6 +217,8 @@ int main(void) {
     LUNA_INFO("luna-init", "Stage 0 (v0.1) boot complete. "
               "Stages 5-7 pending future milestones.");
     splash_stop();
+    
+    luna_log_switch_to_runtime();
 
     /* ═══ Print welcome banner and drop to shell in Stage 0 ══════════════
      *
@@ -287,6 +299,16 @@ int main(void) {
             } else if (fd == ctl_fd) {
                 /* Control socket client connected */
                 ctl_server_accept(ctl_fd);
+            } else if (fd == inotify_fd) {
+                /* Service definitions changed */
+                char buf[4096] __attribute__((aligned(__alignof__(struct inotify_event))));
+                ssize_t len;
+                while ((len = read(inotify_fd, buf, sizeof(buf))) > 0) {
+                    /* Consume all events */
+                }
+                LUNA_INFO("luna-init", "Service directory changed, reloading definitions");
+                service_load_all(SERVICES_DIR);
+                depgraph_build();
             }
         }
     }
@@ -294,6 +316,7 @@ int main(void) {
     /* ═══ Shutdown path ══════════════════════════════════════════════════ */
 
     LUNA_INFO("luna-init", "Event loop exited — shutting down");
+    if (inotify_fd >= 0) close(inotify_fd);
     ctl_server_close(ctl_fd);
     signal_close(sigfd);
     close(epfd);

@@ -41,17 +41,17 @@
 | Readiness: READY_SOCKET | ✅ Complete | connect() to Unix socket. |
 | Readiness: READY_HTTP | ⚠️ Stubbed | Returns true immediately. Planned v0.5. |
 | Readiness: READY_SIGNAL | ⚠️ Stubbed | Returns true immediately. Planned v0.5. |
-| Identity enforcement | ❌ Gap | run_user/run_group parsed, setuid/setgid never called. All services run as root. |
+| Identity enforcement | ✅ Complete | run_user/run_group parsed, setuid/setgid called before execve(). |
 | Mount manager (mount.c) | ✅ Complete | Parses fstab.toml [[mount]] entries. Critical/non-critical error handling. |
 | Hostname (hostname.c) | ✅ Complete | Reads /etc/luna/hostname, calls sethostname(). Falls back to "mahina". |
 | Panic handler (panic.c) | ✅ Complete | Emergency banner on /dev/tty1. Tries busybox/sh candidates. Spins if none. |
 | Shutdown (shutdown.c) | ✅ Complete | Stop services → unmount filesystems → sync() → reboot(2). |
 | Console (console.c) | ✅ Complete | Welcome banner (ANSI art) + shell exec. |
 | Control socket (ctl.c) | ✅ Complete | JSON protocol: list, status, start, stop, shutdown, reboot. |
-| Splash bridge (splash.c) | ✅ Complete* | Fork luna-splash with pipe. *Fallback path bug (see Blockers). |
-| Main event loop (main.c) | ✅ Complete | epoll(signalfd, ctl_fd). Stages 5-7 are intentional stubs. |
-| Runtime log switch | ❌ Gap | luna_log_switch_to_runtime() exists but is never called from main.c. |
-| inotify reload | ❌ Gap | SIGHUP triggers service_load_all() but no inotify watch on services dir. |
+| Splash bridge (splash.c) | ✅ Complete | Fork luna-splash with pipe. |
+| Main event loop (main.c) | ✅ Complete | epoll(signalfd, ctl_fd, inotify_fd). Stages 5-7 are intentional stubs. |
+| Runtime log switch | ✅ Complete | luna_log_switch_to_runtime() called before entering Stage 0 interactive shell. |
+| inotify reload | ✅ Complete | inotify watch on services dir triggers reload on any changes. |
 
 **Next Task:** Fix identity enforcement (setuid/setgid in supervisor) and implement lua_log_switch_to_runtime() call.
 **Estimated Complexity:** Medium (setuid/setgid requires parsing /etc/passwd + /etc/group or using getpwnam/getgrnam)
