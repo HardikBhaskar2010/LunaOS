@@ -270,6 +270,12 @@ int supervisor_start_all(void) {
     /* Initialize scheduled start times and set to PENDING */
     for (int i = 0; i < g_service_count; i++) {
         g_services[i].scheduled_start_ms = 0;
+        
+        /* EXCLUSION: lgp-compositor is manually started in Stage 5, not Stage 4 */
+        if (strcmp(g_services[i].name, "lgp-compositor") == 0) {
+            continue;
+        }
+
         if (g_services[i].state != SERVICE_STATE_DEGRADED) {
             g_services[i].state = SERVICE_STATE_PENDING;
         }

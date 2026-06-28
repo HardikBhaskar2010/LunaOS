@@ -301,7 +301,19 @@ int main(void) {
             
             splash_update("Boot Complete!", 100);
             usleep(1500000); /* 1.5 second delay to admire the splash screen */
+
+            /* ═══ STAGE 5 (NEW): Graphics Layer ═══════════════════════════════════ */
+            
+            luna_log_set_stage(LUNA_STAGE_GRAPHICS);
+            LUNA_INFO("luna-init", "Stage 5: Releasing boot splash");
+            
             splash_stop();
+            
+            LUNA_INFO("luna-init", "Stage 5: Starting lgp-compositor");
+            int comp_result = supervisor_start_one("lgp-compositor");
+            if (comp_result < 0) {
+                LUNA_WARN("luna-init", "lgp-compositor failed to start — degraded graphics mode");
+            }
             
             luna_log_switch_to_runtime();
             

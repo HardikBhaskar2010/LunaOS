@@ -352,3 +352,8 @@ help:
 	@echo ""
 	@echo "Toolchain: clang (CC=$(CC))"
 	@echo "Build env: WSL2 or Linux required for image/run-qemu targets"
+
+# ---------------------------------------------------------------------------
+# lgp-compositor
+# ---------------------------------------------------------------------------
+include src/lgp-compositor/Makefile.inc
