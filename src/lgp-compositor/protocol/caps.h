@@ -11,9 +11,13 @@
 #include <stdint.h>
 #include "../ipc/client.h"
 
-#define LGP_CAP_LAYER_SHELL    (1 << 0)
-#define LGP_CAP_LUNA_ISLAND    (1 << 1)
-#define LGP_CAP_SCREENCAPTURE  (1 << 2)
+#define LGP_CAP_DMA_BUF        (1u << 0)
+#define LGP_CAP_CANVAS_SURFACE (1u << 1)
+#define LGP_CAP_DIRECT_LGP     (1u << 2)
+#define LGP_CAP_LAYER_SHELL    (1u << 3)
+#define LGP_CAP_LUNA_ISLAND    (1u << 4)
+#define LGP_CAP_CURSOR_SHAPE   (1u << 5)
+#define LGP_CAP_CLIPBOARD      (1u << 6)
 
 /*
  * lgp_caps_negotiate() — Determine granted capabilities based on requested caps

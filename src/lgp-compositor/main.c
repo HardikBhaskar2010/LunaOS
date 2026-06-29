@@ -17,11 +17,15 @@
 #include "ipc/client.h"
 #include "protocol/tlv.h"
 #include "protocol/hello.h"
+#include "protocol/surface.h"
+#include "scene/surface.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/epoll.h>
+#include <sys/socket.h>
 #include <unistd.h>
 
 #define MAX_EVENTS 16
@@ -31,7 +35,368 @@ typedef struct {
     int epoll_fd;
     int signal_fd;
     bool running;
+    uint32_t next_session_id;
+    lgp_client_t *clients;
+    lgp_surface_manager_t surface_manager;
 } lgp_compositor_state_t;
+
+static bool lgp_write_all(int fd, const uint8_t *buf, size_t len) {
+    size_t written = 0;
+
+    while (written < len) {
+        ssize_t n = write(fd, buf + written, len - written);
+        if (n < 0) {
+            if (errno == EINTR) continue;
+            LGP_WARN("protocol", "write() failed: %s", strerror(errno));
+            return false;
+        }
+        if (n == 0) {
+            LGP_WARN("protocol", "short write while sending reply");
+            return false;
+        }
+        written += (size_t)n;
+    }
+
+    return true;
+}
+
+static bool lgp_client_queue_fd(lgp_client_t *client, int fd) {
+    if (client->pending_fd_count >= LGP_CLIENT_MAX_PENDING_FDS) {
+        close(fd);
+        LGP_WARN("protocol", "Client session=%u sent too many pending file descriptors",
+                 client->session_id);
+        return false;
+    }
+
+    client->pending_fds[client->pending_fd_count++] = fd;
+    return true;
+}
+
+static int lgp_client_take_fd(lgp_client_t *client) {
+    if (!client || client->pending_fd_count == 0) {
+        return -1;
+    }
+
+    int fd = client->pending_fds[0];
+    for (size_t i = 1; i < client->pending_fd_count; i++) {
+        client->pending_fds[i - 1] = client->pending_fds[i];
+    }
+    client->pending_fd_count--;
+    client->pending_fds[client->pending_fd_count] = -1;
+    return fd;
+}
+
+static lgp_client_t *lgp_state_find_client(lgp_compositor_state_t *state, int fd) {
+    for (lgp_client_t *client = state->clients; client; client = client->next) {
+        if (client->fd == fd) return client;
+    }
+    return NULL;
+}
+
+static void lgp_state_add_client(lgp_compositor_state_t *state, lgp_client_t *client) {
+    client->next = state->clients;
+    state->clients = client;
+}
+
+static void lgp_state_remove_client(lgp_compositor_state_t *state, lgp_client_t *client) {
+    lgp_client_t **cursor = &state->clients;
+
+    while (*cursor) {
+        if (*cursor == client) {
+            *cursor = client->next;
+            client->next = NULL;
+            return;
+        }
+        cursor = &(*cursor)->next;
+    }
+}
+
+static void lgp_state_close_client(lgp_compositor_state_t *state, lgp_client_t *client) {
+    if (!client) return;
+
+    LGP_DEBUG("ipc", "Disconnecting LGP client session=%u fd=%d",
+              client->session_id, client->fd);
+    epoll_ctl(state->epoll_fd, EPOLL_CTL_DEL, client->fd, NULL);
+    lgp_surface_manager_destroy_for_client(&state->surface_manager, client);
+    lgp_state_remove_client(state, client);
+    lgp_client_destroy(client);
+}
+
+static void lgp_state_close_all_clients(lgp_compositor_state_t *state) {
+    while (state->clients) {
+        lgp_state_close_client(state, state->clients);
+    }
+}
+
+static int lgp_client_read_available(lgp_client_t *client) {
+    size_t available = sizeof(client->rx_buf) - client->rx_len;
+    if (available == 0) {
+        LGP_WARN("protocol", "Client session=%u receive buffer full", client->session_id);
+        return -1;
+    }
+
+    uint8_t control[CMSG_SPACE(sizeof(int) * LGP_CLIENT_MAX_PENDING_FDS)] = {0};
+    struct iovec iov = {
+        .iov_base = client->rx_buf + client->rx_len,
+        .iov_len = available
+    };
+    struct msghdr msgh = {
+        .msg_iov = &iov,
+        .msg_iovlen = 1,
+        .msg_control = control,
+        .msg_controllen = sizeof(control)
+    };
+
+    ssize_t n = recvmsg(client->fd, &msgh, MSG_CMSG_CLOEXEC);
+    if (n > 0) {
+        client->rx_len += (size_t)n;
+        if ((msgh.msg_flags & MSG_CTRUNC) != 0) {
+            LGP_WARN("protocol", "Client session=%u sent truncated control data",
+                     client->session_id);
+            return -1;
+        }
+
+        for (struct cmsghdr *cmsg = CMSG_FIRSTHDR(&msgh);
+             cmsg;
+             cmsg = CMSG_NXTHDR(&msgh, cmsg)) {
+            if (cmsg->cmsg_level != SOL_SOCKET || cmsg->cmsg_type != SCM_RIGHTS) {
+                continue;
+            }
+
+            size_t fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
+            const uint8_t *fd_bytes = (const uint8_t *)CMSG_DATA(cmsg);
+            for (size_t i = 0; i < fd_count; i++) {
+                int received_fd = -1;
+                memcpy(&received_fd, fd_bytes + (i * sizeof(received_fd)), sizeof(received_fd));
+                if (!lgp_client_queue_fd(client, received_fd)) {
+                    return -1;
+                }
+            }
+        }
+        return 1;
+    }
+    if (n == 0) {
+        return 0;
+    }
+    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+        return 1;
+    }
+
+    LGP_WARN("protocol", "Read failed for client session=%u: %s",
+             client->session_id, strerror(errno));
+    return -1;
+}
+
+static bool lgp_handle_fill_rect(lgp_client_t *client, const lgp_msg_t *msg, drm_device_t *drm_dev) {
+    size_t payload_len = msg->length - LGP_HEADER_SIZE;
+    if (payload_len < 4) {
+        LGP_WARN("protocol", "Client session=%u sent short FILL_RECT payload", client->session_id);
+        return false;
+    }
+
+    uint8_t r = msg->payload[0];
+    uint8_t g = msg->payload[1];
+    uint8_t b = msg->payload[2];
+
+    uint32_t color = ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
+    LGP_INFO("main", "Client session=%u requested FILL_RECT with color #%06X",
+             client->session_id, color);
+
+    uint32_t *pixels = (uint32_t *)drm_dev->front_buffer->map;
+    size_t pixel_count = drm_dev->front_buffer->size / 4;
+    for (size_t p = 0; p < pixel_count; p++) {
+        pixels[p] = color;
+    }
+
+    if (kms_page_flip(drm_dev, drm_dev->front_buffer, NULL) != 0) {
+        LGP_WARN("main", "FILL_RECT page flip failed for client session=%u", client->session_id);
+        return false;
+    }
+
+    return true;
+}
+
+static bool lgp_send_create_surface_reply(lgp_client_t *client, uint32_t status, uint32_t surface_id) {
+    uint8_t reply[LGP_HEADER_SIZE + 8];
+    if (!lgp_surface_encode_create_reply(reply, sizeof(reply), status, surface_id)) {
+        return false;
+    }
+
+    return lgp_write_all(client->fd, reply, sizeof(reply));
+}
+
+static bool lgp_handle_create_surface(lgp_compositor_state_t *state,
+                                      lgp_client_t *client,
+                                      const lgp_msg_t *msg,
+                                      const drm_device_t *drm_dev) {
+    lgp_surface_create_payload_t payload;
+    if (!lgp_surface_decode_create(msg, &payload)) {
+        LGP_WARN("protocol", "Client session=%u sent malformed CREATE_SURFACE", client->session_id);
+        return false;
+    }
+
+    uint32_t surface_id = 0;
+    uint32_t status = lgp_surface_manager_create(&state->surface_manager,
+                                                 client,
+                                                 &payload,
+                                                 drm_dev->mode.hdisplay,
+                                                 drm_dev->mode.vdisplay,
+                                                 &surface_id);
+    if (!lgp_send_create_surface_reply(client, status, surface_id)) {
+        return false;
+    }
+
+    if (status != LGP_SURFACE_STATUS_OK) {
+        LGP_WARN("surface", "Rejected CREATE_SURFACE session=%u status=%u type=%u layer=%u",
+                 client->session_id, status, payload.surface_type, payload.layer);
+        return true;
+    }
+
+    LGP_INFO("surface", "Client session=%u created surface id=%u", client->session_id, surface_id);
+    return true;
+}
+
+static bool lgp_handle_destroy_surface(lgp_compositor_state_t *state,
+                                       lgp_client_t *client,
+                                       const lgp_msg_t *msg) {
+    lgp_surface_destroy_payload_t payload;
+    if (!lgp_surface_decode_destroy(msg, &payload)) {
+        LGP_WARN("protocol", "Client session=%u sent malformed DESTROY_SURFACE", client->session_id);
+        return false;
+    }
+
+    uint32_t status = lgp_surface_manager_destroy(&state->surface_manager, client, payload.surface_id);
+    if (status != LGP_SURFACE_STATUS_OK) {
+        LGP_WARN("surface", "Rejected DESTROY_SURFACE session=%u surface=%u status=%u",
+                 client->session_id, payload.surface_id, status);
+        return false;
+    }
+
+    return true;
+}
+
+static bool lgp_repaint_surfaces(lgp_compositor_state_t *state, drm_device_t *drm_dev) {
+    if (lgp_surface_manager_composite(&state->surface_manager,
+                                      drm_dev->front_buffer->map,
+                                      drm_dev->front_buffer->width,
+                                      drm_dev->front_buffer->height,
+                                      drm_dev->front_buffer->pitch) != 0) {
+        LGP_WARN("surface", "Failed to composite surface scene");
+        return false;
+    }
+
+    if (kms_page_flip(drm_dev, drm_dev->front_buffer, NULL) != 0) {
+        LGP_WARN("surface", "Surface scene page flip failed");
+        return false;
+    }
+
+    return true;
+}
+
+static bool lgp_handle_commit_buffer(lgp_compositor_state_t *state,
+                                     lgp_client_t *client,
+                                     const lgp_msg_t *msg,
+                                     drm_device_t *drm_dev) {
+    lgp_surface_commit_payload_t payload;
+    if (!lgp_surface_decode_commit(msg, &payload)) {
+        LGP_WARN("protocol", "Client session=%u sent malformed COMMIT_BUFFER", client->session_id);
+        return false;
+    }
+
+    int buffer_fd = lgp_client_take_fd(client);
+    uint32_t status = lgp_surface_manager_commit(&state->surface_manager, client, &payload, buffer_fd);
+    if (status != LGP_SURFACE_STATUS_OK) {
+        LGP_WARN("surface", "Rejected COMMIT_BUFFER session=%u surface=%u status=%u",
+                 client->session_id, payload.surface_id, status);
+        return false;
+    }
+
+    LGP_INFO("surface", "Client session=%u committed surface id=%u",
+             client->session_id, payload.surface_id);
+    return lgp_repaint_surfaces(state, drm_dev);
+}
+
+static bool lgp_handle_client_message(lgp_compositor_state_t *state,
+                                      lgp_client_t *client,
+                                      const lgp_msg_t *msg,
+                                      drm_device_t *drm_dev) {
+    if (!client->hello_done && msg->type != LGP_MSG_HELLO) {
+        LGP_WARN("protocol", "Client session=%u sent message 0x%04X before LGP_HELLO",
+                 client->session_id, msg->type);
+        return false;
+    }
+
+    if (client->hello_done && msg->type == LGP_MSG_HELLO) {
+        LGP_WARN("protocol", "Client session=%u repeated LGP_HELLO", client->session_id);
+        return false;
+    }
+
+    if (msg->type == LGP_MSG_HELLO) {
+        return lgp_hello_handle(client, msg);
+    }
+
+    if (msg->type == LGP_MSG_FILL_RECT) {
+        return lgp_handle_fill_rect(client, msg, drm_dev);
+    }
+
+    if (msg->type == LGP_MSG_CREATE_SURFACE) {
+        return lgp_handle_create_surface(state, client, msg, drm_dev);
+    }
+
+    if (msg->type == LGP_MSG_DESTROY_SURFACE) {
+        return lgp_handle_destroy_surface(state, client, msg);
+    }
+
+    if (msg->type == LGP_MSG_COMMIT_BUFFER) {
+        return lgp_handle_commit_buffer(state, client, msg, drm_dev);
+    }
+
+    LGP_WARN("protocol", "Client session=%u sent unknown message 0x%04X",
+             client->session_id, msg->type);
+    return false;
+}
+
+static bool lgp_client_process_messages(lgp_compositor_state_t *state,
+                                        lgp_client_t *client,
+                                        drm_device_t *drm_dev) {
+    while (client->rx_len >= LGP_HEADER_SIZE) {
+        uint16_t type = 0;
+        uint32_t length = 0;
+
+        if (!lgp_tlv_peek_header(client->rx_buf, client->rx_len, &type, &length)) {
+            return true;
+        }
+
+        if (length < LGP_HEADER_SIZE || length > sizeof(client->rx_buf)) {
+            LGP_WARN("protocol", "Client session=%u sent invalid TLV length %u for type 0x%04X",
+                     client->session_id, length, type);
+            return false;
+        }
+
+        if (client->rx_len < length) {
+            return true;
+        }
+
+        lgp_msg_t msg;
+        if (!lgp_tlv_decode(client->rx_buf, length, &msg)) {
+            LGP_WARN("protocol", "Client session=%u sent malformed TLV frame",
+                     client->session_id);
+            return false;
+        }
+
+        if (!lgp_handle_client_message(state, client, &msg, drm_dev)) {
+            return false;
+        }
+
+        size_t remaining = client->rx_len - length;
+        if (remaining > 0) {
+            memmove(client->rx_buf, client->rx_buf + length, remaining);
+        }
+        client->rx_len = remaining;
+    }
+
+    return true;
+}
 
 int main(int argc, char **argv) {
     lgp_args_t args;
@@ -63,8 +428,12 @@ int main(int argc, char **argv) {
     lgp_compositor_state_t state = {
         .epoll_fd = epoll_create1(EPOLL_CLOEXEC),
         .signal_fd = lgp_signal_init(),
-        .running = true
+        .running = true,
+        .next_session_id = 1,
+        .clients = NULL,
+        .surface_manager = {0}
     };
+    lgp_surface_manager_init(&state.surface_manager);
 
     if (state.epoll_fd < 0 || state.signal_fd < 0) {
         LGP_FATAL("main", "Failed to initialize epoll/signalfd");
@@ -173,56 +542,40 @@ int main(int argc, char **argv) {
             } else if (fd == listen_fd) {
                 int client_fd = lgp_socket_server_accept(listen_fd);
                 if (client_fd >= 0) {
-                    /* For M3, just add the fd to epoll. A robust client list is M4+ */
+                    lgp_client_t *client = lgp_client_create(client_fd);
+                    if (!client) {
+                        close(client_fd);
+                        continue;
+                    }
+
+                    client->session_id = state.next_session_id++;
                     ev.events = EPOLLIN;
                     ev.data.fd = client_fd;
                     if (epoll_ctl(state.epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1) {
-                        close(client_fd);
+                        lgp_client_destroy(client);
+                        continue;
                     }
+
+                    lgp_state_add_client(&state, client);
+                    LGP_DEBUG("ipc", "Client session=%u registered", client->session_id);
                 }
             } else {
-                /* Must be a client fd (in M3 we only have 1 global client tracking for simplicity) */
-                uint8_t buf[1024];
-                ssize_t s = read(fd, buf, sizeof(buf));
-                if (s <= 0) {
-                    close(fd);
+                lgp_client_t *client = lgp_state_find_client(&state, fd);
+                if (!client) {
+                    LGP_WARN("ipc", "Received event for unknown client fd %d", fd);
                     epoll_ctl(state.epoll_fd, EPOLL_CTL_DEL, fd, NULL);
-                } else {
-                    lgp_msg_t msg;
-                    if (lgp_tlv_decode(buf, s, &msg)) {
-                        if (msg.type == LGP_MSG_HELLO) {
-                            lgp_client_t *client = lgp_client_create(fd);
-                            if (client) {
-                                lgp_hello_handle(client, &msg);
-                                /* Set fd to -1 before destroying the struct so
-                                 * lgp_client_destroy() does not close the fd —
-                                 * the fd is managed by epoll and must stay open
-                                 * for the duration of the client connection.
-                                 * (CODE_AUDIT_REPORT §1.2) */
-                                client->fd = -1;
-                                lgp_client_destroy(client);
-                            }
-                        } else if (msg.type == LGP_MSG_FILL_RECT) {
-                            if (msg.length - LGP_HEADER_SIZE >= 4) {
-                                uint8_t r = msg.payload[0];
-                                uint8_t g = msg.payload[1];
-                                uint8_t b = msg.payload[2];
-                                /* uint8_t a = msg.payload[3]; */ /* Ignored for solid screen fill */
-                                
-                                uint32_t color = (r << 16) | (g << 8) | b;
-                                LGP_INFO("main", "Client requested FILL_RECT with color #%06X", color);
-                                
-                                uint32_t *pixels = (uint32_t *)drm_dev.front_buffer->map;
-                                size_t pixel_count = drm_dev.front_buffer->size / 4;
-                                for (size_t p = 0; p < pixel_count; p++) {
-                                    pixels[p] = color;
-                                }
-                                
-                                /* For M3 mock: schedule page flip again to show the color */
-                                kms_page_flip(&drm_dev, drm_dev.front_buffer, NULL);
-                            }
-                        }
-                    }
+                    close(fd);
+                    continue;
+                }
+
+                int read_status = lgp_client_read_available(client);
+                if (read_status <= 0) {
+                    lgp_state_close_client(&state, client);
+                    continue;
+                }
+
+                if (!lgp_client_process_messages(&state, client, &drm_dev)) {
+                    lgp_state_close_client(&state, client);
                 }
             }
         }
@@ -230,7 +583,8 @@ int main(int argc, char **argv) {
 
     /* Clean up */
     LGP_INFO("main", "lgp-compositor shutting down cleanly");
-    
+
+    lgp_state_close_all_clients(&state);
     close(listen_fd);
     unlink(LGP_SOCKET_PATH);
     

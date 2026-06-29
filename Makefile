@@ -140,11 +140,20 @@ LUNA_CTL_OBJECTS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(LUNA_CTL_SOURCE
 UNITY_SRC    := $(TESTS_DIR)/vendor/unity/unity.c
 UNITY_OBJ    := $(BUILD_DIR)/tests/vendor/unity.o
 
-TEST_SOURCES := \
+LUNA_INIT_TEST_SOURCES := \
     $(TESTS_DIR)/unit/luna-init/log_test.c \
     $(TESTS_DIR)/unit/luna-init/toml_test.c \
     $(TESTS_DIR)/unit/luna-init/depgraph_test.c \
     $(TESTS_DIR)/unit/luna-init/service_test.c
+
+LGP_UNIT_TEST_SOURCES := \
+    $(TESTS_DIR)/unit/lgp-compositor/protocol_test.c
+
+LGP_UNIT_TEST_SUPPORT := \
+    $(SRC_DIR)/lgp-compositor/protocol/tlv.c \
+    $(SRC_DIR)/lgp-compositor/protocol/surface.c \
+    $(SRC_DIR)/lgp-compositor/scene/surface.c \
+    $(SRC_DIR)/lgp-compositor/logging/log.c
 
 # ---------------------------------------------------------------------------
 # Primary targets
@@ -252,13 +261,25 @@ run-qemu-headless: image
 test-unit: $(UNITY_OBJ) $(filter-out $(BUILD_DIR)/luna-init/main_test_asan.o, $(LUNA_INIT_OBJECTS:.o=_test_asan.o)) | $(BUILD_DIR)/tests
 	@echo "  TEST    Running unit tests with ASan + UBSan"
 	@failed=0; \
-	for src in $(TEST_SOURCES); do \
+	for src in $(LUNA_INIT_TEST_SOURCES); do \
 	    name=$$(basename $$src .c); \
 	    echo "  BUILD   $$name"; \
 	    $(CC) $(CFLAGS_TEST) $(INCLUDES) \
 	        -I$(TESTS_DIR)/vendor/unity \
 	        $$src \
 	        $(filter-out $(BUILD_DIR)/luna-init/main_test_asan.o, $(LUNA_INIT_OBJECTS:.o=_test_asan.o)) \
+	        $(UNITY_OBJ) \
+	        -o $(BUILD_DIR)/tests/$$name 2>&1 || { failed=1; continue; }; \
+	    echo "  RUN     $$name"; \
+	    $(BUILD_DIR)/tests/$$name || failed=1; \
+	done; \
+	for src in $(LGP_UNIT_TEST_SOURCES); do \
+	    name=lgp_$$(basename $$src .c); \
+	    echo "  BUILD   $$name"; \
+	    $(CC) $(CFLAGS_TEST) $(INCLUDES) \
+	        -I$(TESTS_DIR)/vendor/unity \
+	        $$src \
+	        $(LGP_UNIT_TEST_SUPPORT) \
 	        $(UNITY_OBJ) \
 	        -o $(BUILD_DIR)/tests/$$name 2>&1 || { failed=1; continue; }; \
 	    echo "  RUN     $$name"; \
@@ -271,7 +292,7 @@ test-unit: $(UNITY_OBJ) $(filter-out $(BUILD_DIR)/luna-init/main_test_asan.o, $(
 	    exit 1; \
 	fi
 
-$(UNITY_OBJ): $(UNITY_SRC) | $(BUILD_DIR)/tests
+$(UNITY_OBJ): $(UNITY_SRC) | $(BUILD_DIR)/tests/vendor
 	@echo "  CC      unity.c"
 	$(CC) $(CFLAGS_TEST) -I$(TESTS_DIR)/vendor/unity -c -o $@ $<
 
@@ -289,9 +310,23 @@ test-fuzz: | $(BUILD_DIR)/tests
 	    $(TESTS_DIR)/fuzz/toml/fuzz_toml.c \
 	    $(LUNA_INIT_SRC)/toml.c \
 	    -o $(BUILD_DIR)/tests/fuzz_toml
+	@echo "  FUZZ    Building LGP TLV fuzz target"
+	$(CC) $(CFLAGS_FUZZ) $(INCLUDES) \
+	    $(TESTS_DIR)/fuzz/lgp_tlv/fuzz_lgp_tlv.c \
+	    $(SRC_DIR)/lgp-compositor/protocol/tlv.c \
+	    $(SRC_DIR)/lgp-compositor/protocol/surface.c \
+	    -o $(BUILD_DIR)/tests/fuzz_lgp_tlv
+	@rm -rf $(BUILD_DIR)/tests/fuzz_corpus
+	@mkdir -p $(BUILD_DIR)/tests/fuzz_corpus/toml $(BUILD_DIR)/tests/fuzz_corpus/lgp_tlv
+	@cp -R $(TESTS_DIR)/fuzz/toml/corpus/. $(BUILD_DIR)/tests/fuzz_corpus/toml/
+	@cp -R $(TESTS_DIR)/fuzz/lgp_tlv/corpus/. $(BUILD_DIR)/tests/fuzz_corpus/lgp_tlv/
 	@echo "  FUZZ    Running fuzz regression (5 seconds)"
 	$(BUILD_DIR)/tests/fuzz_toml \
-	    $(TESTS_DIR)/fuzz/toml/corpus/ \
+	    $(BUILD_DIR)/tests/fuzz_corpus/toml/ \
+	    -max_total_time=5 \
+	    -print_final_stats=1
+	$(BUILD_DIR)/tests/fuzz_lgp_tlv \
+	    $(BUILD_DIR)/tests/fuzz_corpus/lgp_tlv/ \
 	    -max_total_time=5 \
 	    -print_final_stats=1
 
@@ -318,6 +353,9 @@ $(BUILD_DIR)/luna-init-ctl:
 	@mkdir -p $@
 
 $(BUILD_DIR)/luna-splash:
+	@mkdir -p $@
+
+$(BUILD_DIR)/tests:
 	@mkdir -p $@
 
 $(BUILD_DIR)/tests/vendor:

@@ -166,6 +166,11 @@ static toml_error_t parse_array_value(const char *src, toml_value_t *val) {
         if (*p == '"') p++; /* skip closing " */
     }
 
+    if (*p != ']') return TOML_ERR_INVALID;
+    p++;
+    while (*p && isspace((unsigned char)*p)) p++;
+    if (*p != '\0') return TOML_ERR_INVALID;
+
     return TOML_OK;
 }
 

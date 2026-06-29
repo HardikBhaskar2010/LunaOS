@@ -25,6 +25,10 @@
 #define LGP_MSG_HELLO       0x0001
 #define LGP_MSG_HELLO_REPLY 0x0002
 #define LGP_MSG_FILL_RECT   0x0010
+#define LGP_MSG_CREATE_SURFACE       0x0100
+#define LGP_MSG_CREATE_SURFACE_REPLY 0x0101
+#define LGP_MSG_DESTROY_SURFACE      0x0102
+#define LGP_MSG_COMMIT_BUFFER        0x0103
 #define LGP_MSG_ERROR       0xFFFF
 
 typedef struct {
@@ -32,6 +36,12 @@ typedef struct {
     uint32_t length;
     const uint8_t *payload;
 } lgp_msg_t;
+
+/*
+ * lgp_tlv_peek_header() — Decode only the fixed-size TLV header.
+ * Returns true once a complete header is available.
+ */
+bool lgp_tlv_peek_header(const uint8_t *buf, size_t buf_len, uint16_t *out_type, uint32_t *out_length);
 
 /*
  * lgp_tlv_decode() — Decode a buffer into a message struct.

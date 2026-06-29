@@ -8,15 +8,39 @@
 #include "hello.h"
 #include "caps.h"
 #include "../logging/log.h"
+#include <errno.h>
+#include <string.h>
 #include <unistd.h>
 
 #define LGP_VERSION_MAJOR 1
 #define LGP_VERSION_MINOR 0
 
-void lgp_hello_handle(lgp_client_t *client, const lgp_msg_t *msg) {
+static bool lgp_write_all(int fd, const uint8_t *buf, size_t len) {
+    size_t written = 0;
+
+    while (written < len) {
+        ssize_t n = write(fd, buf + written, len - written);
+        if (n < 0) {
+            if (errno == EINTR) continue;
+            LGP_ERROR("protocol", "Failed to write LGP reply: %s", strerror(errno));
+            return false;
+        }
+        if (n == 0) {
+            LGP_ERROR("protocol", "Short write while sending LGP reply");
+            return false;
+        }
+        written += (size_t)n;
+    }
+
+    return true;
+}
+
+bool lgp_hello_handle(lgp_client_t *client, const lgp_msg_t *msg) {
+    if (!client || !msg) return false;
+
     if (msg->length - LGP_HEADER_SIZE < 8) {
         LGP_ERROR("protocol", "LGP_HELLO payload too small");
-        return;
+        return false;
     }
 
     const uint8_t *p = msg->payload;
@@ -33,11 +57,12 @@ void lgp_hello_handle(lgp_client_t *client, const lgp_msg_t *msg) {
         LGP_WARN("protocol", "Client requested unsupported major version %u (we are %u)",
                  hello.version_major, LGP_VERSION_MAJOR);
         /* In a full implementation, send an ERROR message and drop connection */
-        return;
+        return false;
     }
 
     /* Intersect requested capabilities with what this client's policy allows */
     uint32_t caps_granted = lgp_caps_negotiate(client, hello.caps_requested);
+    client->caps_granted = caps_granted;
 
     /* Construct LGP_HELLO_REPLY */
     uint8_t reply[LGP_HEADER_SIZE + 8];
@@ -52,5 +77,10 @@ void lgp_hello_handle(lgp_client_t *client, const lgp_msg_t *msg) {
     reply[12] = (uint8_t)((caps_granted >> 16) & 0xFF);
     reply[13] = (uint8_t)((caps_granted >> 24) & 0xFF);
 
-    write(client->fd, reply, sizeof(reply));
+    if (!lgp_write_all(client->fd, reply, sizeof(reply))) {
+        return false;
+    }
+
+    client->hello_done = true;
+    return true;
 }

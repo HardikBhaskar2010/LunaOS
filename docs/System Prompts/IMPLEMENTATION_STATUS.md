@@ -10,7 +10,7 @@
 |---|---|---|
 | Phase 0: Core Foundation | ✅ COMPLETE | ~95% |
 | Phase 1: Boot Aesthetics | 🔵 IN PROGRESS | ~70% |
-| Phase 2: Graphics Layer | ⬜ NOT STARTED | 0% |
+| Phase 2: Graphics Layer | 🔵 IN PROGRESS | ~20% |
 | Phase 3: AI & Shell | ⬜ NOT STARTED | 0% |
 | Phase 4: Public Release | ⬜ NOT STARTED | 0% |
 
@@ -25,7 +25,7 @@
 **Current Milestone:** Phase 0 / Stage 4 boot
 **Dependencies:** Linux kernel, glibc, signalfd, epoll, waitpid
 **Blockers:** None
-**Test Coverage:** 4 unit tests (log, toml, depgraph, service_find). Supervisor/mount/shutdown have zero test coverage.
+**Test Coverage:** 8 unit tests across log, toml, depgraph, and service_find. Supervisor/mount/shutdown have zero test coverage.
 **Documentation Coverage:** Fully documented in `Volume II / 04_init_system.md`
 
 | Subsystem | Status | Notes |
@@ -168,33 +168,38 @@
 
 ---
 
-## Phase 2: Graphics Layer — NOT STARTED
+## Phase 2: Graphics Layer — IN PROGRESS
 
-All decisions are accepted. Implementation has not begun.
+The early `lgp-compositor` path is implemented and building. DL-053 supersedes
+DL-025 for the LGP wire format; the code uses the canonical 6-byte TLV header
+(`uint16_t type` + `uint32_t length`).
 
 ### lgp-compositor
 
-**Status:** ⬜ NOT STARTED
-**Completion:** 0%
+**Status:** 🔵 IN PROGRESS
+**Completion:** ~25%
 **Current Milestone:** Phase 2
-**Dependencies (accepted):** Linux DRM/KMS, libinput (DL-032), D-Bus (DL-031), TLV wire format (DL-025)
-**Blockers:** None (all decisions accepted). Just needs implementation.
-**Next Task:** Create `src/lgp-compositor/` skeleton. Implement KMS modesetting. Open LGP Unix socket. Implement TLV message framing.
+**Dependencies (accepted):** Linux DRM/KMS, libinput (DL-032), D-Bus (DL-031), TLV wire format (DL-053)
+**Blockers:** Stage 6 shell/LunaGUI clients are not implemented. D-Bus Ready is still a documented gap.
+**Next Task:** Boot QEMU and run `/usr/bin/lgp-test-client` to verify a committed shared-memory surface, then begin the LunaGUI client library.
 **Estimated Complexity:** Very High (3–6 months)
 
 | Subsystem | Status | Authority |
 |---|---|---|
-| KMS/DRM modesetting | ⬜ | DL-026 |
-| Software renderer | ⬜ | DL-026 §Stage 2 |
+| KMS/DRM modesetting | ✅ Basic | DL-026 |
+| Software renderer | 🔵 Minimal | DL-026 §Stage 2 |
 | Vulkan backend | ⬜ | DL-026 §Stage 3 (after software renderer) |
-| LGP Unix socket server | ⬜ | DL-025 |
-| TLV wire framing | ⬜ | DL-025 |
-| LGP_HELLO handshake | ⬜ | DL-025 |
+| LGP Unix socket server | ✅ Basic | DL-053 |
+| TLV wire framing | ✅ Basic | DL-053 |
+| LGP_HELLO handshake | ✅ Basic | DL-053 |
 | Window management | ⬜ | Volume III/03_compositor.md |
 | libinput backend | ⬜ | DL-032 |
 | D-Bus Ready signal | ⬜ | DL-031 |
 | Clipboard extension | ⬜ | DL-033 |
-| luna-splash handoff | ⬜ | DL-043 (accept 1-frame cut) |
+| luna-splash handoff | ✅ Basic | DL-043 (accept 1-frame cut) |
+
+| Surface lifecycle | Basic | `LGP_CREATE_SURFACE`, `LGP_DESTROY_SURFACE`, `LGP_COMMIT_BUFFER` |
+| Shared-memory buffer commit | Basic | `SCM_RIGHTS`, `XRGB8888` |
 
 ### LunaGUI
 
@@ -299,9 +304,9 @@ All decisions are accepted. Implementation has not begun.
 | splash.c | 0 tests | Not tested |
 | luna-splash/render.c | 0 tests | Not tested |
 | luna-splash/ipc.c | 0 tests | Not tested |
-| TOML fuzzer | AFL++ harness | Good — covers all parse paths under mutation |
+| TOML fuzzer | libFuzzer target with AFL++ path | Good — covers parser paths under mutation |
 
-**Overall unit test coverage:** Very Low. 4 tests covering the happy path of 4 modules. 11 modules have zero test coverage.
+**Overall unit test coverage:** Very Low. 8 tests covering 4 modules. 11 modules have zero test coverage.
 
 ---
 

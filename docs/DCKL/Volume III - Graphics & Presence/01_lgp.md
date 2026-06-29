@@ -196,6 +196,22 @@ Even without a final wire format, the following message categories are architect
 | `LGP_INPUT_EVENT` | Keyboard, pointer, or touch event for this surface |
 | `LGP_COMPOSITOR_ERROR` | Protocol error notification |
 
+### Implemented Phase 2 Surface Messages
+
+The current Phase 2 compositor implements the minimum direct-LGP surface path:
+
+| Message | Type | Payload |
+|---|---:|---|
+| `LGP_CREATE_SURFACE` | `0x0100` | `u32 surface_type, i32 x, i32 y, u32 width, u32 height, u32 layer` |
+| `LGP_CREATE_SURFACE_REPLY` | `0x0101` | `u32 status, u32 surface_id` |
+| `LGP_DESTROY_SURFACE` | `0x0102` | `u32 surface_id` |
+| `LGP_COMMIT_BUFFER` | `0x0103` | `u32 surface_id, u32 width, u32 height, u32 stride, u32 pixel_format, u32 byte_size` |
+
+All fields are little-endian. `LGP_COMMIT_BUFFER` carries the shared-memory
+file descriptor through `SCM_RIGHTS` on the same Unix socket message. The only
+accepted pixel format in the Phase 2 software renderer is `XRGB8888`
+(`0x34325258`, DRM `XR24`). One committed buffer is tracked per surface.
+
 ### The Frame Callback Model
 
 LGP uses a **compositor-driven frame timing** model. Applications do not render at arbitrary times and push frames. They:

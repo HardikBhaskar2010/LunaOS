@@ -24,6 +24,41 @@ static bool g_edge[SERVICE_MAX_COUNT][SERVICE_MAX_COUNT];
 /* In-degree array for Kahn's algorithm */
 static int g_indegree[SERVICE_MAX_COUNT];
 
+static bool depgraph_has_cycle(void) {
+    int queue[SERVICE_MAX_COUNT];
+    int q_head = 0;
+    int q_tail = 0;
+    int indegree[SERVICE_MAX_COUNT];
+    int out_count = 0;
+
+    for (int i = 0; i < g_service_count; i++) {
+        indegree[i] = g_indegree[i];
+        if (indegree[i] == 0) queue[q_tail++] = i;
+    }
+
+    while (q_head < q_tail) {
+        int node = queue[q_head++];
+        out_count++;
+
+        for (int j = 0; j < g_service_count; j++) {
+            if (!g_edge[node][j]) continue;
+            if (--indegree[j] == 0) {
+                queue[q_tail++] = j;
+            }
+        }
+    }
+
+    if (out_count == g_service_count) return false;
+
+    LUNA_FATAL(COMP, "Circular dependency detected in service files!");
+    for (int i = 0; i < g_service_count; i++) {
+        if (indegree[i] > 0) {
+            LUNA_FATAL(COMP, "  Service in cycle: %s", g_services[i].name);
+        }
+    }
+    return true;
+}
+
 int depgraph_build(void) {
     /* Zero all state */
     memset(g_edge,     0, sizeof(g_edge));
@@ -75,6 +110,8 @@ int depgraph_build(void) {
             }
         }
     }
+
+    if (depgraph_has_cycle()) return -1;
 
     LUNA_INFO(COMP, "Dependency graph built for %d services", g_service_count);
     return 0;

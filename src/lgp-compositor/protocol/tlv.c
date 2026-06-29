@@ -7,12 +7,21 @@
 
 #include "tlv.h"
 
+bool lgp_tlv_peek_header(const uint8_t *buf, size_t buf_len, uint16_t *out_type, uint32_t *out_length) {
+    if (buf_len < LGP_HEADER_SIZE) return false;
+    if (!buf || !out_type || !out_length) return false;
+
+    *out_type = (uint16_t)(buf[0] | (buf[1] << 8));
+    *out_length = (uint32_t)(buf[2] | (buf[3] << 8) | (buf[4] << 16) | (buf[5] << 24));
+    return true;
+}
+
 bool lgp_tlv_decode(const uint8_t *buf, size_t buf_len, lgp_msg_t *out_msg) {
     if (buf_len < LGP_HEADER_SIZE) return false;
+    if (!buf || !out_msg) return false;
 
     /* Little-endian decoding */
-    out_msg->type = (uint16_t)(buf[0] | (buf[1] << 8));
-    out_msg->length = (uint32_t)(buf[2] | (buf[3] << 8) | (buf[4] << 16) | (buf[5] << 24));
+    if (!lgp_tlv_peek_header(buf, buf_len, &out_msg->type, &out_msg->length)) return false;
 
     if (out_msg->length < LGP_HEADER_SIZE) return false;
     if (buf_len < out_msg->length) return false;
@@ -23,6 +32,7 @@ bool lgp_tlv_decode(const uint8_t *buf, size_t buf_len, lgp_msg_t *out_msg) {
 
 bool lgp_tlv_encode_header(uint8_t *buf, size_t buf_len, uint16_t type, uint32_t length) {
     if (buf_len < LGP_HEADER_SIZE) return false;
+    if (!buf) return false;
     
     if (length < LGP_HEADER_SIZE) length = LGP_HEADER_SIZE;
 

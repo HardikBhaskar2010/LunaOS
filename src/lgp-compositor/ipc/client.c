@@ -25,6 +25,12 @@ lgp_client_t *lgp_client_create(int fd) {
     }
 
     client->fd = fd;
+    client->pid = -1;
+    client->uid = (uid_t)-1;
+    client->gid = (gid_t)-1;
+    for (size_t i = 0; i < LGP_CLIENT_MAX_PENDING_FDS; i++) {
+        client->pending_fds[i] = -1;
+    }
 
     struct ucred ucred;
     socklen_t len = sizeof(struct ucred);
@@ -48,6 +54,11 @@ void lgp_client_destroy(lgp_client_t *client) {
     LGP_DEBUG("ipc", "Destroying client (pid %d)", (int)client->pid);
     if (client->fd >= 0) {
         close(client->fd);
+    }
+    for (size_t i = 0; i < client->pending_fd_count; i++) {
+        if (client->pending_fds[i] >= 0) {
+            close(client->pending_fds[i]);
+        }
     }
     free(client);
 }

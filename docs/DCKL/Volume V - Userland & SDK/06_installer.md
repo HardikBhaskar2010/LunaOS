@@ -53,6 +53,19 @@ The installer runs as a full LunaGUI application with a restricted desktop envir
 - No luna-shell, no luna-dock, no luna-bar
 - luna-ai-d in a limited mode (no LLM, presence-only)
 
+### Setup Experience Rule
+
+Mahina setup is GUI-first. The supported user-facing install path is the
+full-screen LunaGUI installer described in this document, with guided automatic
+partitioning as the default. Terminal-only setup is reserved for emergency
+recovery, development shells, and debugging; it is not the primary install
+experience and must not become the normal user flow.
+
+The implementation order is:
+1. Prove LGP surface creation and shared-memory commits in `lgp-compositor`.
+2. Build the LunaGUI client library on top of LGP.
+3. Build `luna-installer` as a LunaGUI application using the screen flow below.
+
 ```
 Installer system services (running during install):
   lgp-compositor    — graphics

@@ -112,12 +112,17 @@ PID N: luna-splash (child of luna-init)
      └── Renders: logo + progress text + progress bar
 ```
 
-### Future System (Stages 5–7, v0.5–v0.9)
+### Current Graphics System (Stage 5 bring-up)
 
-All of Stage 5 onwards is not implemented. Zero code exists for:
-- lgp-compositor, LunaGUI, luna-shell, luna-island, luna-bar, luna-ai-d, lpkg
+Stage 5 is partially implemented. `luna-init` releases `luna-splash` and starts
+`lgp-compositor` after the splash fade-out. `lgp-compositor` has real M1-M3 code:
+DRM/KMS dumb-buffer setup, `/run/lgp/compositor.sock`, 6-byte TLV framing per
+DL-053, `LGP_HELLO`, persistent client lifecycle state, stream reassembly,
+basic `LGP_CREATE_SURFACE` / `LGP_DESTROY_SURFACE` / `LGP_COMMIT_BUFFER`, and
+shared-memory `XRGB8888` commits via `SCM_RIGHTS`.
 
-For planned architecture, read the relevant DCKL volume.
+Still not implemented: LunaGUI, luna-shell, luna-island, luna-bar, luna-ai-d,
+lpkg, and luna-lock. For planned architecture, read the relevant DCKL volume.
 
 ---
 
@@ -215,7 +220,7 @@ Key decisions relevant to coding:
 | DL-004R | LGP compositor replaces Wayland/Hyprland | Never link against wayland-client or hyprland IPC |
 | DL-008 | TOML config format | All config in .toml; never YAML, JSON, INI |
 | DL-021 | AI = Presence Engine + LLM (lazy) | Ollama NOT started at boot; only on first AI demand |
-| DL-025 | LGP wire: TLV (1B type, 4B len, N bytes payload) | All LGP codec must use this exact framing |
+| DL-053 | LGP wire: TLV (2B type, 4B len, N bytes payload) | All LGP codec must use this exact 6-byte framing |
 | DL-026 | GPU: software renderer Stage 2, Vulkan Stage 3 | No GPU API calls in Stage 2 compositor code |
 | DL-027 | Btrfs root | Installer + lpkg must use btrfs snapshot before updates |
 | DL-031 | Compositor ready signal = D-Bus `org.mahina.compositor.Ready` | Stage 6 services block on this D-Bus signal |
@@ -264,9 +269,17 @@ Key decisions relevant to coding:
 | FB renderer | `src/luna-splash/render.c` | `render_init()`, `render_clear()`, `render_text()`, `render_logo()`, `render_progress()` |
 | Splash IPC | `src/luna-splash/ipc.c` | `ipc_init(fd)`, `ipc_read_event()`, `ipc_cleanup()` |
 
-### Not Implemented (Stage 2+)
+### Partially Implemented (Stage 5)
 
-Everything under these subsystems has zero code: `lgp-compositor`, `LunaGUI`, `luna-shell`, `luna-island`, `luna-bar`, `luna-ai-d`, `lpkg`, `luna-lock`.
+`src/lgp-compositor/` exists and builds. It currently covers the early compositor
+bring-up path: DRM/KMS initialization, socket lifecycle, TLV framing, `LGP_HELLO`,
+client identity via `SO_PEERCRED`, persistent per-connection state, and bounded
+receive-buffer parsing for split stream reads.
+
+### Not Implemented (Stage 6+)
+
+These subsystems still have zero code: `LunaGUI`, `luna-shell`, `luna-island`,
+`luna-bar`, `luna-ai-d`, `lpkg`, and `luna-lock`.
 
 ---
 
@@ -287,18 +300,14 @@ Everything under these subsystems has zero code: `lgp-compositor`, `LunaGUI`, `l
 
 ## Current Sprint / Current Priorities
 
-**Current state:** Stage 0 is complete. The system boots to a root shell.
+**Current state:** Stage 5 graphics bring-up is in progress. The system boots
+through `luna-splash`, releases it, starts `lgp-compositor`, and falls back to
+interactive shells while Stage 6 clients are still absent.
 
-**Next milestone (Phase 1 completion):**
-- Fix the luna-splash fallback path bug (`./build/luna-splash` → `./build/luna-splash/luna-splash`)
-- Close DL-P04 (MIT license confirmed — add DL entry to decision_log)
-- Add test coverage for supervisor, mount, and shutdown modules
-- Delete stale `.github/workflows/build.yml`
-- Delete stale `tests/unit/test_toml.c` and `tests/unit/test_depgraph.c`
-
-**Phase 2 (LGP) — requires new code, not fixes:**
-All Phase 2 decisions are accepted. The work is pure implementation.
-Start with: `lgp-compositor` skeleton → KMS modesetting → LGP socket → software renderer.
+**Next milestone (Phase 2 continuation):**
+- Harden luna-init audit findings that affect Stage 5 supervision.
+- Continue `lgp-compositor` toward documented surface creation and buffer commit.
+- Keep docs synchronized when implementation state changes.
 
 ---
 

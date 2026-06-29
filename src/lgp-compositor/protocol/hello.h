@@ -29,6 +29,6 @@ typedef struct {
  * lgp_hello_handle() — Handle an LGP_HELLO message from a client.
  * Sends back an LGP_HELLO_REPLY if the version is acceptable.
  */
-void lgp_hello_handle(lgp_client_t *client, const lgp_msg_t *msg);
+bool lgp_hello_handle(lgp_client_t *client, const lgp_msg_t *msg);
 
 #endif
