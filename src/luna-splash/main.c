@@ -47,6 +47,9 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--fd") == 0 && i + 1 < argc) {
             pipe_fd = atoi(argv[i + 1]);
+            /* Set the pipe to non-blocking so ipc_read_event doesn't hang when empty */
+            int flags = fcntl(pipe_fd, F_GETFL, 0);
+            if (flags >= 0) fcntl(pipe_fd, F_SETFL, flags | O_NONBLOCK);
             break;
         }
     }
@@ -55,6 +58,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "luna-splash: Failed to initialize framebuffer\n");
         return 1;
     }
+    dprintf(STDERR_FILENO, "luna-splash: init done, fb mapped\n");
     
     if (ipc_init(pipe_fd) < 0) {
         fprintf(stderr, "luna-splash: Warning: IPC not initialized\n");
@@ -78,9 +82,11 @@ int main(int argc, char **argv) {
     }
     
     /* Initial render */
+    dprintf(STDERR_FILENO, "luna-splash: rendering initial logo\n");
     render_clear(COLOR_BG);
     render_logo();
     render_progress("Awaiting instructions...", 0);
+    dprintf(STDERR_FILENO, "luna-splash: initial logo rendered\n");
     
     bool running = true;
     struct epoll_event events[MAX_EVENTS];
@@ -112,7 +118,9 @@ int main(int argc, char **argv) {
         }
     }
     
+    dprintf(STDERR_FILENO, "luna-splash: exited epoll loop, fading out\n");
     render_fade_out();
+    dprintf(STDERR_FILENO, "luna-splash: fade out complete, exiting\n");
 
 cleanup:
     if (sigfd >= 0) close(sigfd);

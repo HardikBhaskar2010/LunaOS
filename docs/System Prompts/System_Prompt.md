@@ -395,3 +395,41 @@ Prefer explicitness over brevity.
 Prefer TODOs over assumptions.
 
 Produce documentation worthy of becoming the official specification for Mahina.
+
+
+
+
+1. Current State of the System
+We have successfully resolved the early-boot race conditions, rendering limitations, and usability issues. The boot chain and graphics protocol stack are fully operational:
+
+Boot Splash Screen (luna-splash):
+Stable Rendering: The splash screen initializes at 0.003s, prints progress updates from luna-init cleanly, and waits for services to be ready.
+Cinematic Fade Out: Fixed the Write-Combined VRAM issue (which returned zero-byte reads and instantly blacked out the screen) by introducing a Shadow Framebuffer in system RAM. The splash screen now fades out dynamically and smoothly to black over 16 frames (~480ms).
+Optimized Render Clears: Changed render_clear to use memset on 32bpp framebuffers instead of iterating pixel-by-pixel, slashing paint times and eliminating rendering lag.
+Supervisor Delay (lgp-compositor):
+Delayed Takeover: The compositor was previously taking over DRM Master in Stage 4, instantly blanking out the splash screen. We fixed this by explicitly marking its service state as SERVICE_STATE_STOPPED during Stage 4 load.
+Stage 5 Launch: It now launches correctly in Stage 5 after the splash screen completes its fade-out, showing the "Void" frame and listening on /run/lgp/compositor.sock.
+Dual Shell Spawning:
+luna-init now forks two interactive BusyBox shells at the end of boot:
+One on the default serial port (ttyS0 / your Windows WSL terminal) for development/debugging.
+A second one on the virtual console (tty1 / the QEMU screen itself) for physical screen access.
+luna-init-ctl Static Compilation:
+Fixed the /bin/sh: /usr/bin/luna-init-ctl: not found error by modifying the root Makefile to compile luna-init-ctl statically. Because our custom root filesystem lacks a dynamic linker and shared libraries, dynamically linked binaries cannot execute. Rebuilding it statically resolves the issue.
+2. Where to Continue Next
+Here are the logical next steps to continue implementing the requirements from 
+
+CODE_AUDIT_REPORT.md
+ and 
+
+ARCHITECTURE_COMPLIANCE_REPORT.md
+:
+
+A. Address LGP Compositor Protocol framing (Audit §1.1 - Critical)
+Conflict: src/lgp-compositor/protocol/tlv.h defines a 6-byte header (uint16_t type + uint32_t length), but the design log (DL-025) and architecture documents specify a 5-byte header (uint8_t type + uint32_t length).
+Action: Update the wire protocol headers in src/lgp-compositor to strictly use a 5-byte header, or write a superseding design log to justify a 2-byte message type field.
+B. Fix Client Lifecycle Leak in Compositor (Audit §1.2 - High)
+Conflict: Immediately after a client performs the LGP_HELLO handshake, the compositor calls lgp_client_destroy(), which closes the client's socket file descriptor.
+Action: Do not destroy the client connection directly in the handshake handler. Instead, track client objects inside an active client list for the duration of the socket connection, and only clean them up when the connection is disconnected.
+C. Implement Message Reassembly for LGP socket reads (Audit §1.3 - Medium)
+Conflict: The socket reader in the compositor reads up to 1024 bytes and assumes complete messages arrive in single chunks, failing if a packet is fragmented across TCP/Unix stream buffers.
+Action: Implement basic buffer accumulation and stream parsing for the compositor socket to cleanly handle split packet reads.

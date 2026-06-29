@@ -182,11 +182,11 @@ $(BUILD_DIR)/luna-init/%.o: $(LUNA_INIT_SRC)/%.c | $(BUILD_DIR)/luna-init
 
 $(BUILD_DIR)/luna-init-ctl/luna-init-ctl: $(LUNA_CTL_OBJECTS) | $(BUILD_DIR)/luna-init-ctl
 	@echo "  LINK    $@"
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS_STATIC) -o $@ $^
 
 $(BUILD_DIR)/luna-init-ctl/%.o: $(LUNA_CTL_SRC)/%.c | $(BUILD_DIR)/luna-init-ctl
 	@echo "  CC      $<"
-	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
+	$(CC) $(CFLAGS_STATIC) $(INCLUDES) -c -o $@ $<
 
 # ---------------------------------------------------------------------------
 # luna-splash binary (statically linked for early boot)

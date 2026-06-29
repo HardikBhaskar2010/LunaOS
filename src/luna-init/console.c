@@ -13,6 +13,10 @@
 #include "console.h"
 #include "log.h"
 
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 
 #define COMP "console"
@@ -38,8 +42,23 @@ void console_print_welcome(void) {
     LUNA_INFO(COMP, "Welcome message displayed");
 }
 
-void console_drop_to_shell(void) {
-    LUNA_INFO(COMP, "Dropping to interactive root shell");
+void console_drop_to_shell(const char *tty_path) {
+    LUNA_INFO(COMP, "Dropping to interactive root shell on %s", tty_path ? tty_path : "default terminal");
+
+    if (tty_path) {
+        int fd = open(tty_path, O_RDWR);
+        if (fd >= 0) {
+            dup2(fd, 0);
+            dup2(fd, 1);
+            dup2(fd, 2);
+            if (fd > 2) close(fd);
+            
+            setsid();
+            ioctl(0, TIOCSCTTY, 1);
+        } else {
+            LUNA_WARN(COMP, "Failed to open tty %s: %s", tty_path, strerror(errno));
+        }
+    }
 
     /* In v0.1, drop to busybox sh. In v0.5+ this path is replaced by
      * the login manager (luna-lock). */

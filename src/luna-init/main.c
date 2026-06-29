@@ -300,7 +300,7 @@ int main(void) {
             LUNA_INFO("luna-init", "Stage 0 (v0.1) boot complete. Stages 5-7 pending.");
             
             splash_update("Boot Complete!", 100);
-            usleep(1500000); /* 1.5 second delay to admire the splash screen */
+            usleep(3500000); /* 3.5 second delay to admire the splash screen (accounts for QEMU window startup lag) */
 
             /* ═══ STAGE 5 (NEW): Graphics Layer ═══════════════════════════════════ */
             
@@ -322,9 +322,17 @@ int main(void) {
             
             console_print_welcome();
             
+            /* Spawn default shell (serial console / user's main terminal) */
             pid_t shell_pid = fork();
             if (shell_pid == 0) {
-                console_drop_to_shell();
+                console_drop_to_shell(NULL);
+                _exit(0);
+            }
+
+            /* Spawn shell on virtual console tty1 (the virtual OS screen / keyboard) */
+            pid_t tty_shell_pid = fork();
+            if (tty_shell_pid == 0) {
+                console_drop_to_shell("/dev/tty1");
                 _exit(0);
             }
         }

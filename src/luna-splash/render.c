@@ -21,6 +21,7 @@ static int fb_fd = -1;
 static uint32_t *fb_mem = NULL;
 static struct fb_var_screeninfo vinfo;
 static struct fb_fix_screeninfo finfo;
+static uint32_t *shadow_fb = NULL;
 
 int screen_w = 0;
 int screen_h = 0;
@@ -52,10 +53,19 @@ int render_init(void) {
         return -1;
     }
 
+    shadow_fb = malloc(screensize);
+    if (shadow_fb) {
+        memset(shadow_fb, 0, screensize);
+    }
+
     return 0;
 }
 
 void render_cleanup(void) {
+    if (shadow_fb) {
+        free(shadow_fb);
+        shadow_fb = NULL;
+    }
     if (fb_mem != MAP_FAILED && fb_mem != NULL) {
         size_t screensize = (size_t)vinfo.yres_virtual * (size_t)finfo.line_length;
         munmap(fb_mem, screensize);
@@ -73,6 +83,7 @@ static inline void put_pixel(int x, int y, uint32_t color) {
     if (vinfo.bits_per_pixel == 32) {
         int offset = (y * line_length / 4) + x;
         fb_mem[offset] = color;
+        if (shadow_fb) shadow_fb[offset] = color;
     } else if (vinfo.bits_per_pixel == 16) {
         int offset = (y * line_length / 2) + x;
         uint16_t *fb16 = (uint16_t *)fb_mem;
@@ -81,12 +92,19 @@ static inline void put_pixel(int x, int y, uint32_t color) {
         uint8_t b = color & 0xFF;
         uint16_t color16 = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
         fb16[offset] = color16;
+        if (shadow_fb) ((uint16_t*)shadow_fb)[offset] = color16;
     } else if (vinfo.bits_per_pixel == 24) {
         int offset = (y * line_length) + (x * 3);
         uint8_t *fb8 = (uint8_t *)fb_mem;
         fb8[offset] = color & 0xFF;
         fb8[offset+1] = (color >> 8) & 0xFF;
         fb8[offset+2] = (color >> 16) & 0xFF;
+        if (shadow_fb) {
+            uint8_t *shadow8 = (uint8_t *)shadow_fb;
+            shadow8[offset] = color & 0xFF;
+            shadow8[offset+1] = (color >> 8) & 0xFF;
+            shadow8[offset+2] = (color >> 16) & 0xFF;
+        }
     }
 }
 
@@ -98,8 +116,12 @@ void render_fade_out(void) {
     uint32_t *backbuffer = malloc(pixel_count * sizeof(uint32_t));
     if (!backbuffer) return;
     
-    /* Copy framebuffer to backbuffer once (slow read from VRAM) */
-    memcpy(backbuffer, fb_mem, pixel_count * sizeof(uint32_t));
+    /* Copy from shadow_fb to avoid slow/zero reads from WC VRAM */
+    if (shadow_fb) {
+        memcpy(backbuffer, shadow_fb, pixel_count * sizeof(uint32_t));
+    } else {
+        memcpy(backbuffer, fb_mem, pixel_count * sizeof(uint32_t));
+    }
 
     for (int step = 0; step < 16; step++) {
         for (size_t i = 0; i < pixel_count; i++) {
@@ -121,6 +143,13 @@ void render_fade_out(void) {
 }
 
 void render_clear(uint32_t color) {
+    if (vinfo.bits_per_pixel == 32 && color == 0) {
+        size_t screensize = (size_t)vinfo.yres_virtual * (size_t)finfo.line_length;
+        memset(fb_mem, 0, screensize);
+        if (shadow_fb) memset(shadow_fb, 0, screensize);
+        return;
+    }
+    
     for (int y = 0; y < screen_h; y++) {
         for (int x = 0; x < screen_w; x++) {
             put_pixel(x, y, color);

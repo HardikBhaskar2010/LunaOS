@@ -281,6 +281,7 @@ int supervisor_start_all(void) {
         
         /* EXCLUSION: lgp-compositor is manually started in Stage 5, not Stage 4 */
         if (strcmp(g_services[i].name, "lgp-compositor") == 0) {
+            g_services[i].state = SERVICE_STATE_STOPPED;
             continue;
         }
 

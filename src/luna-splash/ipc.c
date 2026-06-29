@@ -33,23 +33,26 @@ void ipc_cleanup(void) {
 bool ipc_read_event(char *msg_out, int *percent_out) {
     if (ipc_fd < 0) return false;
 
-    char temp[64];
-    ssize_t n = read(ipc_fd, temp, sizeof(temp) - 1);
-    if (n <= 0) return false;
-
-    temp[n] = '\0';
-    
-    /* Append to buffer */
-    int to_copy = (int)n;
-    if (buf_len + to_copy >= MAX_IPC_MSG) {
-        to_copy = MAX_IPC_MSG - buf_len - 1;
-    }
-    memcpy(buffer + buf_len, temp, (size_t)to_copy);
-    buf_len += to_copy;
-    buffer[buf_len] = '\0';
-
-    /* Check for newline */
     char *nl = strchr(buffer, '\n');
+    if (!nl) {
+        char temp[64];
+        ssize_t n = read(ipc_fd, temp, sizeof(temp) - 1);
+        if (n <= 0) return false;
+
+        temp[n] = '\0';
+        
+        /* Append to buffer */
+        int to_copy = (int)n;
+        if (buf_len + to_copy >= MAX_IPC_MSG) {
+            to_copy = MAX_IPC_MSG - buf_len - 1;
+        }
+        memcpy(buffer + buf_len, temp, (size_t)to_copy);
+        buf_len += to_copy;
+        buffer[buf_len] = '\0';
+
+        nl = strchr(buffer, '\n');
+    }
+
     if (nl) {
         *nl = '\0';
         

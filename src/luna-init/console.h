@@ -32,6 +32,6 @@ void console_print_welcome(void);
  * This is the final act of luna-init in Stage 0 — in later stages
  * the login manager replaces this path.
  */
-void console_drop_to_shell(void);
+void console_drop_to_shell(const char *tty_path);
 
 #endif /* MAHINA_CONSOLE_H */
