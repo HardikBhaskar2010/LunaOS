@@ -468,6 +468,13 @@ void lgui_application_set_global_key_cb(lgui_application_t *app, lgui_global_key
     }
 }
 
+void lgui_application_set_global_pointer_cb(lgui_application_t *app, lgui_global_pointer_cb cb, void *user_data) {
+    if (app) {
+        app->global_pointer_cb = cb;
+        app->global_pointer_user_data = user_data;
+    }
+}
+
 void lgui_widget_focus(lgui_application_t *app, lgui_widget_t *widget) {
     if (app) app->focused_widget = widget;
 }
@@ -520,14 +527,17 @@ int lgui_application_run(lgui_application_t *app) {
                 uint32_t payload_len = len - (uint32_t)LGP_HEADER_SIZE;
 
                 if (type == 0x0110u) {
-                    /* LGP_MSG_POINTER_MOTION: int32_t x, int32_t y (big-endian per compositor) */
+                    /* LGP_MSG_POINTER_MOTION: int32_t x, int32_t y, surface-local for apps.
+                     * The WM receives the same message in global output coordinates. */
                     if (payload_len >= 8u) {
-                        int px = (int)((uint32_t)payload[0] << 24 | (uint32_t)payload[1] << 16
-                                     | (uint32_t)payload[2] << 8 | (uint32_t)payload[3]);
-                        int py = (int)((uint32_t)payload[4] << 24 | (uint32_t)payload[5] << 16
-                                     | (uint32_t)payload[6] << 8 | (uint32_t)payload[7]);
+                        int px = (int)read_u32_le(payload + 0);
+                        int py = (int)read_u32_le(payload + 4);
                         app->cursor_x = px;
                         app->cursor_y = py;
+
+                        if (app->global_pointer_cb) {
+                            app->global_pointer_cb(px, py, false, false, app->global_pointer_user_data);
+                        }
                     }
                 } else if (type == 0x0111u) {
                     /* LGP_MSG_POINTER_BUTTON: uint8_t button, uint8_t pressed */
@@ -536,6 +546,9 @@ int lgui_application_run(lgui_application_t *app) {
                         lgui_dispatch_pointer_button(app,
                                                       app->cursor_x, app->cursor_y,
                                                       pressed);
+                        if (app->global_pointer_cb) {
+                            app->global_pointer_cb(app->cursor_x, app->cursor_y, pressed, true, app->global_pointer_user_data);
+                        }
                     }
                 } else if (type == 0x0112u) {
                     /* LGP_MSG_KEYBOARD_KEY: uint32 key, uint32 state, uint32 modifiers */

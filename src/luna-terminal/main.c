@@ -151,7 +151,7 @@ static void terminal_on_key(lgui_widget_t *widget, uint32_t key, uint32_t modifi
     if (g_pty_fd < 0) return;
 
     /* Ctrl+Shift+C / Ctrl+Shift+V */
-    if (modifiers == 3) { /* Shift | Ctrl */
+    if ((modifiers & 0x01) && (modifiers & 0x02)) { /* Shift | Ctrl */
         if (key == KEY_C) {
             /* TODO: Copy selected text */
             return;
@@ -161,12 +161,27 @@ static void terminal_on_key(lgui_widget_t *widget, uint32_t key, uint32_t modifi
         }
     }
 
+    /* Handle Ctrl+key combinations (e.g. Ctrl+C -> \x03, Ctrl+D -> \x04) */
+    if (modifiers & 0x02) { /* Ctrl is pressed */
+        char normal_char = lgui_keymap_translate(key, 0);
+        if (normal_char >= 'a' && normal_char <= 'z') {
+            char ctrl_char = normal_char - 'a' + 1;
+            write(g_pty_fd, &ctrl_char, 1);
+            return;
+        }
+    }
+
     /* Handle special keys with ANSI escape sequences */
     const char *seq = NULL;
-    if (key == KEY_UP)    seq = "\x1b[A";
-    if (key == KEY_DOWN)  seq = "\x1b[B";
-    if (key == KEY_RIGHT) seq = "\x1b[C";
-    if (key == KEY_LEFT)  seq = "\x1b[D";
+    if (key == KEY_UP)        seq = "\x1b[A";
+    else if (key == KEY_DOWN)  seq = "\x1b[B";
+    else if (key == KEY_RIGHT) seq = "\x1b[C";
+    else if (key == KEY_LEFT)  seq = "\x1b[D";
+    else if (key == KEY_HOME)  seq = "\x1b[1~";
+    else if (key == KEY_END)   seq = "\x1b[4~";
+    else if (key == KEY_DELETE) seq = "\x1b[3~";
+    else if (key == KEY_PAGEUP) seq = "\x1b[5~";
+    else if (key == KEY_PAGEDOWN) seq = "\x1b[6~";
     
     if (seq) {
         write(g_pty_fd, seq, strlen(seq));
@@ -232,26 +247,25 @@ int main(void) {
     render_grid();
     lgui_window_show(g_win);
 
-    /* Write a neofetch-style welcome banner to the terminal */
-    if (g_pty_fd >= 0) {
-        /* ANSI escape sequences for colours:
-         * \x1b[35m = magenta, \x1b[36m = cyan, \x1b[37m = white, \x1b[0m = reset */
-        const char *banner =
-            "\r\n"
-            "\x1b[35m  __ __ __    __   _____ ___  ____\x1b[0m\r\n"
-            "\x1b[35m |  V  |  |  | | |  |  |   ||  |-'\x1b[0m\r\n"
-            "\x1b[35m |  |  |  |__| |_|  |  | | ||  |  \x1b[0m\r\n"
-            "\x1b[35m |__|__|_____|_____|__|_|___||__|  \x1b[0m\r\n"
-            "\x1b[36m       Luna Island v0.3 Desktop\x1b[0m\r\n"
-            "\r\n"
-            "\x1b[37m  OS:\x1b[0m   MahinaOS (Luna Island)\r\n"
-            "\x1b[37m  Shell:\x1b[0m /bin/sh\r\n"
-            "\x1b[37m  Term:\x1b[0m  luna-terminal (80x24)\r\n"
-            "\x1b[37m  Theme:\x1b[0m Cyberpunk Dark / Neon Magenta\r\n"
-            "\x1b[36m  \xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88 Mahina  \x1b[35m\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88 Luna\x1b[0m\r\n"
-            "\r\n";
-        write(g_pty_fd, banner, strlen(banner));
-    }
+    /* Write a neofetch-style welcome banner to the terminal cell grid locally.
+     * Feeding it to the parser instead of writing to g_pty_fd avoids shell syntax errors on boot. */
+    /* ANSI escape sequences for colours:
+     * \x1b[35m = magenta, \x1b[36m = cyan, \x1b[37m = white, \x1b[0m = reset */
+    const char *banner =
+        "\r\n"
+        "\x1b[35m  __ __ __    __   _____ ___  ____\x1b[0m\r\n"
+        "\x1b[35m |  V  |  |  | | |  |  |   ||  |-'\x1b[0m\r\n"
+        "\x1b[35m |  |  |  |__| |_|  |  | | ||  |  \x1b[0m\r\n"
+        "\x1b[35m |__|__|_____|_____|__|_|___||__|  \x1b[0m\r\n"
+        "\x1b[36m       Luna Island v0.3 Desktop\x1b[0m\r\n"
+        "\r\n"
+        "\x1b[37m  OS:\x1b[0m   MahinaOS (Luna Island)\r\n"
+        "\x1b[37m  Shell:\x1b[0m /bin/sh\r\n"
+        "\x1b[37m  Term:\x1b[0m  luna-terminal (80x24)\r\n"
+        "\x1b[37m  Theme:\x1b[0m Cyberpunk Dark / Neon Magenta\r\n"
+        "\x1b[36m  \xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88 Mahina  \x1b[35m\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88 Luna\x1b[0m\r\n"
+        "\r\n";
+    ansi_feed(&g_parser, &g_grid, (const uint8_t *)banner, strlen(banner));
 
     lgui_application_run(g_app);
     lgui_application_destroy(g_app);

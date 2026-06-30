@@ -56,13 +56,15 @@ static uint32_t read_mem_percent(void) {
 }
 
 /* ── Colour palette ────────────────────────────────────────────────────────*/
-#define TB_BG       0x0A0A14u  /* Near-black panel */
-#define TB_BORDER   0xE03E8Au  /* Magenta bottom border */
-#define TB_LOGO     0xE03E8Au  /* Magenta logo */
-#define TB_ISLAND   0x8A2BE2u  /* Purple "Luna Island" */
-#define TB_CLOCK    0xFFFFFFu  /* White clock */
-#define TB_INFO     0x00D8FFu  /* Cyan info */
-#define TB_WS       0xA0FFA0u  /* Green workspace indicator */
+#define TB_LEFT_INSET  72
+
+#define TB_BG       0xEE0A0A14u  /* Acrylic near-black panel */
+#define TB_BORDER   0xFFE03E8Au  /* Magenta bottom border */
+#define TB_LOGO     0xFFE03E8Au  /* Magenta logo */
+#define TB_ISLAND   0xFF8A2BE2u  /* Purple "Luna Island" */
+#define TB_CLOCK    0xFFFFFFFFu  /* White clock */
+#define TB_INFO     0xFF00D8FFu  /* Cyan info */
+#define TB_WS       0xFFA0FFA0u  /* Green workspace indicator */
 
 /* ── API ───────────────────────────────────────────────────────────────────*/
 
@@ -96,9 +98,9 @@ void topbar_render(const topbar_state_t *t, lgui_canvas_t *canvas, uint32_t sw) 
     lgui_canvas_fill_rect(canvas, 0, TOPBAR_HEIGHT - 1, w, 1, TB_BORDER);
 
     /* ── LEFT section ─────────────────────────────────────────────────────*/
-    int lx = 8;
-    lgui_canvas_draw_text(canvas, lx, 8, "* MahinaOS", TB_LOGO);
-    lx += 88;
+    int lx = TB_LEFT_INSET;
+    lgui_canvas_draw_text(canvas, lx, 8, "MahinaOS", TB_LOGO);
+    lx += 72;
     lgui_canvas_draw_text(canvas, lx, 8, "| Luna Island", TB_ISLAND);
     lx += 112;
 
@@ -114,7 +116,7 @@ void topbar_render(const topbar_state_t *t, lgui_canvas_t *canvas, uint32_t sw) 
 
     /* ── RIGHT section — system stats ────────────────────────────────────*/
     char info[64];
-    snprintf(info, sizeof(info), "MEM:%u%%", t->mem_percent);
+    snprintf(info, sizeof(info), "NET --  AUDIO --  MEM:%u%%", t->mem_percent);
     int info_w = (int)strlen(info) * 8;
     int rx = w - info_w - 8;
     lgui_canvas_draw_text(canvas, rx, 8, info, TB_INFO);

@@ -35,6 +35,7 @@ STRIP   := llvm-strip
 
 MAHINA_VERSION := 0.1.0
 MAHINA_CODENAME := Waxing
+WALLPAPER_MP4 ?= retro-lake-at-night.1920x1080.mp4
 
 # ---------------------------------------------------------------------------
 # Directories
@@ -187,13 +188,38 @@ LUNA_GUI_UNIT_TEST_SUPPORT := \
 .PHONY: all luna-init luna-init-ctl luna-splash image run-qemu clean \
         test-unit test-fuzz lint verify help
 
-all: luna-init luna-init-ctl luna-splash lgp-compositor lunagui luna-shell luna-desktop luna-installer luna-terminal luna-settings luna-files luna-calc luna-text luna-about luna-tasks
+all: luna-init luna-init-ctl luna-splash lgp-compositor lunagui luna-shell luna-desktop luna-installer luna-terminal luna-settings luna-files luna-calc luna-text luna-about luna-tasks build/live.lraw
 
 luna-init: $(BUILD_DIR)/luna-init/luna-init
 
 luna-init-ctl: $(BUILD_DIR)/luna-init-ctl/luna-init-ctl
 
 luna-splash: $(BUILD_DIR)/luna-splash/luna-splash
+
+build/synthwave.lraw: tools/gen_video.c
+	@mkdir -p build
+	@echo "  HOSTCC  tools/gen_video.c"
+	@clang -O2 tools/gen_video.c -o build/gen_video -lm
+	@echo "  GEN     build/synthwave.lraw"
+	@build/gen_video build/synthwave.lraw
+
+build/retro_lake.lraw: tools/convert_video.py build/synthwave.lraw
+	@mkdir -p build
+	@if [ -f "$(WALLPAPER_MP4)" ] && command -v ffmpeg >/dev/null 2>&1; then \
+		echo "  CONVERT $(WALLPAPER_MP4) -> build/retro_lake.lraw"; \
+		python3 tools/convert_video.py "$(WALLPAPER_MP4)" build/retro_lake.lraw 480 270 30 10; \
+	else \
+		if [ ! -f "$(WALLPAPER_MP4)" ]; then \
+			echo "  WARN    $(WALLPAPER_MP4) not found; using generated fallback"; \
+		else \
+			echo "  WARN    ffmpeg not found; using generated fallback"; \
+		fi; \
+		cp build/synthwave.lraw build/retro_lake.lraw; \
+	fi
+
+build/live.lraw: build/synthwave.lraw build/retro_lake.lraw
+	@echo "  COPY    build/live.lraw"
+	@cp build/retro_lake.lraw build/live.lraw
 
 # ---------------------------------------------------------------------------
 # luna-init binary (statically linked — mandatory per 04_init_system.md)

@@ -21,8 +21,7 @@
 #include "protocol/surface.h"
 #include "protocol/wm.h"
 #include "scene/surface.h"
-#include "input/mouse.h"
-#include "input/keyboard.h"
+#include "input/input.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -39,94 +38,124 @@
 
 static bool lgp_write_all(int fd, const uint8_t *buf, size_t len);
 
-void lgp_dispatch_pointer_motion(lgp_compositor_state_t *state, int x, int y) {
-    if (!state) return;
-    
+static void write_u32_le(uint8_t *p, uint32_t v) {
+    p[0] = (uint8_t)(v & 0xFFu);
+    p[1] = (uint8_t)((v >> 8) & 0xFFu);
+    p[2] = (uint8_t)((v >> 16) & 0xFFu);
+    p[3] = (uint8_t)((v >> 24) & 0xFFu);
+}
+
+static void lgp_send_pointer_motion_to_session(lgp_compositor_state_t *state,
+                                               uint32_t session_id,
+                                               int x,
+                                               int y) {
+    if (!state || session_id == 0u) return;
+
+    lgp_client_t *client = state->clients;
+    while (client) {
+        if (client->session_id == session_id) {
+            uint8_t payload[8];
+            write_u32_le(payload + 0, (uint32_t)x);
+            write_u32_le(payload + 4, (uint32_t)y);
+
+            uint8_t frame[LGP_HEADER_SIZE + 8];
+            lgp_tlv_encode_header(frame, sizeof(frame), LGP_MSG_POINTER_MOTION, sizeof(frame));
+            memcpy(frame + LGP_HEADER_SIZE, payload, 8);
+            lgp_write_all(client->fd, frame, sizeof(frame));
+            return;
+        }
+        client = client->next;
+    }
+}
+
+static void lgp_send_pointer_button_to_session(lgp_compositor_state_t *state,
+                                               uint32_t session_id,
+                                               uint8_t button,
+                                               bool pressed) {
+    if (!state || session_id == 0u) return;
+
+    lgp_client_t *client = state->clients;
+    while (client) {
+        if (client->session_id == session_id) {
+            uint8_t payload[2];
+            payload[0] = button;
+            payload[1] = pressed ? 1u : 0u;
+
+            uint8_t frame[LGP_HEADER_SIZE + 2];
+            lgp_tlv_encode_header(frame, sizeof(frame), LGP_MSG_POINTER_BUTTON, sizeof(frame));
+            memcpy(frame + LGP_HEADER_SIZE, payload, 2);
+            lgp_write_all(client->fd, frame, sizeof(frame));
+            return;
+        }
+        client = client->next;
+    }
+}
+
+static const lgp_surface_t *lgp_find_pointer_target(lgp_compositor_state_t *state,
+                                                    int x,
+                                                    int y) {
+    if (!state) return NULL;
+
     int top_layer = -1;
-    uint32_t target_session_id = 0;
-    
+    const lgp_surface_t *target = NULL;
+
     for (size_t i = 0; i < LGP_SURFACE_MAX; i++) {
         lgp_surface_t *s = &state->surface_manager.surfaces[i];
         if (!s->in_use) continue;
-        
+
+        /* The WM shell receives global input separately. Transparent shell
+         * overlays should not prevent applications below them from receiving
+         * surface-local events. */
+        if (state->wm_client && s->owner_session_id == state->wm_client->session_id) {
+            continue;
+        }
+        if (s->layer < LGP_LAYER_APPLICATION || s->layer >= LGP_LAYER_SHELL) {
+            continue;
+        }
+
         if (x >= s->x && x < s->x + (int32_t)s->width &&
             y >= s->y && y < s->y + (int32_t)s->height) {
-            
             if ((int)s->layer > top_layer) {
                 top_layer = (int)s->layer;
-                target_session_id = s->owner_session_id;
+                target = s;
             }
         }
     }
-    
-    if (target_session_id > 0) {
-        lgp_client_t *client = state->clients;
-        while (client) {
-            if (client->session_id == target_session_id) {
-                uint8_t payload[8];
-                payload[0] = (x >> 24) & 0xFF;
-                payload[1] = (x >> 16) & 0xFF;
-                payload[2] = (x >> 8) & 0xFF;
-                payload[3] = x & 0xFF;
-                payload[4] = (y >> 24) & 0xFF;
-                payload[5] = (y >> 16) & 0xFF;
-                payload[6] = (y >> 8) & 0xFF;
-                payload[7] = y & 0xFF;
-                
-                uint8_t frame[LGP_HEADER_SIZE + 8];
-                lgp_tlv_encode_header(frame, sizeof(frame), LGP_MSG_POINTER_MOTION, sizeof(frame));
-                memcpy(frame + LGP_HEADER_SIZE, payload, 8);
-                lgp_write_all(client->fd, frame, sizeof(frame));
-                break;
-            }
-            client = client->next;
-        }
+
+    return target;
+}
+
+void lgp_dispatch_pointer_motion(lgp_compositor_state_t *state, int x, int y) {
+    if (!state) return;
+
+    if (state->wm_client) {
+        lgp_send_pointer_motion_to_session(state, state->wm_client->session_id, x, y);
+    }
+
+    const lgp_surface_t *target = lgp_find_pointer_target(state, x, y);
+    if (target) {
+        lgp_send_pointer_motion_to_session(state,
+                                           target->owner_session_id,
+                                           x - target->x,
+                                           y - target->y);
     }
 }
 
 void lgp_dispatch_pointer_button(lgp_compositor_state_t *state, int x, int y, uint8_t button, bool pressed) {
     if (!state) return;
-    
-    int top_layer = -1;
-    uint32_t target_session_id = 0;
-    uint32_t target_surface_id = 0;
-    
-    for (size_t i = 0; i < LGP_SURFACE_MAX; i++) {
-        lgp_surface_t *s = &state->surface_manager.surfaces[i];
-        if (!s->in_use) continue;
-        
-        if (x >= s->x && x < s->x + (int32_t)s->width &&
-            y >= s->y && y < s->y + (int32_t)s->height) {
-            
-            if ((int)s->layer > top_layer) {
-                top_layer = (int)s->layer;
-                target_session_id = s->owner_session_id;
-                target_surface_id = s->id;
-            }
-        }
+
+    if (state->wm_client) {
+        lgp_send_pointer_button_to_session(state, state->wm_client->session_id, button, pressed);
     }
-    
-    if (target_session_id > 0) {
+
+    const lgp_surface_t *target = lgp_find_pointer_target(state, x, y);
+    if (target) {
         if (pressed) {
-            state->keyboard_focus_session_id = target_session_id;
-            state->keyboard_focus_surface_id = target_surface_id;
+            state->keyboard_focus_session_id = target->owner_session_id;
+            state->keyboard_focus_surface_id = target->id;
         }
 
-        lgp_client_t *client = state->clients;
-        while (client) {
-            if (client->session_id == target_session_id) {
-                uint8_t payload[2];
-                payload[0] = button;
-                payload[1] = pressed ? 1 : 0;
-                
-                uint8_t frame[LGP_HEADER_SIZE + 2];
-                lgp_tlv_encode_header(frame, sizeof(frame), LGP_MSG_POINTER_BUTTON, sizeof(frame));
-                memcpy(frame + LGP_HEADER_SIZE, payload, 2);
-                lgp_write_all(client->fd, frame, sizeof(frame));
-                break;
-            }
-            client = client->next;
-        }
+        lgp_send_pointer_button_to_session(state, target->owner_session_id, button, pressed);
     }
 }
 
@@ -151,20 +180,20 @@ void lgp_dispatch_keyboard_key(lgp_compositor_state_t *state, uint32_t key, uint
     while (client) {
         if (client->session_id == target_session_id) {
             uint8_t payload[12];
-            payload[0] = (key >> 24) & 0xFF;
-            payload[1] = (key >> 16) & 0xFF;
-            payload[2] = (key >> 8) & 0xFF;
-            payload[3] = key & 0xFF;
+            payload[0] = key & 0xFF;
+            payload[1] = (key >> 8) & 0xFF;
+            payload[2] = (key >> 16) & 0xFF;
+            payload[3] = (key >> 24) & 0xFF;
 
-            payload[4] = (key_state >> 24) & 0xFF;
-            payload[5] = (key_state >> 16) & 0xFF;
-            payload[6] = (key_state >> 8) & 0xFF;
-            payload[7] = key_state & 0xFF;
+            payload[4] = key_state & 0xFF;
+            payload[5] = (key_state >> 8) & 0xFF;
+            payload[6] = (key_state >> 16) & 0xFF;
+            payload[7] = (key_state >> 24) & 0xFF;
 
-            payload[8] = (modifiers >> 24) & 0xFF;
-            payload[9] = (modifiers >> 16) & 0xFF;
-            payload[10] = (modifiers >> 8) & 0xFF;
-            payload[11] = modifiers & 0xFF;
+            payload[8] = modifiers & 0xFF;
+            payload[9] = (modifiers >> 8) & 0xFF;
+            payload[10] = (modifiers >> 16) & 0xFF;
+            payload[11] = (modifiers >> 24) & 0xFF;
 
             uint8_t frame[LGP_HEADER_SIZE + 12];
             lgp_tlv_encode_header(frame, sizeof(frame), LGP_MSG_KEYBOARD_KEY, sizeof(frame));
@@ -397,6 +426,13 @@ static bool lgp_handle_create_surface(lgp_compositor_state_t *state,
     }
 
     LGP_INFO("surface", "Client session=%u created surface id=%u", client->session_id, surface_id);
+
+    /* Auto-focus newly created application window to route keyboard inputs */
+    if (payload.layer == LGP_LAYER_APPLICATION) {
+        state->keyboard_focus_session_id = client->session_id;
+        state->keyboard_focus_surface_id = surface_id;
+        LGP_INFO("surface", "Auto-focused client session=%u surface id=%u", client->session_id, surface_id);
+    }
     
     if (state->wm_client && state->wm_client != client) {
         uint8_t buf[64];
@@ -497,7 +533,7 @@ static bool lgp_handle_wm_set_position(lgp_compositor_state_t *state, lgp_client
     if (payload.x < -(int)surf->width || payload.x + (int)surf->width > max_w ||
         payload.y < -(int)surf->height || payload.y + (int)surf->height > max_h) {
         LGP_WARN("wm", "WM rejected surface position (%d, %d) out of bounds", payload.x, payload.y);
-        return false;
+        return true; /* Keep the client connected, just drop the out of bounds move */
     }
 
     surf->x = payload.x;
@@ -777,23 +813,22 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    /* Mouse and Keyboard input */
-    lgp_mouse_init((uint32_t)drm_dev.mode.hdisplay, (uint32_t)drm_dev.mode.vdisplay);
-    int mouse_fd = lgp_mouse_get_fd();
-    if (mouse_fd >= 0) {
-        struct epoll_event ev_mouse = {0};
-        ev_mouse.events = EPOLLIN;
-        ev_mouse.data.fd = mouse_fd;
-        epoll_ctl(state.epoll_fd, EPOLL_CTL_ADD, mouse_fd, &ev_mouse);
+    /* Input backend: libinput when available, raw evdev fallback otherwise. */
+    lgp_input_init((uint32_t)drm_dev.mode.hdisplay, (uint32_t)drm_dev.mode.vdisplay);
+    int input_fd = lgp_input_get_fd();
+    if (input_fd >= 0) {
+        struct epoll_event ev_input = {0};
+        ev_input.events = EPOLLIN;
+        ev_input.data.fd = input_fd;
+        epoll_ctl(state.epoll_fd, EPOLL_CTL_ADD, input_fd, &ev_input);
     }
 
-    lgp_keyboard_init();
-    int keyboard_fd = lgp_keyboard_get_fd();
-    if (keyboard_fd >= 0) {
-        struct epoll_event ev_kb = {0};
-        ev_kb.events = EPOLLIN;
-        ev_kb.data.fd = keyboard_fd;
-        epoll_ctl(state.epoll_fd, EPOLL_CTL_ADD, keyboard_fd, &ev_kb);
+    int input_aux_fd = lgp_input_get_aux_fd();
+    if (input_aux_fd >= 0) {
+        struct epoll_event ev_input_aux = {0};
+        ev_input_aux.events = EPOLLIN;
+        ev_input_aux.data.fd = input_aux_fd;
+        epoll_ctl(state.epoll_fd, EPOLL_CTL_ADD, input_aux_fd, &ev_input_aux);
     }
 
     drm_dev.front_buffer = kms_dumb_buffer_create(&drm_dev, drm_dev.mode.hdisplay, drm_dev.mode.vdisplay);
@@ -863,10 +898,9 @@ int main(int argc, char **argv) {
                 }
             } else if (fd == drm_dev.fd) {
                 kms_handle_events(&drm_dev);
-            } else if (mouse_fd >= 0 && fd == mouse_fd) {
-                lgp_mouse_pump(&state);
-            } else if (keyboard_fd >= 0 && fd == keyboard_fd) {
-                lgp_keyboard_pump(&state);
+            } else if ((input_fd >= 0 && fd == input_fd) ||
+                       (input_aux_fd >= 0 && fd == input_aux_fd)) {
+                lgp_input_pump(&state);
             } else if (fd == listen_fd) {
                 int client_fd = lgp_socket_server_accept(listen_fd);
                 if (client_fd >= 0) {
@@ -913,6 +947,7 @@ int main(int argc, char **argv) {
     LGP_INFO("main", "lgp-compositor shutting down cleanly");
 
     lgp_state_close_all_clients(&state);
+    lgp_input_cleanup();
     close(listen_fd);
     unlink(LGP_SOCKET_PATH);
     

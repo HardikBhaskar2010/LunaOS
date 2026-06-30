@@ -111,6 +111,14 @@ if [ -f "${BUILD_DIR}/luna-8x16.psf" ]; then
     sudo cp "${BUILD_DIR}/luna-8x16.psf" "$MNT_ROOT/usr/share/fonts/"
 fi
 
+# Copy the generated live.lraw video loop files and options
+sudo mkdir -p "$MNT_ROOT/usr/share/wallpaper"
+for wp in live.lraw synthwave.lraw retro_lake.lraw; do
+    if [ -f "${BUILD_DIR}/${wp}" ]; then
+        sudo cp "${BUILD_DIR}/${wp}" "$MNT_ROOT/usr/share/wallpaper/"
+    fi
+done
+
 # Fetch and install busybox for an emergency shell
 if [ ! -f "${BUILD_DIR}/busybox" ]; then
     echo "  IMAGE   Downloading busybox..."

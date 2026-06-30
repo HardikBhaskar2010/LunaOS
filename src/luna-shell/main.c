@@ -226,6 +226,40 @@ static void on_timer(int fd, void *user_data) {
     }
 }
 
+/* ── Global pointer handler ─────────────────────────────────────────────── */
+
+static void on_global_pointer(int x, int y, bool pressed, bool button_event, void *user_data) {
+    (void)user_data;
+
+    shell.ptr_x = x;
+    shell.ptr_y = y;
+
+    if (button_event) {
+        shell.ptr_down = pressed;
+        if (pressed) {
+            /* Try clicking the dock first */
+            bool dock_clicked = dock_on_click(&shell.dk, x, y);
+            if (!dock_clicked) {
+                /* If not dock, try dragging window titlebars */
+                deco_pointer_down(&shell.dc, x, y, shell.app);
+            }
+        } else {
+            deco_pointer_up(&shell.dc);
+        }
+    } else {
+        /* Motion event */
+        dock_on_pointer(&shell.dk, x, y);
+        if (shell.ptr_down) {
+            deco_pointer_move(&shell.dc, x, y, shell.app);
+        }
+    }
+
+    /* Force overlay window redraw on any pointer interaction */
+    if (shell.overlay_win) {
+        lgui_window_update(shell.overlay_win);
+    }
+}
+
 /* ── Global key handler ─────────────────────────────────────────────────── */
 
 static void on_global_key(uint32_t key, uint32_t modifiers, void *user_data) {
@@ -286,6 +320,7 @@ int main(int argc, char **argv) {
     }
 
     lgui_application_set_global_key_cb(shell.app, on_global_key, NULL);
+    lgui_application_set_global_pointer_cb(shell.app, on_global_pointer, NULL);
 
     /* Grab keyboard shortcuts */
     lgui_wm_grab_key(shell.app, KEY_T,   LGP_MOD_SUPER);
@@ -359,6 +394,7 @@ int main(int argc, char **argv) {
     lgui_application_run(shell.app);
 
     if (shell.timer_fd >= 0) close(shell.timer_fd);
+    wallpaper_cleanup(&shell.wp);
     lgui_application_destroy(shell.app);
     return 0;
 }

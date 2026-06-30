@@ -69,7 +69,7 @@ char lgui_keymap_translate(uint32_t key, uint32_t modifiers) {
 
         case KEY_SPACE: return ' ';
         case KEY_ENTER: return '\n';
-        case KEY_BACKSPACE: return '\b';
+        case KEY_BACKSPACE: return '\x7f';
         case KEY_TAB: return '\t';
 
         default: return '\0';

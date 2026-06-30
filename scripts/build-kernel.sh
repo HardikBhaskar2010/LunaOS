@@ -58,6 +58,7 @@ scripts/config --enable CONFIG_FB_EFI
 scripts/config --enable CONFIG_SYSFB
 scripts/config --enable CONFIG_SYSFB_SIMPLEFB
 scripts/config --enable CONFIG_DRM_SIMPLEDRM
+scripts/config --enable CONFIG_INPUT_MOUSEDEV
 
 echo "  KERNEL  Updating configuration..."
 make CC=gcc-13 HOSTCC=gcc-13 olddefconfig >/dev/null

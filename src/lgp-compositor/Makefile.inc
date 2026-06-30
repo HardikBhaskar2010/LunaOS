@@ -22,8 +22,7 @@ LGP_COMPOSITOR_SOURCES := \
     $(LGP_COMPOSITOR_SRC)/protocol/caps.c \
     $(LGP_COMPOSITOR_SRC)/protocol/surface.c \
     $(LGP_COMPOSITOR_SRC)/scene/surface.c \
-    $(LGP_COMPOSITOR_SRC)/input/mouse.c \
-    $(LGP_COMPOSITOR_SRC)/input/keyboard.c \
+    $(LGP_COMPOSITOR_SRC)/input/input.c \
     $(LGP_COMPOSITOR_SRC)/protocol/wm.c
 
 LGP_COMPOSITOR_OBJECTS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(LGP_COMPOSITOR_SOURCES))
@@ -38,9 +37,20 @@ all: lgp-compositor lgp-test-client
 lgp-compositor: $(BUILD_LGP)/lgp-compositor
 lgp-test-client: $(BUILD_LGP)/lgp-test-client
 
-# lgp-compositor is statically linked to avoid needing glibc and libdrm in the image
-LGP_CFLAGS := $(CFLAGS) -I/usr/include/libdrm -static
-LGP_LDFLAGS := -ldrm
+LGP_HAVE_LIBINPUT := $(shell pkg-config --exists libinput libudev 2>/dev/null && echo yes || echo no)
+ifeq ($(LGP_HAVE_LIBINPUT),yes)
+  LGP_INPUT_CFLAGS := $(shell pkg-config --cflags libinput libudev 2>/dev/null)
+  LGP_INPUT_LIBS   := $(shell pkg-config --libs libinput libudev 2>/dev/null)
+else
+  $(warning "libinput/libudev not found. lgp-compositor will use raw evdev input fallback.")
+  LGP_INPUT_CFLAGS :=
+  LGP_INPUT_LIBS   :=
+endif
+
+# lgp-compositor stays Mahina-native: DRM/KMS + LGP, with libinput only for
+# kernel input-device normalization when available.
+LGP_CFLAGS := $(CFLAGS) -I/usr/include/libdrm $(LGP_INPUT_CFLAGS) $(if $(filter yes,$(LGP_HAVE_LIBINPUT)),-DLGP_HAVE_LIBINPUT,) -static
+LGP_LDFLAGS := -ldrm $(LGP_INPUT_LIBS)
 
 $(BUILD_LGP)/lgp-compositor: $(LGP_COMPOSITOR_OBJECTS) | $(BUILD_LGP)
 	@echo "  LINK    $@"

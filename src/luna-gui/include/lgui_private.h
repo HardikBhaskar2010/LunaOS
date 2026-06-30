@@ -39,6 +39,9 @@ struct lgui_application_t {
     lgui_global_key_cb global_key_cb;
     void *global_key_user_data;
 
+    lgui_global_pointer_cb global_pointer_cb;
+    void *global_pointer_user_data;
+
     uint32_t output_width;
     uint32_t output_height;
     lgui_output_geometry_cb output_geometry_cb;

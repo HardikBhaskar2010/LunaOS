@@ -37,12 +37,14 @@ const int g_dock_item_count = (int)(sizeof(g_dock_items) / sizeof(g_dock_items[0
 
 /* ── Colour palette ────────────────────────────────────────────────────────*/
 
-#define DOCK_BG_TILE      0x0D0D14u  /* Near-black tile */
-#define DOCK_BG_STRIP     0x08080Eu  /* Strip background */
-#define DOCK_ACCENT       0xE03E8Au  /* Neon magenta */
-#define DOCK_PURPLE       0x8A2BE2u  /* Purple border */
-#define DOCK_TEXT         0xC0C0D0u  /* Soft white */
-#define DOCK_GLYPH_HOV    0xFFFFFFu  /* White glyph when hovered */
+#define DOCK_TOP_OFFSET   44
+#define DOCK_BG_TILE      0xCC151722u  /* Soft acrylic tile */
+#define DOCK_BG_STRIP     0xB008090Eu  /* Translucent strip background */
+#define DOCK_ACCENT       0xFFE03E8Au  /* Neon magenta */
+#define DOCK_PURPLE       0xFF8A2BE2u  /* Purple edge */
+#define DOCK_TEXT         0xFFD8D8E8u  /* Soft white */
+#define DOCK_MUTED        0xFF6D5878u
+#define DOCK_GLYPH_HOV    0xFFFFFFFFu  /* White glyph when hovered */
 
 /* ── Helpers ───────────────────────────────────────────────────────────────*/
 
@@ -66,14 +68,14 @@ void dock_init(dock_state_t *d, uint32_t screen_height) {
 void dock_render(dock_state_t *d, lgui_canvas_t *canvas, uint32_t screen_height) {
     if (!d || !canvas) return;
 
-    /* Draw the strip background */
-    fill_rect(canvas, 0, 0, DOCK_WIDTH, (int)screen_height, DOCK_BG_STRIP);
+    /* Draw the strip below the top panel so the brand/title never clips. */
+    fill_rect(canvas, 0, DOCK_TOP_OFFSET, DOCK_WIDTH, (int)screen_height - DOCK_TOP_OFFSET, DOCK_BG_STRIP);
 
     /* Right border line */
-    fill_rect(canvas, DOCK_WIDTH - 1, 0, 1, (int)screen_height, DOCK_PURPLE);
+    fill_rect(canvas, DOCK_WIDTH - 1, DOCK_TOP_OFFSET, 1, (int)screen_height - DOCK_TOP_OFFSET, DOCK_MUTED);
 
     /* Render each icon tile */
-    int item_y = 72; /* Start below the top panel + small gap */
+    int item_y = DOCK_TOP_OFFSET + 18;
     for (int i = 0; i < g_dock_item_count; i++) {
         int tx = DOCK_PADDING;
         int ty = item_y;
@@ -87,8 +89,11 @@ void dock_render(dock_state_t *d, lgui_canvas_t *canvas, uint32_t screen_height)
         fill_rect(canvas, tx, ty, tw, th, tile_bg);
 
         /* Tile border */
-        uint32_t border_c = hovered ? DOCK_GLYPH_HOV : DOCK_PURPLE;
+        uint32_t border_c = hovered ? DOCK_GLYPH_HOV : DOCK_MUTED;
         draw_outline(canvas, tx, ty, tw, th, border_c);
+        if (hovered) {
+            fill_rect(canvas, tx, ty, 3, th, DOCK_GLYPH_HOV);
+        }
 
         /* Glyph text (centered) */
         uint32_t glyph_c = hovered ? DOCK_GLYPH_HOV : DOCK_ACCENT;
@@ -108,7 +113,7 @@ void dock_render(dock_state_t *d, lgui_canvas_t *canvas, uint32_t screen_height)
 
     /* Luna logo at bottom of dock */
     int logo_y = (int)screen_height - 48;
-    fill_rect(canvas, DOCK_PADDING, logo_y, DOCK_WIDTH - DOCK_PADDING * 2, 36, 0x1A1A3Au);
+    fill_rect(canvas, DOCK_PADDING, logo_y, DOCK_WIDTH - DOCK_PADDING * 2, 36, 0xCC1A1A3Au);
     draw_outline(canvas, DOCK_PADDING, logo_y, DOCK_WIDTH - DOCK_PADDING * 2, 36, DOCK_ACCENT);
     lgui_canvas_draw_text(canvas, DOCK_PADDING + 4, logo_y + 4,  "MA",  0xE03E8Au);
     lgui_canvas_draw_text(canvas, DOCK_PADDING + 4, logo_y + 20, "HIN", 0x8A2BE2u);
@@ -118,13 +123,13 @@ void dock_on_pointer(dock_state_t *d, int x, int y) {
     if (!d) return;
 
     /* Check if pointer is within dock strip */
-    if (x < 0 || x >= DOCK_WIDTH) {
+    if (x < 0 || x >= DOCK_WIDTH || y < DOCK_TOP_OFFSET) {
         d->hovered = -1;
         return;
     }
 
     /* Identify which tile */
-    int item_y = 72;
+    int item_y = DOCK_TOP_OFFSET + 18;
     for (int i = 0; i < g_dock_item_count; i++) {
         int ty = item_y;
         int th = DOCK_ICON_SZ;
@@ -140,9 +145,9 @@ void dock_on_pointer(dock_state_t *d, int x, int y) {
 
 bool dock_on_click(dock_state_t *d, int x, int y) {
     if (!d) return false;
-    if (x < 0 || x >= DOCK_WIDTH) return false;
+    if (x < 0 || x >= DOCK_WIDTH || y < DOCK_TOP_OFFSET) return false;
 
-    int item_y = 72;
+    int item_y = DOCK_TOP_OFFSET + 18;
     for (int i = 0; i < g_dock_item_count; i++) {
         int ty = item_y;
         int th = DOCK_ICON_SZ;

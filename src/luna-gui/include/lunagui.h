@@ -154,6 +154,9 @@ void lgui_clipboard_request_text(lgui_application_t *app, lgui_clipboard_cb cb, 
 typedef void (*lgui_global_key_cb)(uint32_t key, uint32_t modifiers, void *user_data);
 void lgui_application_set_global_key_cb(lgui_application_t *app, lgui_global_key_cb cb, void *user_data);
 
+typedef void (*lgui_global_pointer_cb)(int x, int y, bool pressed, bool button_event, void *user_data);
+void lgui_application_set_global_pointer_cb(lgui_application_t *app, lgui_global_pointer_cb cb, void *user_data);
+
 /* Focus Management */
 void lgui_widget_focus(lgui_application_t *app, lgui_widget_t *widget);
 

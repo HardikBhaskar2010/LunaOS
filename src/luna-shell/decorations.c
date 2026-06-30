@@ -9,7 +9,7 @@
  * a 24px titlebar drawn at (win.x, win.y - DECO_TITLEBAR_H) in the overlay.
  *
  * Visual style (v0.3 spec):
- *   - Titlebar: dark acrylic #0D0D18 with 1px purple border #8A2BE2
+ *   - Titlebar: dark acrylic with a quiet divider and focused magenta edge
  *   - Focused:  magenta left accent bar #E03E8A
  *   - Buttons:  close [×] and minimize [–]
  *   - Drag:     hold mouse on titlebar → move via lgui_wm_set_surface_position
@@ -21,13 +21,14 @@
 #include <stdio.h>
 
 /* ── Colour palette ────────────────────────────────────────────────────────*/
-#define DECO_BG         0x0D0D18u  /* Acrylic dark */
-#define DECO_BORDER     0x8A2BE2u  /* Purple border */
-#define DECO_FOCUSED    0xE03E8Au  /* Magenta accent */
-#define DECO_TEXT       0xC8C8E0u  /* Soft white title */
-#define DECO_BTN_CLR    0xFF4060u  /* Close button red */
-#define DECO_BTN_MIN    0xF0A820u  /* Minimize button yellow */
-#define DECO_UNFOCUSED  0x4A3A5Au  /* Unfocused border */
+#define DECO_BG         0xE60F1018u  /* Acrylic dark */
+#define DECO_SHADOW     0x66000000u
+#define DECO_BORDER     0xFF5B3D78u  /* Muted purple border */
+#define DECO_FOCUSED    0xFFE03E8Au  /* Magenta accent */
+#define DECO_TEXT       0xFFC8C8E0u  /* Soft white title */
+#define DECO_BTN_CLR    0xFFFF4060u  /* Close button red */
+#define DECO_BTN_MIN    0xFFF0A820u  /* Minimize button yellow */
+#define DECO_UNFOCUSED  0xFF4A3A5Au  /* Unfocused border */
 
 /* ── Public API ────────────────────────────────────────────────────────────*/
 
@@ -169,12 +170,16 @@ void deco_render(const deco_state_t *d, lgui_canvas_t *canvas) {
 
         if (ty < 0) ty = 0; /* Clamp to top of screen */
 
+        /* Subtle shadow around the top edge of the managed surface */
+        lgui_canvas_fill_rect(canvas, tx + 2, ty + DECO_TITLEBAR_H, tw, 2, DECO_SHADOW);
+        lgui_canvas_fill_rect(canvas, tx + tw, ty + 2, 2, DECO_TITLEBAR_H, DECO_SHADOW);
+
         /* Titlebar background */
         lgui_canvas_fill_rect(canvas, tx, ty, tw, DECO_TITLEBAR_H, DECO_BG);
 
         /* Focused accent bar (left 3px strip in magenta) */
         if (win->focused) {
-            lgui_canvas_fill_rect(canvas, tx, ty, 3, DECO_TITLEBAR_H, DECO_FOCUSED);
+            lgui_canvas_fill_rect(canvas, tx, ty, 4, DECO_TITLEBAR_H, DECO_FOCUSED);
         }
 
         /* Title bar border (bottom 1px) */
@@ -186,7 +191,7 @@ void deco_render(const deco_state_t *d, lgui_canvas_t *canvas) {
                                       win->focused ? DECO_FOCUSED : DECO_UNFOCUSED);
 
         /* Window title text (left-aligned, after the accent bar) */
-        lgui_canvas_draw_text(canvas, tx + 8, ty + (DECO_TITLEBAR_H - 8) / 2,
+        lgui_canvas_draw_text(canvas, tx + 12, ty + (DECO_TITLEBAR_H - 8) / 2,
                               win->title, DECO_TEXT);
 
         /* Close button [×] */
