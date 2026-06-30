@@ -7,7 +7,8 @@ BUILD_LUNA_TERMINAL := $(BUILD_DIR)/luna-terminal
 
 LUNA_TERMINAL_SOURCES := \
     $(LUNA_TERMINAL_SRC)/main.c \
-    $(LUNA_TERMINAL_SRC)/pty.c
+    $(LUNA_TERMINAL_SRC)/pty.c \
+    $(LUNA_TERMINAL_SRC)/ansi.c
 
 LUNA_TERMINAL_OBJECTS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(LUNA_TERMINAL_SOURCES))
 
