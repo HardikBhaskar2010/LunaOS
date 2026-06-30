@@ -80,6 +80,12 @@ fi
 if [ -f "${BUILD_DIR}/lgp-compositor/lgp-test-client" ]; then
     sudo cp "${BUILD_DIR}/lgp-compositor/lgp-test-client" "$MNT_ROOT/usr/bin/"
 fi
+if [ -f "${BUILD_DIR}/luna-shell/luna-shell" ]; then
+    sudo cp "${BUILD_DIR}/luna-shell/luna-shell" "$MNT_ROOT/usr/bin/"
+fi
+if [ -f "${BUILD_DIR}/luna-terminal/luna-terminal" ]; then
+    sudo cp "${BUILD_DIR}/luna-terminal/luna-terminal" "$MNT_ROOT/usr/bin/"
+fi
 
 # Fetch and install busybox for an emergency shell
 if [ ! -f "${BUILD_DIR}/busybox" ]; then

@@ -68,9 +68,21 @@ void lgp_mouse_pump(lgp_compositor_state_t *state) {
         /* Dispatch motion event to the surface under the cursor */
         lgp_dispatch_pointer_motion(state, g_mouse_x, g_mouse_y);
 
-        /* TODO(input): dispatch LGP_MSG_POINTER_BUTTON for left/right clicks */
-        (void)(data[0] & 0x01u); /* left_button */
-        (void)(data[0] & 0x02u); /* right_button */
+        /* Handle LGP_MSG_POINTER_BUTTON for left/right clicks */
+        static bool last_left = false;
+        static bool last_right = false;
+
+        bool left_button = (data[0] & 0x01u) != 0;
+        bool right_button = (data[0] & 0x02u) != 0;
+
+        if (left_button != last_left) {
+            lgp_dispatch_pointer_button(state, g_mouse_x, g_mouse_y, 0, left_button);
+            last_left = left_button;
+        }
+        if (right_button != last_right) {
+            lgp_dispatch_pointer_button(state, g_mouse_x, g_mouse_y, 1, right_button);
+            last_right = right_button;
+        }
     }
 }
 

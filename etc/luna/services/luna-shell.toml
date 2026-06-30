@@ -1,0 +1,26 @@
+# /etc/luna/services/luna-shell.toml
+
+[service]
+name        = "luna-shell"
+binary      = "/usr/bin/luna-shell"
+description = "MahinaOS Desktop Shell & Window Manager"
+args        = []
+
+[service.depends]
+after  = ["lgp-compositor"]
+
+[service.ready]
+method     = "none"
+
+[service.restart]
+policy   = "always"
+attempts = 5
+delay_ms = 1000
+
+[service.stop]
+signal     = "SIGTERM"
+timeout_ms = 3000
+
+[service.identity]
+user  = "root"
+group = "root"

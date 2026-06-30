@@ -142,9 +142,47 @@ void lgui_window_show(lgui_window_t *win);
  */
 void lgui_window_update(lgui_window_t *win);
 
-/* ── Widgets ──────────────────────────────────────────────────────────────── */
-
 typedef void (*lgui_button_click_cb)(lgui_widget_t *button, void *user_data);
+typedef void (*lgui_key_cb)(lgui_widget_t *widget, uint32_t key, uint32_t modifiers, void *user_data);
+typedef void (*lgui_clipboard_cb)(const char *text, void *user_data);
+
+/* ── Application extensions ───────────────────────────────────────────────── */
+
+void lgui_clipboard_set_text(lgui_application_t *app, const char *text);
+void lgui_clipboard_request_text(lgui_application_t *app, lgui_clipboard_cb cb, void *user_data);
+
+typedef void (*lgui_global_key_cb)(uint32_t key, uint32_t modifiers, void *user_data);
+void lgui_application_set_global_key_cb(lgui_application_t *app, lgui_global_key_cb cb, void *user_data);
+
+/* Focus Management */
+void lgui_widget_focus(lgui_application_t *app, lgui_widget_t *widget);
+
+/* Keyboard Translation */
+char lgui_keymap_translate(uint32_t key, uint32_t modifiers);
+
+/* ── Window Management (WM) APIs ──────────────────────────────────────────── */
+
+typedef void (*lgui_wm_surface_created_cb)(uint32_t surface_id, uint32_t type, uint32_t w, uint32_t h, void *user_data);
+typedef void (*lgui_wm_surface_destroyed_cb)(uint32_t surface_id, void *user_data);
+
+lgui_application_t *lgui_application_create_wm(const char *name, 
+                                               lgui_wm_surface_created_cb on_created, 
+                                               lgui_wm_surface_destroyed_cb on_destroyed,
+                                               void *user_data);
+
+void lgui_wm_set_surface_position(lgui_application_t *app, uint32_t surface_id, int x, int y);
+void lgui_wm_set_focus(lgui_application_t *app, uint32_t session_id);
+void lgui_wm_set_state(lgui_application_t *app, uint32_t surface_id, uint32_t state);
+void lgui_wm_grab_key(lgui_application_t *app, uint32_t key, uint32_t modifiers);
+
+/* ── Window extensions ────────────────────────────────────────────────────── */
+lgui_canvas_t *lgui_window_get_canvas(lgui_window_t *win);
+
+/* ── Canvas extensions ────────────────────────────────────────────────────── */
+void lgui_canvas_push_clip(lgui_canvas_t *canvas, int x, int y, int w, int h);
+void lgui_canvas_pop_clip(lgui_canvas_t *canvas);
+
+/* ── Widgets ──────────────────────────────────────────────────────────────── */
 
 /* Label */
 lgui_widget_t *lgui_label_create(const char *text);
@@ -160,8 +198,20 @@ lgui_widget_t *lgui_vbox_create(void);
 lgui_widget_t *lgui_hbox_create(void);
 void           lgui_box_add_child(lgui_widget_t *box, lgui_widget_t *child);
 
+/* Scroll Container */
+lgui_widget_t *lgui_scroll_container_create(void);
+void           lgui_scroll_container_set_child(lgui_widget_t *scroll, lgui_widget_t *child);
+
+/* Canvas Widget */
+typedef void (*lgui_canvas_render_cb)(lgui_widget_t *widget, lgui_canvas_t *canvas, int x, int y);
+lgui_widget_t *lgui_canvas_widget_create(void);
+void           lgui_canvas_widget_set_render(lgui_widget_t *widget, lgui_canvas_render_cb cb);
+
 /* Widget sizing */
 void lgui_widget_set_size(lgui_widget_t *widget, int width, int height);
+
+/* Event listeners */
+void lgui_widget_set_on_key(lgui_widget_t *widget, lgui_key_cb cb, void *user_data);
 
 /* Memory management */
 void lgui_widget_destroy(lgui_widget_t *widget);

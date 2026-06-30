@@ -153,6 +153,23 @@ void lgui_widget_render(lgui_canvas_t *canvas, lgui_widget_t *w,
                 lgui_widget_render(canvas, w->children[i], cx, cy);
             }
             break;
+        case 5: /* Scroll Container */
+            if (w->child_count > 0) {
+                lgui_widget_t *child = w->children[0];
+                child->width = w->width;
+                /* Height depends on layout, but for VBox we can just let it layout freely */
+                lgui_canvas_push_clip(canvas, cx, cy, w->width, w->height);
+                lgui_widget_render(canvas, child, cx - w->scroll_offset_x, cy - w->scroll_offset_y);
+                lgui_canvas_pop_clip(canvas);
+            }
+            break;
+        case 6: /* Canvas Widget */
+            if (w->canvas_render) {
+                lgui_canvas_push_clip(canvas, cx, cy, w->width, w->height);
+                w->canvas_render(w, canvas, cx, cy);
+                lgui_canvas_pop_clip(canvas);
+            }
+            break;
         default:
             /* Unknown widget type — still recurse into children */
             for (int i = 0; i < w->child_count; i++) {

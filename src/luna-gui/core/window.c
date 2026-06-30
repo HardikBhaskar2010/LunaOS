@@ -142,24 +142,18 @@ static bool lgui_send_commit(int lgp_fd, uint32_t surface_id,
  * ---------------------------------------------------------------------------*/
 
 static void lgui_window_render_internal(lgui_window_t *win) {
-    if (!win || !win->buffer_map) return;
-
-    lgui_canvas_t *canvas = lgui_canvas_create(win->buffer_map,
-                                                win->width, win->height,
-                                                win->width * 4u);
-    if (!canvas) return;
+    if (!win || !win->canvas) return;
 
     /* Fill with Mahina dark background (#1E1E28) */
-    lgui_canvas_fill_rect(canvas, 0, 0, (int)win->width, (int)win->height, 0xFF1E1E28u);
+    lgui_canvas_fill_rect(win->canvas, 0, 0, (int)win->width, (int)win->height, 0xFF1E1E28u);
 
     if (win->root_widget) {
         lgui_widget_t *root = win->root_widget;
         if (root->width  == 0) root->width  = win->width;
         if (root->height == 0) root->height = win->height;
-        lgui_widget_render(canvas, root, 0, 0);
+        lgui_widget_render(win->canvas, root, 0, 0);
     }
 
-    lgui_canvas_destroy(canvas);
     win->dirty = false;
 }
 
@@ -203,6 +197,14 @@ lgui_window_t *lgui_window_create(lgui_application_t *app,
                            PROT_READ | PROT_WRITE, MAP_SHARED,
                            win->buffer_fd, 0);
     if (win->buffer_map == MAP_FAILED) {
+        close(win->buffer_fd);
+        free(win);
+        return NULL;
+    }
+
+    win->canvas = lgui_canvas_create(win->buffer_map, win->width, win->height, win->width * 4u);
+    if (!win->canvas) {
+        munmap(win->buffer_map, win->buffer_size);
         close(win->buffer_fd);
         free(win);
         return NULL;
@@ -312,6 +314,11 @@ void lgui_window_show(lgui_window_t *win) {
                           win->width * 4u, win->buffer_size, win->buffer_fd)) {
         fprintf(stderr, "lunagui: failed to send COMMIT_BUFFER\n");
     }
+}
+
+lgui_canvas_t *lgui_window_get_canvas(lgui_window_t *win) {
+    if (!win) return NULL;
+    return win->canvas;
 }
 
 void lgui_window_update(lgui_window_t *win) {

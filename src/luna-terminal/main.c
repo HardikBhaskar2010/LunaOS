@@ -70,53 +70,44 @@ int pty_spawn(pid_t *out_pid, int *out_fd);
  *   1. Fill background rectangle
  *   2. Draw character using lgui_canvas_draw_text()
  */
-static void render_grid(void) {
-    /* The window's pixel buffer is accessible through window_update.
-     * We mark the window dirty so lgui_application_run()'s dirty loop
-     * calls lgui_window_update() which calls lgui_widget_render() on the
-     * root. However, for the terminal we bypass the widget system and
-     * draw directly using a canvas label widget that we refresh each frame.
-     *
-     * Implementation note: the terminal renders its own framebuffer through
-     * a custom canvas widget approach. For now, the root widget is a single
-     * label that shows a status line; the actual cell-by-cell rendering
-     * requires direct pixel access which the current canvas API supports
-     * but the window's buffer pointer must be exposed.
-     *
-     * Phase D implementation: render each changed cell via the label's
-     * text representation (one row per label in a VBox). This approach
-     * works but loses color; full cell rendering requires the pixel-buffer
-     * canvas path which will be added when lgui_window_get_canvas() is
-     * implemented in Phase E.
-     */
-
-    /* Build text representation of each visible row */
-    static char row_text[TERM_ROWS_MAX][TERM_COLS_MAX + 1];
-
-    lgui_widget_t *vbox = lgui_vbox_create();
-    lgui_widget_set_size(vbox, TERM_WIN_W, TERM_WIN_H);
-
+static void terminal_render_cb(lgui_widget_t *widget, lgui_canvas_t *canvas, int x, int y) {
+    (void)widget;
+    
     for (int r = 0; r < g_grid.rows; r++) {
-        int col = 0;
         for (int c = 0; c < g_grid.cols; c++) {
-            uint32_t ch = g_grid.cells[r][c].ch;
-            /* Only emit ASCII printable range for now */
-            if (ch >= 0x20u && ch < 0x7Fu) {
-                row_text[r][col++] = (char)ch;
-            } else {
-                row_text[r][col++] = ' ';
+            term_cell_t cell = g_grid.cells[r][c];
+            
+            int cell_x = x + TERM_PAD + c * TERM_FONT_W;
+            int cell_y = y + TERM_PAD + r * TERM_FONT_H;
+
+            /* Default colors */
+            uint32_t bg = 0xFF1E1E28u; /* MAHINA_BG_SURFACE */
+            uint32_t fg = 0xFFEEEEF4u; /* MAHINA_TEXT_PRIMARY */
+            
+            /* TODO: parse cell.fg and cell.bg ANSI colors if needed */
+            if (cell.flags & TERM_CELL_INVERSE) {
+                uint32_t tmp = bg; bg = fg; fg = tmp;
+            }
+
+            /* Draw background */
+            if (bg != 0xFF1E1E28u) {
+                lgui_canvas_fill_rect(canvas, cell_x, cell_y, TERM_FONT_W, TERM_FONT_H, bg);
+            }
+
+            /* Draw foreground character */
+            if (cell.ch >= 0x20u && cell.ch < 0x7Fu) {
+                char str[2] = { (char)cell.ch, '\0' };
+                lgui_canvas_draw_text(canvas, cell_x, cell_y, str, fg);
             }
         }
-        /* Remove trailing spaces */
-        while (col > 0 && row_text[r][col - 1] == ' ') col--;
-        row_text[r][col] = '\0';
-
-        lgui_widget_t *lbl = lgui_label_create(row_text[r]);
-        lgui_widget_set_size(lbl, TERM_WIN_W - TERM_PAD * 2, TERM_FONT_H);
-        lgui_box_add_child(vbox, lbl);
     }
+}
 
-    lgui_window_set_root_widget(g_win, vbox);
+static void render_grid(void) {
+    if (g_win) {
+        g_win->dirty = true;
+        /* Trigger a re-render in the event loop */
+    }
 }
 
 /* ── PTY callback ────────────────────────────────────────────────────────── */
@@ -148,6 +139,50 @@ static void pty_resize(int cols, int rows) {
     ioctl(g_pty_fd, TIOCSWINSZ, &ws);
 
     term_grid_resize(&g_grid, cols, rows);
+}
+
+#include <linux/input-event-codes.h>
+
+static void terminal_on_paste(const char *text, void *user_data) {
+    (void)user_data;
+    if (text && g_pty_fd >= 0) {
+        write(g_pty_fd, text, strlen(text));
+    }
+}
+
+static void terminal_on_key(lgui_widget_t *widget, uint32_t key, uint32_t modifiers, void *user_data) {
+    (void)widget;
+    (void)user_data;
+    if (g_pty_fd < 0) return;
+
+    /* Ctrl+Shift+C / Ctrl+Shift+V */
+    if (modifiers == 3) { /* Shift | Ctrl */
+        if (key == KEY_C) {
+            /* TODO: Copy selected text */
+            return;
+        } else if (key == KEY_V) {
+            lgui_clipboard_request_text(g_app, terminal_on_paste, NULL);
+            return;
+        }
+    }
+
+    /* Handle special keys with ANSI escape sequences */
+    const char *seq = NULL;
+    if (key == KEY_UP)    seq = "\x1b[A";
+    if (key == KEY_DOWN)  seq = "\x1b[B";
+    if (key == KEY_RIGHT) seq = "\x1b[C";
+    if (key == KEY_LEFT)  seq = "\x1b[D";
+    
+    if (seq) {
+        write(g_pty_fd, seq, strlen(seq));
+        return;
+    }
+
+    /* Translate normal keys */
+    char c = lgui_keymap_translate(key, modifiers);
+    if (c != '\0') {
+        write(g_pty_fd, &c, 1);
+    }
 }
 
 /* ── Entry point ─────────────────────────────────────────────────────────── */
@@ -186,7 +221,16 @@ int main(void) {
         return 1;
     }
 
-    /* Initial render (empty grid) */
+    /* Set up terminal UI using a CanvasWidget */
+    lgui_widget_t *canvas_widget = lgui_canvas_widget_create();
+    lgui_widget_set_size(canvas_widget, TERM_WIN_W, TERM_WIN_H);
+    lgui_canvas_widget_set_render(canvas_widget, terminal_render_cb);
+    lgui_widget_set_on_key(canvas_widget, terminal_on_key, NULL);
+
+    lgui_window_set_root_widget(g_win, canvas_widget);
+    lgui_widget_focus(g_app, canvas_widget);
+
+    /* Initial render */
     render_grid();
     lgui_window_show(g_win);
 

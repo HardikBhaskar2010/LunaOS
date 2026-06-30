@@ -19,8 +19,10 @@
 #include "protocol/hello.h"
 #include "protocol/caps.h"
 #include "protocol/surface.h"
+#include "protocol/wm.h"
 #include "scene/surface.h"
 #include "input/mouse.h"
+#include "input/keyboard.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -72,13 +74,105 @@ void lgp_dispatch_pointer_motion(lgp_compositor_state_t *state, int x, int y) {
                 payload[7] = y & 0xFF;
                 
                 uint8_t frame[LGP_HEADER_SIZE + 8];
-                lgp_tlv_encode_header(frame, LGP_MSG_POINTER_MOTION, sizeof(frame));
+                lgp_tlv_encode_header(frame, sizeof(frame), LGP_MSG_POINTER_MOTION, sizeof(frame));
                 memcpy(frame + LGP_HEADER_SIZE, payload, 8);
                 lgp_write_all(client->fd, frame, sizeof(frame));
                 break;
             }
             client = client->next;
         }
+    }
+}
+
+void lgp_dispatch_pointer_button(lgp_compositor_state_t *state, int x, int y, uint8_t button, bool pressed) {
+    if (!state) return;
+    
+    int top_layer = -1;
+    uint32_t target_session_id = 0;
+    uint32_t target_surface_id = 0;
+    
+    for (size_t i = 0; i < LGP_SURFACE_MAX; i++) {
+        lgp_surface_t *s = &state->surface_manager.surfaces[i];
+        if (!s->in_use) continue;
+        
+        if (x >= s->x && x < s->x + (int32_t)s->width &&
+            y >= s->y && y < s->y + (int32_t)s->height) {
+            
+            if ((int)s->layer > top_layer) {
+                top_layer = s->layer;
+                target_session_id = s->owner_session_id;
+                target_surface_id = s->id;
+            }
+        }
+    }
+    
+    if (target_session_id > 0) {
+        if (pressed) {
+            state->keyboard_focus_session_id = target_session_id;
+            state->keyboard_focus_surface_id = target_surface_id;
+        }
+
+        lgp_client_t *client = state->clients;
+        while (client) {
+            if (client->session_id == target_session_id) {
+                uint8_t payload[2];
+                payload[0] = button;
+                payload[1] = pressed ? 1 : 0;
+                
+                uint8_t frame[LGP_HEADER_SIZE + 2];
+                lgp_tlv_encode_header(frame, sizeof(frame), LGP_MSG_POINTER_BUTTON, sizeof(frame));
+                memcpy(frame + LGP_HEADER_SIZE, payload, 2);
+                lgp_write_all(client->fd, frame, sizeof(frame));
+                break;
+            }
+            client = client->next;
+        }
+    }
+}
+
+void lgp_dispatch_keyboard_key(lgp_compositor_state_t *state, uint32_t key, uint32_t key_state, uint32_t modifiers) {
+    if (!state) return;
+
+    uint32_t target_session_id = state->keyboard_focus_session_id;
+
+    /* Check if WM grabbed this key */
+    if (state->wm_client) {
+        for (size_t i = 0; i < state->grabbed_keys_count; i++) {
+            if (state->grabbed_keys[i].key == key && state->grabbed_keys[i].modifiers == modifiers) {
+                target_session_id = state->wm_client->session_id;
+                break;
+            }
+        }
+    }
+
+    if (target_session_id == 0) return;
+
+    lgp_client_t *client = state->clients;
+    while (client) {
+        if (client->session_id == target_session_id) {
+            uint8_t payload[12];
+            payload[0] = (key >> 24) & 0xFF;
+            payload[1] = (key >> 16) & 0xFF;
+            payload[2] = (key >> 8) & 0xFF;
+            payload[3] = key & 0xFF;
+
+            payload[4] = (key_state >> 24) & 0xFF;
+            payload[5] = (key_state >> 16) & 0xFF;
+            payload[6] = (key_state >> 8) & 0xFF;
+            payload[7] = key_state & 0xFF;
+
+            payload[8] = (modifiers >> 24) & 0xFF;
+            payload[9] = (modifiers >> 16) & 0xFF;
+            payload[10] = (modifiers >> 8) & 0xFF;
+            payload[11] = modifiers & 0xFF;
+
+            uint8_t frame[LGP_HEADER_SIZE + 12];
+            lgp_tlv_encode_header(frame, sizeof(frame), LGP_MSG_KEYBOARD_KEY, sizeof(frame));
+            memcpy(frame + LGP_HEADER_SIZE, payload, 12);
+            lgp_write_all(client->fd, frame, sizeof(frame));
+            break;
+        }
+        client = client->next;
     }
 }
 
@@ -303,6 +397,14 @@ static bool lgp_handle_create_surface(lgp_compositor_state_t *state,
     }
 
     LGP_INFO("surface", "Client session=%u created surface id=%u", client->session_id, surface_id);
+    
+    if (state->wm_client) {
+        uint8_t buf[64];
+        if (lgp_wm_encode_surface_created(buf, sizeof(buf), surface_id, payload.surface_type, payload.width, payload.height)) {
+            lgp_write_all(state->wm_client->fd, buf, LGP_HEADER_SIZE + 16);
+        }
+    }
+    
     return true;
 }
 
@@ -320,6 +422,13 @@ static bool lgp_handle_destroy_surface(lgp_compositor_state_t *state,
         LGP_WARN("surface", "Rejected DESTROY_SURFACE session=%u surface=%u status=%u",
                  client->session_id, payload.surface_id, status);
         return false;
+    }
+
+    if (state->wm_client) {
+        uint8_t buf[32];
+        if (lgp_wm_encode_surface_destroyed(buf, sizeof(buf), payload.surface_id)) {
+            lgp_write_all(state->wm_client->fd, buf, LGP_HEADER_SIZE + 4);
+        }
     }
 
     return true;
@@ -366,6 +475,55 @@ static bool lgp_handle_commit_buffer(lgp_compositor_state_t *state,
     return lgp_repaint_surfaces(state, drm_dev);
 }
 
+static bool lgp_handle_wm_set_position(lgp_compositor_state_t *state, lgp_client_t *client, const lgp_msg_t *msg, drm_device_t *drm_dev) {
+    if (!(client->caps_granted & 128)) return false; /* Must be WM */
+    lgp_wm_set_position_payload_t payload;
+    if (!lgp_wm_decode_set_position(msg, &payload)) return false;
+
+    for (size_t i = 0; i < LGP_SURFACE_MAX; i++) {
+        if (state->surface_manager.surfaces[i].in_use && state->surface_manager.surfaces[i].id == payload.surface_id) {
+            state->surface_manager.surfaces[i].x = payload.x;
+            state->surface_manager.surfaces[i].y = payload.y;
+            return lgp_repaint_surfaces(state, drm_dev);
+        }
+    }
+    return true;
+}
+
+static bool lgp_handle_wm_set_focus(lgp_compositor_state_t *state, lgp_client_t *client, const lgp_msg_t *msg) {
+    if (!(client->caps_granted & 128)) return false;
+    lgp_wm_set_focus_payload_t payload;
+    if (!lgp_wm_decode_set_focus(msg, &payload)) return false;
+    
+    state->keyboard_focus_session_id = payload.session_id;
+    return true;
+}
+
+static bool lgp_handle_wm_set_state(lgp_compositor_state_t *state, lgp_client_t *client, const lgp_msg_t *msg) {
+    if (!(client->caps_granted & 128)) return false;
+    lgp_wm_set_state_payload_t payload;
+    if (!lgp_wm_decode_set_state(msg, &payload)) return false;
+    
+    /* In v0.1, we just accept state changes, we might use them later for mapping/unmapping */
+    return true;
+}
+
+static bool lgp_handle_wm_grab_key(lgp_compositor_state_t *state, lgp_client_t *client, const lgp_msg_t *msg) {
+    if (!(client->caps_granted & 128)) return false;
+    lgp_wm_grab_key_payload_t payload;
+    if (!lgp_wm_decode_grab_key(msg, &payload)) return false;
+    
+    if (state->grabbed_keys_count < 16) {
+        state->grabbed_keys[state->grabbed_keys_count].key = payload.key;
+        state->grabbed_keys[state->grabbed_keys_count].modifiers = payload.modifiers;
+        state->grabbed_keys_count++;
+        LGP_INFO("ipc", "WM registered grab for key=%u mods=%u", payload.key, payload.modifiers);
+    } else {
+        LGP_WARN("ipc", "WM grab key limit reached");
+    }
+    return true;
+}
+
 static bool lgp_handle_client_message(lgp_compositor_state_t *state,
                                       lgp_client_t *client,
                                       const lgp_msg_t *msg,
@@ -382,7 +540,12 @@ static bool lgp_handle_client_message(lgp_compositor_state_t *state,
     }
 
     if (msg->type == LGP_MSG_HELLO) {
-        return lgp_hello_handle(client, msg);
+        bool ok = lgp_hello_handle(client, msg);
+        if (ok && (client->caps_granted & 128)) { /* LGP_CAP_WINDOW_MANAGER */
+            state->wm_client = client;
+            LGP_INFO("ipc", "Client session=%u registered as Window Manager", client->session_id);
+        }
+        return ok;
     }
 
     if (msg->type == LGP_MSG_FILL_RECT) {
@@ -399,6 +562,43 @@ static bool lgp_handle_client_message(lgp_compositor_state_t *state,
 
     if (msg->type == LGP_MSG_COMMIT_BUFFER) {
         return lgp_handle_commit_buffer(state, client, msg, drm_dev);
+    }
+
+    if (msg->type == LGP_MSG_CLIPBOARD_SET) {
+        size_t payload_len = msg->length - LGP_HEADER_SIZE;
+        if (payload_len >= sizeof(state->global_clipboard)) {
+            payload_len = sizeof(state->global_clipboard) - 1;
+        }
+        memcpy(state->global_clipboard, msg->payload, payload_len);
+        state->global_clipboard[payload_len] = '\0';
+        LGP_INFO("ipc", "Client session=%u set clipboard (len=%zu)", client->session_id, payload_len);
+        return true;
+    }
+
+    if (msg->type == LGP_MSG_CLIPBOARD_GET) {
+        size_t cb_len = strlen(state->global_clipboard);
+        uint8_t *frame = malloc(LGP_HEADER_SIZE + cb_len + 1);
+        if (frame) {
+            lgp_tlv_encode_header(frame, LGP_HEADER_SIZE + cb_len + 1, LGP_MSG_CLIPBOARD_DATA, LGP_HEADER_SIZE + cb_len + 1);
+            memcpy(frame + LGP_HEADER_SIZE, state->global_clipboard, cb_len + 1);
+            lgp_write_all(client->fd, frame, LGP_HEADER_SIZE + cb_len + 1);
+            free(frame);
+            LGP_INFO("ipc", "Client session=%u got clipboard (len=%zu)", client->session_id, cb_len);
+        }
+        return true;
+    }
+
+    if (msg->type == LGP_MSG_WM_SET_SURFACE_POSITION) {
+        return lgp_handle_wm_set_position(state, client, msg, drm_dev);
+    }
+    if (msg->type == LGP_MSG_WM_SET_FOCUS) {
+        return lgp_handle_wm_set_focus(state, client, msg);
+    }
+    if (msg->type == LGP_MSG_WM_SET_STATE) {
+        return lgp_handle_wm_set_state(state, client, msg);
+    }
+    if (msg->type == LGP_MSG_WM_GRAB_KEY) {
+        return lgp_handle_wm_grab_key(state, client, msg);
     }
 
     LGP_WARN("protocol", "Client session=%u sent unknown message 0x%04X",
@@ -521,7 +721,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    /* Mouse input — init AFTER connector setup so mode dimensions are known */
+    /* Mouse and Keyboard input */
     lgp_mouse_init((uint32_t)drm_dev.mode.hdisplay, (uint32_t)drm_dev.mode.vdisplay);
     int mouse_fd = lgp_mouse_get_fd();
     if (mouse_fd >= 0) {
@@ -529,6 +729,15 @@ int main(int argc, char **argv) {
         ev_mouse.events = EPOLLIN;
         ev_mouse.data.fd = mouse_fd;
         epoll_ctl(state.epoll_fd, EPOLL_CTL_ADD, mouse_fd, &ev_mouse);
+    }
+
+    lgp_keyboard_init();
+    int keyboard_fd = lgp_keyboard_get_fd();
+    if (keyboard_fd >= 0) {
+        struct epoll_event ev_kb = {0};
+        ev_kb.events = EPOLLIN;
+        ev_kb.data.fd = keyboard_fd;
+        epoll_ctl(state.epoll_fd, EPOLL_CTL_ADD, keyboard_fd, &ev_kb);
     }
 
     drm_dev.front_buffer = kms_dumb_buffer_create(&drm_dev, drm_dev.mode.hdisplay, drm_dev.mode.vdisplay);
@@ -600,6 +809,8 @@ int main(int argc, char **argv) {
                 kms_handle_events(&drm_dev);
             } else if (mouse_fd >= 0 && fd == mouse_fd) {
                 lgp_mouse_pump(&state);
+            } else if (keyboard_fd >= 0 && fd == keyboard_fd) {
+                lgp_keyboard_pump(&state);
             } else if (fd == listen_fd) {
                 int client_fd = lgp_socket_server_accept(listen_fd);
                 if (client_fd >= 0) {

@@ -26,10 +26,10 @@ struct lgui_window_t {
     uint32_t layer;
     lgui_widget_t *root_widget;
     bool dirty; /* true when the widget tree has changed and needs re-render */
-
     int    buffer_fd;
     void  *buffer_map;
     size_t buffer_size;
+    lgui_canvas_t *canvas;
 };
 
 #endif

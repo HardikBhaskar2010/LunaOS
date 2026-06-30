@@ -23,6 +23,12 @@ void lgui_widget_set_size(lgui_widget_t *widget, int width, int height) {
     widget->height = height;
 }
 
+void lgui_widget_set_on_key(lgui_widget_t *widget, lgui_key_cb cb, void *user_data) {
+    if (!widget) return;
+    widget->on_key = cb;
+    widget->user_data = user_data;
+}
+
 /*
  * lgui_widget_destroy() — Recursively free a widget and all of its children.
  *

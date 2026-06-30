@@ -26,6 +26,9 @@ uint32_t lgp_caps_negotiate(lgp_client_t *client, uint32_t requested_caps) {
         if (requested_caps & LGP_CAP_LUNA_ISLAND) {
             granted |= LGP_CAP_LUNA_ISLAND;
         }
+        if (requested_caps & LGP_CAP_WINDOW_MANAGER) {
+            granted |= LGP_CAP_WINDOW_MANAGER;
+        }
     }
 
     /* DMA-BUF, cursor shape, and clipboard are not implemented yet, so deny them. */

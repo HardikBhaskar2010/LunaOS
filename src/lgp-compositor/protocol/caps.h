@@ -18,6 +18,7 @@
 #define LGP_CAP_LUNA_ISLAND    (1u << 4)
 #define LGP_CAP_CURSOR_SHAPE   (1u << 5)
 #define LGP_CAP_CLIPBOARD      (1u << 6)
+#define LGP_CAP_WINDOW_MANAGER (1u << 7)
 
 /*
  * lgp_caps_negotiate() — Determine granted capabilities based on requested caps

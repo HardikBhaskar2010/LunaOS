@@ -38,6 +38,13 @@
 #define LGP_CAP_LAYER_SHELL    (1u << 3)
 #define LGP_CAP_LUNA_ISLAND    (1u << 4)
 
+#define LGP_MSG_WM_SURFACE_CREATED   0x0200u
+#define LGP_MSG_WM_SURFACE_DESTROYED 0x0201u
+#define LGP_MSG_WM_SET_SURFACE_POSITION 0x0202u
+#define LGP_MSG_WM_SET_FOCUS         0x0203u
+#define LGP_MSG_WM_SET_STATE         0x0204u
+#define LGP_MSG_WM_GRAB_KEY          0x0205u
+
 /* ---------------------------------------------------------------------------
  * Internal helpers
  * ---------------------------------------------------------------------------*/
@@ -104,7 +111,7 @@ static bool lgui_read_exact(int fd, uint8_t *buf, size_t len) {
  * The compositor replies with LGP_HELLO_REPLY (same structure, caps = granted).
  * We must read and parse the reply before sending any other messages.
  * ---------------------------------------------------------------------------*/
-static bool lgui_do_hello(int fd, uint32_t *out_caps_granted) {
+static bool lgui_do_hello(int fd, uint32_t caps_requested, uint32_t *out_caps_granted) {
     /* HELLO payload: 2 (major) + 2 (minor) + 4 (caps) = 8 bytes */
     const uint32_t payload_len = 8u;
     const uint32_t total_len   = (uint32_t)LGP_HEADER_SIZE + payload_len;
@@ -114,7 +121,7 @@ static bool lgui_do_hello(int fd, uint32_t *out_caps_granted) {
     write_u32_le(hello + 2, total_len);
     write_u16_le(hello + 6, (uint16_t)LGP_VERSION_MAJOR);
     write_u16_le(hello + 8, (uint16_t)LGP_VERSION_MINOR);
-    write_u32_le(hello + 10, LGP_CAP_CANVAS_SURFACE | LGP_CAP_LAYER_SHELL | LGP_CAP_LUNA_ISLAND);
+    write_u32_le(hello + 10, caps_requested);
 
     if (!lgui_write_all(fd, hello, sizeof(hello))) {
         fprintf(stderr, "lunagui: failed to send LGP_HELLO\n");
@@ -201,7 +208,53 @@ lgui_application_t *lgui_application_create(const char *name) {
 
     /* Perform the LGP_HELLO handshake — mandatory before any other message */
     uint32_t caps_granted = 0;
-    if (!lgui_do_hello(fd, &caps_granted)) {
+    if (!lgui_do_hello(fd, 2 | 8 | 16, &caps_granted)) { /* CANVAS_SURFACE | LAYER_SHELL | LUNA_ISLAND */
+        close(fd);
+        free(app);
+        return NULL;
+    }
+
+    app->caps_granted = caps_granted;
+    return app;
+}
+
+lgui_application_t *lgui_application_create_wm(const char *name, 
+                                               lgui_wm_surface_created_cb on_created, 
+                                               lgui_wm_surface_destroyed_cb on_destroyed,
+                                               void *user_data) {
+    if (!name) return NULL;
+
+    lgui_application_t *app = calloc(1, sizeof(lgui_application_t));
+    if (!app) return NULL;
+
+    strncpy(app->name, name, sizeof(app->name) - 1);
+    app->lgp_fd = -1;
+    app->wm_surface_created_cb = on_created;
+    app->wm_surface_destroyed_cb = on_destroyed;
+    app->wm_user_data = user_data;
+
+    lgui_font_init("/usr/share/fonts/luna-8x16.psf");
+
+    int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    if (fd < 0) {
+        free(app);
+        return NULL;
+    }
+
+    struct sockaddr_un addr = {0};
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, LGP_SOCKET_PATH, sizeof(addr.sun_path) - 1);
+
+    if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        close(fd);
+        free(app);
+        return NULL;
+    }
+
+    app->lgp_fd = fd;
+
+    uint32_t caps_granted = 0;
+    if (!lgui_do_hello(fd, 2 | 8 | 16 | 128, &caps_granted)) { /* Includes LGP_CAP_WINDOW_MANAGER */
         close(fd);
         free(app);
         return NULL;
@@ -227,6 +280,36 @@ void lgui_application_add_fd(lgui_application_t *app, int fd, lgui_fd_callback_t
     app->custom_fds[app->custom_fd_count].cb        = cb;
     app->custom_fds[app->custom_fd_count].user_data = user_data;
     app->custom_fd_count++;
+}
+
+void lgui_clipboard_set_text(lgui_application_t *app, const char *text) {
+    if (!app || app->lgp_fd < 0 || !text) return;
+    
+    size_t text_len = strlen(text);
+    uint32_t total_len = LGP_HEADER_SIZE + (uint32_t)text_len;
+    
+    uint8_t *msg = malloc(total_len);
+    if (!msg) return;
+    
+    write_u16_le(msg + 0, 0x0120u); /* LGP_MSG_CLIPBOARD_SET */
+    write_u32_le(msg + 2, total_len);
+    memcpy(msg + LGP_HEADER_SIZE, text, text_len);
+    
+    lgui_write_all(app->lgp_fd, msg, total_len);
+    free(msg);
+}
+
+void lgui_clipboard_request_text(lgui_application_t *app, lgui_clipboard_cb cb, void *user_data) {
+    if (!app || app->lgp_fd < 0 || !cb) return;
+    
+    app->clipboard_cb = cb;
+    app->clipboard_user_data = user_data;
+    
+    uint8_t msg[LGP_HEADER_SIZE];
+    write_u16_le(msg + 0, 0x0121u); /* LGP_MSG_CLIPBOARD_GET */
+    write_u32_le(msg + 2, LGP_HEADER_SIZE);
+    
+    lgui_write_all(app->lgp_fd, msg, sizeof(msg));
 }
 
 /* ---------------------------------------------------------------------------
@@ -261,10 +344,6 @@ static lgui_widget_t *lgui_widget_hittest(lgui_widget_t *w,
     return NULL;
 }
 
-/*
- * lgui_dispatch_pointer_button() — Route a compositor POINTER_BUTTON event
- * to the widget under the cursor, calling its on_click handler if it has one.
- */
 static void lgui_dispatch_pointer_button(lgui_application_t *app,
                                           int x, int y, bool pressed) {
     if (!pressed) return; /* Only fire on button-down */
@@ -274,15 +353,73 @@ static void lgui_dispatch_pointer_button(lgui_application_t *app,
         if (!win || !win->root_widget) continue;
 
         lgui_widget_t *hit = lgui_widget_hittest(win->root_widget, 0, 0, x, y);
-        if (hit && hit->type == 2 /* Button */ && hit->on_click) {
-            hit->on_click(hit, hit->user_data);
-            /* Window tree may have changed; mark all windows dirty */
-            for (int j = 0; j < app->window_count; j++) {
-                if (app->windows[j]) app->windows[j]->dirty = true;
+        if (hit) {
+            app->focused_widget = hit;
+            if (hit->type == 2 /* Button */ && hit->on_click) {
+                hit->on_click(hit, hit->user_data);
+                /* Window tree may have changed; mark all windows dirty */
+                for (int j = 0; j < app->window_count; j++) {
+                    if (app->windows[j]) app->windows[j]->dirty = true;
+                }
             }
             return;
         }
     }
+}
+
+/* ---------------------------------------------------------------------------
+ * Window Management (WM) APIs
+ * ---------------------------------------------------------------------------*/
+
+void lgui_wm_set_surface_position(lgui_application_t *app, uint32_t surface_id, int x, int y) {
+    if (!app || app->lgp_fd < 0) return;
+    uint8_t buf[LGP_HEADER_SIZE + 12];
+    write_u16_le(buf, LGP_MSG_WM_SET_SURFACE_POSITION);
+    write_u32_le(buf + 2, sizeof(buf));
+    write_u32_le(buf + LGP_HEADER_SIZE, surface_id);
+    write_u32_le(buf + LGP_HEADER_SIZE + 4, (uint32_t)x);
+    write_u32_le(buf + LGP_HEADER_SIZE + 8, (uint32_t)y);
+    lgui_write_all(app->lgp_fd, buf, sizeof(buf));
+}
+
+void lgui_wm_set_focus(lgui_application_t *app, uint32_t session_id) {
+    if (!app || app->lgp_fd < 0) return;
+    uint8_t buf[LGP_HEADER_SIZE + 4];
+    write_u16_le(buf, LGP_MSG_WM_SET_FOCUS);
+    write_u32_le(buf + 2, sizeof(buf));
+    write_u32_le(buf + LGP_HEADER_SIZE, session_id);
+    lgui_write_all(app->lgp_fd, buf, sizeof(buf));
+}
+
+void lgui_wm_set_state(lgui_application_t *app, uint32_t surface_id, uint32_t state) {
+    if (!app || app->lgp_fd < 0) return;
+    uint8_t buf[LGP_HEADER_SIZE + 8];
+    write_u16_le(buf, LGP_MSG_WM_SET_STATE);
+    write_u32_le(buf + 2, sizeof(buf));
+    write_u32_le(buf + LGP_HEADER_SIZE, surface_id);
+    write_u32_le(buf + LGP_HEADER_SIZE + 4, state);
+    lgui_write_all(app->lgp_fd, buf, sizeof(buf));
+}
+
+void lgui_wm_grab_key(lgui_application_t *app, uint32_t key, uint32_t modifiers) {
+    if (!app || app->lgp_fd < 0) return;
+    uint8_t buf[LGP_HEADER_SIZE + 8];
+    write_u16_le(buf, LGP_MSG_WM_GRAB_KEY);
+    write_u32_le(buf + 2, sizeof(buf));
+    write_u32_le(buf + LGP_HEADER_SIZE, key);
+    write_u32_le(buf + LGP_HEADER_SIZE + 4, modifiers);
+    lgui_write_all(app->lgp_fd, buf, sizeof(buf));
+}
+
+void lgui_application_set_global_key_cb(lgui_application_t *app, lgui_global_key_cb cb, void *user_data) {
+    if (app) {
+        app->global_key_cb = cb;
+        app->global_key_user_data = user_data;
+    }
+}
+
+void lgui_widget_focus(lgui_application_t *app, lgui_widget_t *widget) {
+    if (app) app->focused_widget = widget;
 }
 
 int lgui_application_run(lgui_application_t *app) {
@@ -349,6 +486,51 @@ int lgui_application_run(lgui_application_t *app) {
                         lgui_dispatch_pointer_button(app,
                                                       app->cursor_x, app->cursor_y,
                                                       pressed);
+                    }
+                } else if (type == 0x0112u) {
+                    /* LGP_MSG_KEYBOARD_KEY: uint32 key, uint32 state, uint32 modifiers */
+                    if (payload_len >= 12u) {
+                        uint32_t key = read_u32_le(payload + 0);
+                        uint32_t state = read_u32_le(payload + 4);
+                        uint32_t modifiers = read_u32_le(payload + 8);
+                        
+                        /* Dispatch to global callback if registered (e.g. for WM) */
+                        if (state != 0 && app->global_key_cb) {
+                            app->global_key_cb(key, modifiers, app->global_key_user_data);
+                        }
+                        
+                        /* Also dispatch to focused widget */
+                        if (state != 0 && app->focused_widget && app->focused_widget->on_key) {
+                            app->focused_widget->on_key(app->focused_widget, key, modifiers, app->focused_widget->user_data);
+                        }
+                    }
+                } else if (type == 0x0122u) {
+                    /* LGP_MSG_CLIPBOARD_DATA: string payload */
+                    if (app->clipboard_cb) {
+                        char *text = NULL;
+                        if (payload_len > 0) {
+                            text = malloc(payload_len + 1);
+                            if (text) {
+                                memcpy(text, payload, payload_len);
+                                text[payload_len] = '\0';
+                            }
+                        }
+                        app->clipboard_cb(text, app->clipboard_user_data);
+                        if (text) free(text);
+                        app->clipboard_cb = NULL;
+                    }
+                } else if (type == LGP_MSG_WM_SURFACE_CREATED) {
+                    if (payload_len >= 16u && app->wm_surface_created_cb) {
+                        uint32_t surface_id = read_u32_le(payload + 0);
+                        uint32_t surface_type = read_u32_le(payload + 4);
+                        uint32_t w = read_u32_le(payload + 8);
+                        uint32_t h = read_u32_le(payload + 12);
+                        app->wm_surface_created_cb(surface_id, surface_type, w, h, app->wm_user_data);
+                    }
+                } else if (type == LGP_MSG_WM_SURFACE_DESTROYED) {
+                    if (payload_len >= 4u && app->wm_surface_destroyed_cb) {
+                        uint32_t surface_id = read_u32_le(payload + 0);
+                        app->wm_surface_destroyed_cb(surface_id, app->wm_user_data);
                     }
                 }
                 offset += len;
