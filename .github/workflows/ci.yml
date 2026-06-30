@@ -26,7 +26,7 @@ jobs:
       - name: Install toolchain
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y clang lld llvm make
+          sudo apt-get install -y clang lld llvm make libdrm-dev
 
       - name: Build all targets
         run: make all CC=clang
@@ -63,7 +63,7 @@ jobs:
       - name: Install toolchain
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y clang lld llvm make
+          sudo apt-get install -y clang lld llvm make libdrm-dev
 
       - name: Run unit tests
         run: make test-unit CC=clang
@@ -106,7 +106,7 @@ jobs:
       - name: Install toolchain
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y clang lld llvm make
+          sudo apt-get install -y clang lld llvm make libdrm-dev
 
       - name: Run fuzz regression
         run: make test-fuzz CC=clang
@@ -125,7 +125,7 @@ jobs:
       - name: Install toolchain and dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y clang lld llvm make qemu-system-x86 ovmf parted dosfstools btrfs-progs bzip2
+          sudo apt-get install -y clang lld llvm make qemu-system-x86 ovmf parted dosfstools btrfs-progs bzip2 libdrm-dev
 
       - name: Run verification boot test
         run: |
