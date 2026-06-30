@@ -20,7 +20,7 @@ The short verdict: the documentation is genuinely impressive in scope and discip
 
 Every file in the repository was read. There are no hidden files, no source directories, no build artifacts, and no configuration files outside the docs tree. The repository contains:
 
-- `docs/DCKL/` — The Divine Collection of Knowledge, Volumes I–V and VII (61 .md files total)
+- `docs/DCKL/` — The Divine Collection of Knowledge about Luna, Volumes I–V and VII (61 .md files total)
 - `docs/Architecture Reviews/` — Four architecture review session records
 - `docs/System Prompts/` — AI agent context, style guides, session templates, progress tracker
 - Zero source files. Zero build scripts. Zero kernel config. Zero TOML service files.

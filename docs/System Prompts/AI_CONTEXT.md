@@ -66,7 +66,7 @@ The OS is named **Mahina**. The AI digital presence within it is named **LUNA**.
 | `luna-ai-d` | The LUNA AI daemon (Python asyncio, future Stage 7) |
 | `luna-lock` | Screen lock daemon (future Stage 3) |
 | `lpkg` | Mahina package manager (Python v1, future) |
-| `DCKL` | Document Control Knowledge Library — the docs in `docs/DCKL/` |
+| `DCKL` | Divine Collection of Knowledge about Luna — the docs in `docs/DCKL/` |
 | `DL-NNN` | Decision Log entry in `Volume I / decision_log.md` |
 | `AR-NNN` | Architecture Review session in `docs/Architecture Reviews/` |
 | `g_services` | Global service table in luna-init (max 32 services) |

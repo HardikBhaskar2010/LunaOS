@@ -4,7 +4,7 @@ Thank you for your interest in contributing to Mahina OS! Building an operating 
 
 ## 📖 Core Philosophy: Documentation-First Engineering
 
-Before contributing any code, please read the entire Document Control Knowledge Library (DCKL) in the `docs/DCKL/` directory. 
+Before contributing any code, please read the entire Divine Collection of Knowledge about Luna (DCKL) in the `docs/DCKL/` directory. 
 
 Mahina strictly follows **Documentation-First Engineering**. 
 No code is merged unless the architectural decisions have been formally accepted in the Decision Log. If you write a feature without documenting its architecture in the DCKL first, your Pull Request **will be closed**.

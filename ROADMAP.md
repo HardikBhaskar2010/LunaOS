@@ -1,6 +1,6 @@
 # Mahina OS Implementation Roadmap
 
-The development of Mahina OS is strictly governed by the Document Control Knowledge Library (DCKL). This document provides a high-level overview of our milestones. For the detailed, authoritative roadmap, see `docs/DCKL/Volume VII - Implementation Roadmap/`.
+The development of Mahina OS is strictly governed by the Divine Collection of Knowledge about Luna (DCKL). This document provides a high-level overview of our milestones. For the detailed, authoritative roadmap, see `docs/DCKL/Volume VII - Implementation Roadmap/`.
 
 ## 🌙 Phase 0: Core Foundation
 *Focus: Getting the OS to boot cleanly, establishing PID 1, and bringing up the absolute minimal environment.*

@@ -56,7 +56,7 @@ This is a deliberate constraint. Mahina's "presence" identity comes partly from 
 
 ### The default theme is the canonical reference
 
-The default theme ("Luna Dark") defines the canonical hex values that all other Mahina documentation refers to when it says "LUNA Green (#2EFF8A)" etc. If a user applies a different theme, those hex values change on their screen — but the semantic meaning does not.
+The default theme ("Animexcyberpunk") defines the canonical hex values that all other Mahina documentation refers to when it says "LUNA Green (#2EFF8A)" etc. If a user applies a different theme, those hex values change on their screen — but the semantic meaning does not.
 
 ### Dark mode is the default
 
@@ -81,10 +81,10 @@ Mahina themes are defined in TOML files (DL-008 — TOML is the system configura
 
 ```toml
 # /usr/share/luna/themes/luna-dark/theme.toml
-# Official Mahina default theme — Luna Dark
+# Official Mahina default theme — Animexcyberpunk (supersedes Luna Dark)
 
 [meta]
-name        = "Luna Dark"
+name        = "Animexcyberpunk"
 author      = "Mahina Project"
 version     = "1.0"
 base        = "dark"    # "dark" or "light" — affects default contrast assumptions

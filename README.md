@@ -21,7 +21,7 @@ It aims to provide:
 - **LGP (Luna Graphics Protocol):** A modern, minimal display protocol designed to replace heavy legacy systems, complete with surface management, alpha blending, and privileged Window Manager extensions.
 - **LunaGUI Toolkit:** A lightweight native GUI library in C17 featuring a robust widget tree, custom layouts (VBox/HBox), scrolling, and event-routing.
 - **luna-shell:** A native desktop shell and Window Manager.
-- **Documentation-First:** No code is written unless it is first codified in the Document Control Knowledge Library (DCKL).
+- **Documentation-First:** No code is written unless it is first codified in the Divine Collection of Knowledge about Luna (DCKL).
 
 ## 🏗️ Architecture
 

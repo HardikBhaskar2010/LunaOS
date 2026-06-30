@@ -50,18 +50,16 @@ These three words are the test for every visual decision: if a proposed design e
 
 ### Foundation: Dark Environment
 
-Mahina v1 ships **Luna Dark** as its only built-in theme (DL-039). All color decisions are made for dark environments first. The dark environment is not a constraint — it is the designed state.
+Mahina v1 ships **Animexcyberpunk** as its default built-in theme (DL-039). All color decisions are made for dark environments first. The dark environment is not a constraint — it is the designed state.
 
 ```
-Luna Dark color environment:
+Animexcyberpunk color environment:
 
-  Void Black    #0A0A0F   — Deepest background (void of space)
-  Deep Navy     #0D0D1A   — Secondary background layer
-  Surface Dark  #12121E   — Card and panel surfaces
-  Surface Mid   #1A1A2E   — Elevated surfaces (hover states)
-  Surface High  #22223A   — Highest surface (tooltips, modals)
-  Border Dim    #2A2A4A   — Subtle borders, dividers
-  Border Active #3D3D6B   — Active / focused borders
+  Deep Space    #0A0A0F   — Base background
+  Glassmorphic  #15141B   — Panel background
+  Neon Magenta  #E03E8A   — Primary Accent highlight
+  Purple        #8A2BE2   — Secondary gradient & border
+  Cyan          #00F0FF   — Highlight / info text
 ```
 
 ### Semantic Colors
@@ -261,14 +259,11 @@ The Luna Dark visual identity is built on **depth through transparency** — the
 ```
 Glass effect specification:
 
-  Background blur:     backdrop-filter: blur(20px)
-  Background tint:     rgba(13, 13, 26, 0.75)  — dark navy at 75% opacity
+  Background blur:     backdrop-filter: blur(20px) (Windows 11 level)
+  Background tint:     rgba(10, 10, 15, 0.15)  — Deep Space at 15% opacity (Dark Acrylic)
   Border:              1px solid rgba(255, 255, 255, 0.08)
   Inner highlight:     1px solid rgba(255, 255, 255, 0.04) on top edge only
   Shadow:              Elevation 1–3 depending on surface
-
-Visual result: surfaces appear to float over the content beneath them,
-               with depth communicated by blur intensity and shadow size.
 ```
 
 ```

@@ -4,7 +4,7 @@ If you need help with Mahina OS, want to ask questions about the architecture, o
 
 ## Where to get help
 
-1. **The Document Control Knowledge Library (DCKL)**
+1. **The Divine Collection of Knowledge about Luna (DCKL)**
    Before asking a question, please check the `docs/DCKL/` directory. Almost every design decision, architecture flow, and technical requirement is exhaustively documented there. Start with `Volume I - Foundation`.
 
 2. **GitHub Discussions**

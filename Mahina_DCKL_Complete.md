@@ -1,8 +1,9 @@
-# Mahina OS — Document Control Knowledge Library (DCKL)
+# Mahina OS — Divine Collection of Knowledge about Luna (DCKL)
 
 
 
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Implementation Priority
 **Volume I · Chapter 9**
@@ -292,12 +293,8 @@ For each component, the phase in which it must be complete before the next phase
 *Classification: Canonical — this document is the build order authority*
 *Cross-references: All Volume II–V documents. Phase order governs all implementation timelines.*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Decision Status Standard
 **Volume I · Chapter 10**
@@ -521,12 +518,8 @@ Documents written before this standard was adopted have "Current Decisions" tabl
 *Classification: Canonical process standard*
 *Applies to: decision_log.md and all Current Decisions tables in the DCKL*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Core Laws
 **Volume I · Chapter 4**
@@ -764,12 +757,8 @@ Laws I, II, and V are the hardest to amend. They represent the soul of the proje
 *Version: 0.2-concept*
 *This document is versioned. Breaking changes to these laws are major version events.*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Decision Log
 **Volume I · Chapter 6**
@@ -905,7 +894,7 @@ Python for v1. Rust rewrite planned for v2 if performance matters.
 
 ---
 
-## [DL-004] Compositor: Hyprland (v1) → wlroots custom (v2)
+## [DL-004] Compositor: Hyprland (v1) → wlroots custom (v2) (SUPERSEDED)
 
 **Date:** Project start
 **Status:** ACCEPTED
@@ -1103,9 +1092,7 @@ Original commission vs. generative art vs. procedural generator?
 **Target:** Before v1 release
 
 ### [DL-P04] License
-MIT vs. GPL v3
-**Current leaning:** MIT — maximum adoption over control
-**Target:** Before first public commit
+*Superseded by DL-052*
 
 ### [DL-P05] Public release timing
 Phase 2 (booting to desktop) for early community vs. Phase 4 (polished) for big launch?
@@ -1522,7 +1509,7 @@ Neither goal may come at the expense of the other.
 
 ## [DL-025] LGP Wire Format — TLV Binary
 **Date:** 2026-06-27
-**Status:** ✅ Accepted
+**Status:** ❌ SUPERSEDED by DL-053 (2026-06-29)
 **Session:** AR-004
 **Supersedes:** DL-P01 (pending)
 
@@ -2211,16 +2198,98 @@ Phosphor Icons aligns precisely with Mahina's icon design rules: 2px stroke weig
 
 ---
 
-*Document: `00_Foundation/decision_log.md`*
-*Author: Hardik Bhaskar (Luna Kitsune)*
-*This document is append-only. Add new entries at the top of the numbered section.*
+## [DL-052] Project License: MIT
+Date: 2026-06-28
+Status: ACCEPTED
+Decided by: Hardik Bhaskar
 
+### Question
+Which open-source license should govern the Mahina OS repository?
+
+### Options Considered
+- **GPLv3** — Ensures derived works remain open source, but limits commercial integration.
+- **MIT** — Permissive, maximizes adoption, allows proprietary derivatives.
+- **Apache 2.0** — Permissive with patent grants, slightly more complex.
+
+### Decision
+MIT License for source code and documentation.
+
+### Reasoning
+The goal of Mahina is to rethink OS architecture, not to restrict how people use it. The MIT License offers maximum freedom for contributors and downstream integrators. It aligns with the permissive licensing of our major dependencies like Limine (BSD-2-Clause) and LLVM (Apache 2.0).
+
+### Consequences
+- `LICENSE` file created at repo root.
+- `COPYRIGHT.md` established.
+- All `.c` and `.h` files updated with MIT copyright headers.
+- DL-P04 closed.
 
 ---
 
+## [DL-054] Userland Technology Stack: Rust Transition Above Compositor
+Date: 2026-06-30
+Status: ✅ ACCEPTED
+Decided by: Hardik Bhaskar
 
+### Question
+What programming language policy should Mahina enforce across the different layers of the operating system?
+
+### Options Considered
+- **Everything in C**: Uniformity, minimal dependency footprint, standard systems language, but high risk of memory-safety issues in complex userland applications (shell, editor, file manager).
+- **Rust for everything**: Hard to boot (kernel/bootloader in Rust requires a complex runtime setup for early stages), but excellent security.
+- **Assembly/C for Boot/Core, Rust for Userland (this decision)**: Restrict C to low-level stages where necessary (Bootloader, Kernel, Init manager, Compositor, LGP Protocol), and write everything above the compositor layer (desktop shell, applications, widgets, background services) in Rust.
+
+### Decision
+Adopt the hybrid stack: Assembly + C for the Bootloader, C for the Kernel, `luna-init` (init system), `lgp-compositor`, and the LGP protocol definitions. Transition all components residing above the compositor layer to Rust.
+
+### Reasoning
+- Core components like the bootloader, kernel, init, and compositor need direct hardware access, absolute minimum footprint, and low-level system call integration where C excels.
+- The layers above the compositor (the shell, applications, widgets, search, screenshot/OCR tools, and daemons) represent a massive surface area for user interaction and complexity. Implementing these in C leads to elevated risks of memory corruption and bounds-checking bugs.
+- Rust offers safety guarantees, a robust package manager (Cargo) for graphics and UI libraries, and allows high development velocity for the desktop experience without sacrificing performance.
+
+### Consequences
+- `luna-shell`, widgets, desktop launcher/dock, and future applications (Luna Terminal, Luna Files, Settings) will be written/rewritten in Rust.
+- C remains the standard for the boot, kernel, compositor, and LGP protocol headers.
+- Volume VI / Chapter 01 (Coding Standards) must enforce both C and Rust rules for their respective domains.
+
+---
+
+## [DL-053] LGP Wire Format: 2-byte Type + 4-byte Length Header
+Date: 2026-06-29
+Status: ✅ ACCEPTED — Supersedes DL-025
+Decided by: Hardik Bhaskar
+
+### Question
+DL-025 specified a 1-byte type + 4-byte length (5-byte) TLV header for the Luna Graphics Protocol. The actual implementation in `src/lgp-compositor/protocol/tlv.h` and `tlv.c` uses a 2-byte type + 4-byte length (6-byte) header. Which should be canonical?
+
+### Context
+This discrepancy was identified in the `CODE_AUDIT_REPORT.md` (§1.1) and `ARCHITECTURE_COMPLIANCE_REPORT.md` (§2.1) code audit of 2026-06-29. The 6-byte framing was not a typo — the implementation defines message type constants like `LGP_MSG_ERROR = 0xFFFF` which require a 2-byte type field and cannot fit in 1 byte. The test client was also written to match the 6-byte framing.
+
+### Options Considered
+1. **Revert to 1-byte type field (honor DL-025):** Would require changing message type constants to `uint8_t` values (max 255 message types), redesigning the protocol type namespace, and rewriting `tlv.h`, `tlv.c`, and `test_client.c`. Risk: 255 message types may be too restrictive for a long-lived protocol.
+2. **Accept 2-byte type field and supersede DL-025 (this decision):** Keeps the implementation as-is. Provides 65,535 message types (ample headroom). Aligns with other protocols (e.g. HTTP/2 frame types use 1 byte but have separate opcode namespaces; SPDY, Wayland, and many IPC protocols use ≥2 bytes for type).
+
+### Decision
+Accept the 6-byte TLV header format (2-byte `uint16_t` type + 4-byte `uint32_t` length) as the canonical LGP wire format. DL-025 is superseded by this entry.
+
+### Reasoning
+- The 1-byte type field would immediately limit the protocol to 255 distinct message types. Given the planned scope of LGP (graphics primitives, window management, input events, layer shell, compositor control), 255 types may be reached before the protocol is stable.
+- The implementation is correct and consistent internally. Changing it before any second client is built is low-cost now; changing it later would be breaking.
+- The protocol is append-only and this decision must be made now while no external clients exist.
+
+### Consequences
+- `src/lgp-compositor/protocol/tlv.h`: `LGP_HEADER_SIZE` remains `6`. `lgp_msg_t.type` remains `uint16_t`.
+- `docs/DCKL/Volume III - Graphics & Presence/01_lgp.md`: Update §Wire Format (line 162) to document 2-byte type field.
+- All future LGP clients must use the 6-byte framing.
+- DL-025 marked as: **Status: SUPERSEDED by DL-053**
+
+---
+
+*Document: `00_Foundation/decision_log.md`*
+*Author: Hardik Bhaskar (Luna Kitsune)*
+*This document is append-only.*
 
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Glossary
 **Volume I · Chapter 8**
@@ -2271,7 +2340,7 @@ Reuse identical wording everywhere thereafter
 |---|---|---|
 | **Mahina** | The ground-up Linux-based OS this project builds. Not a distro reskin. | `identity.md` |
 | **LUNA** | The OS's local-first AI presence. Not an assistant, not a mascot — the OS's digital presence. | `identity.md`, `vision.md` |
-| **DCKL** | "The Divine Collection of Knowledge of Mahina" — the name of this documentation project. | System prompt / project structure |
+| **DCKL** | "The Divine Collection of Knowledge about Luna" — the name of this documentation project. | System prompt / project structure |
 | **Luna Kitsune** | Project author identity, Hardik Bhaskar. | All Foundation docs |
 
 ### LUNA-Specific
@@ -2351,12 +2420,8 @@ An AI agent should treat every term in the Current Decisions tables above as fix
 *Author: Hardik Bhaskar (Luna Kitsune)*
 *Version: 0.1-concept*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Identity
 **Volume I · Chapter 3**
@@ -2539,12 +2604,8 @@ These messages are real. They appear during boot. They are part of the product.
 *Author: Hardik Bhaskar (Luna Kitsune)*
 *Version: 0.2-concept*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Living Interface Design
 **Volume I · Chapter 7**
@@ -2772,12 +2833,8 @@ Before implementing any animated, colored, or state-expressing UI element on Mah
 *Version: 0.1-concept*
 *Cross-references: `philosophy.md` (Law III), `core_laws.md` (Law III, Amendments), `luna_personality.md` (Expression Layer), `identity.md` (Luna Island), `decision_log.md` (DL-004R)*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # LUNA — Personality Engine Specification
 **Volume I · Chapter 5**
@@ -3046,12 +3103,8 @@ Error state         → Concerned expression, no prop
 *Author: Hardik Bhaskar (Luna Kitsune)*
 *Version: 0.2-concept*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina Non-Negotiable Decisions
 
@@ -3103,11 +3156,8 @@ Motion communicates state.
 
 Never decorative.
 
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Philosophy
 **Volume I · Chapter 2**
@@ -3254,12 +3304,8 @@ The philosophy is the backbone. Every other decision hangs from it.
 *Author: Hardik Bhaskar (Luna Kitsune)*
 *Version: 0.2-concept*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Vision
 **Volume I · Chapter 1**
@@ -3386,12 +3432,8 @@ Mahina fails if:
 *Version: 0.2-concept*
 *Last updated: See git log*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Architecture Overview
 **Volume II · Chapter 1**
@@ -3775,12 +3817,8 @@ An AI agent implementing Mahina must observe these constraints absolutely:
 *Depends on: vision.md, philosophy.md, core_laws.md, identity.md, decision_log.md, glossary.md, non_negotiables.md*
 *Supersedes: v0.1-draft (contained Wayland/Hyprland references — non-compliant)*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Boot Flow
 **Volume II · Chapter 2**
@@ -4241,12 +4279,8 @@ An AI agent implementing the boot sequence must understand:
 *Depends on: architecture_overview.md, core_laws.md, decision_log.md (DL-002, DL-005, DL-009, DL-015, DL-021), non_negotiables.md*
 *Supersedes: v0.2-draft (Ollama incorrectly placed in boot sequence — DL-021 non-compliant)*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Linux Architecture
 **Volume II · Chapter 3**
@@ -4601,12 +4635,8 @@ An AI agent building Mahina or modifying the kernel configuration must understan
 *Depends on: architecture_overview.md, decision_log.md (DL-001, DL-007, DL-009), core_laws.md, non_negotiables.md*
 *Supersedes: v0.1-draft (referenced Wayland as graphics target — non-compliant)*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Init System
 **Volume II · Chapter 4**
@@ -5124,12 +5154,8 @@ An AI agent implementing `luna-init` must understand:
 *Version: 0.1-draft*
 *Depends on: architecture_overview.md, boot_flow.md, core_laws.md, decision_log.md (DL-002, DL-008), non_negotiables.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Scheduler
 **Volume II · Chapter 5**
@@ -5446,12 +5472,8 @@ An AI agent implementing Mahina scheduling must understand:
 *Depends on: architecture_overview.md, boot_flow.md, linux_architecture.md, init_system.md, core_laws.md (Law III Animation Budget), decision_log.md (DL-021), non_negotiables.md*
 *Supersedes: v0.1-draft (assumed Ollama boot-resident; updated for lazy LLM loading)*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Memory Architecture
 **Volume II · Chapter 6**
@@ -5819,12 +5841,8 @@ An AI agent working on Mahina memory systems must understand:
 *Depends on: architecture_overview.md, linux_architecture.md, scheduler.md, core_laws.md (Law II, IV, V), non_negotiables.md, decision_log.md (DL-008, DL-021, DL-022, DL-023)*
 *Supersedes: v0.1-draft (Ollama assumed boot-resident; memory encryption incorrectly deferred to v2)*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — IPC Architecture
 **Volume II · Chapter 7**
@@ -6171,12 +6189,8 @@ An AI agent implementing any Mahina component that requires IPC must:
 *Version: 0.1-draft*
 *Depends on: architecture_overview.md, init_system.md, core_laws.md (Law I, VI), decision_log.md (DL-008, DL-010), non_negotiables.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Security Architecture
 **Volume II · Chapter 8**
@@ -6524,12 +6538,8 @@ An AI agent implementing any Mahina component must understand:
 *Version: 0.1-draft*
 *Depends on: architecture_overview.md, linux_architecture.md, init_system.md, scheduler.md, memory.md, ipc.md, core_laws.md (Law II, V), non_negotiables.md, decision_log.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Filesystem Architecture
 **Volume II · Chapter 9**
@@ -6895,12 +6905,8 @@ An AI agent creating files in Mahina must:
 *Depends on: architecture_overview.md, init_system.md, memory.md, security.md, core_laws.md (Law I, VI), decision_log.md (DL-008, DL-011, DL-012, DL-017), non_negotiables.md*
 *Supersedes: v0.1-draft (EFI layout undecided, per-user install not documented)*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Networking Architecture
 **Volume II · Chapter 10**
@@ -7175,12 +7181,8 @@ An AI agent implementing Mahina networking must understand:
 *Depends on: architecture_overview.md, linux_architecture.md, init_system.md, security.md, ipc.md, core_laws.md (Law II, V), decision_log.md (DL-013, DL-014, DL-015), non_negotiables.md*
 *Supersedes: v0.1-draft (DNS and NTP open questions now resolved)*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Logging Architecture
 **Volume II · Chapter 11**
@@ -7498,12 +7500,8 @@ An AI agent implementing any Mahina component must understand:
 *Version: 0.1-draft*
 *Depends on: architecture_overview.md, boot_flow.md, init_system.md, core_laws.md (Law I, V), non_negotiables.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Kernel/User Boundary
 **Volume II · Chapter 12**
@@ -7871,12 +7869,8 @@ Decision not yet finalized.
 *Classification: Canonical — boundary definitions here take precedence over any volume-local assumptions*
 *Cross-references: all Volume II–V documents. Every component's layer assignment is defined here.*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Component Ownership Matrix
 **Volume II · Chapter 13**
@@ -8167,12 +8161,8 @@ Decision not yet finalized.
 *Addresses: BLOCKER 3 (IPC ownership gaps)*
 *Cross-references: 08_ipc.md, 03_compositor.md, 04_init_system.md, non_negotiables.md, decision_log.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Luna Graphics Protocol (LGP)
 **Volume III · Chapter 1**
@@ -8335,7 +8325,15 @@ document decides otherwise.
 
 ### Message Format
 
-Per **DL-025**, LGP uses **TLV (Type-Length-Value)** binary framing for all wire messages. Each message consists of a 1-byte type field, a 4-byte length field, and an N-byte payload. No external serialization framework is required. This provides append-compatible message evolution, excellent hex-dump debuggability, and a minimal parser footprint.
+Per **DL-053** (superseding DL-025), LGP uses **TLV (Type-Length-Value)** binary framing for all wire messages. Each message consists of:
+
+| Field  | Size    | Type       | Notes |
+|--------|---------|------------|-------|
+| `type` | 2 bytes | `uint16_t` | Message type identifier — 65,535 distinct types |
+| `length` | 4 bytes | `uint32_t` | Total message length including the 6-byte header |
+| `payload` | N bytes | — | Message body; `length - 6` bytes |
+
+The 2-byte type field was chosen over the originally planned 1-byte field (DL-025) because message type constants like `LGP_MSG_ERROR = 0xFFFF` require 16-bit addressing, and the LGP type namespace is expected to grow beyond 255 distinct values as graphics primitives, input events, and compositor control messages are added. No external serialization framework is required. This provides append-compatible message evolution, excellent hex-dump debuggability, and a minimal parser footprint.
 
 ### Core Message Types (Conceptual)
 
@@ -8363,6 +8361,22 @@ Even without a final wire format, the following message categories are architect
 | `LGP_SURFACE_LEAVE` | Surface has left a display output |
 | `LGP_INPUT_EVENT` | Keyboard, pointer, or touch event for this surface |
 | `LGP_COMPOSITOR_ERROR` | Protocol error notification |
+
+### Implemented Phase 2 Surface Messages
+
+The current Phase 2 compositor implements the minimum direct-LGP surface path:
+
+| Message | Type | Payload |
+|---|---:|---|
+| `LGP_CREATE_SURFACE` | `0x0100` | `u32 surface_type, i32 x, i32 y, u32 width, u32 height, u32 layer` |
+| `LGP_CREATE_SURFACE_REPLY` | `0x0101` | `u32 status, u32 surface_id` |
+| `LGP_DESTROY_SURFACE` | `0x0102` | `u32 surface_id` |
+| `LGP_COMMIT_BUFFER` | `0x0103` | `u32 surface_id, u32 width, u32 height, u32 stride, u32 pixel_format, u32 byte_size` |
+
+All fields are little-endian. `LGP_COMMIT_BUFFER` carries the shared-memory
+file descriptor through `SCM_RIGHTS` on the same Unix socket message. The only
+accepted pixel format in the Phase 2 software renderer is `XRGB8888`
+(`0x34325258`, DRM `XR24`). One committed buffer is tracked per surface.
 
 ### The Frame Callback Model
 
@@ -8639,7 +8653,7 @@ This section documents how LGP implements the conceptual contract defined in `li
 | Compositor owns DRM device exclusively | This document | Accepted |
 | Frame timing: compositor-driven callback model | This document | Accepted |
 | Surface types: SYSTEM_CHROME, LUNA_ISLAND, APPLICATION_WINDOW, CANVAS_SURFACE | This document | Provisional |
-| LGP wire format: TLV binary, custom schema | DL-025 | Accepted |
+| LGP wire format: TLV binary 6-byte header (2-byte type + 4-byte length) | DL-053 (supersedes DL-025) | Accepted |
 | GPU backend: Vulkan primary, OpenGL/EGL fallback | DL-026 | Accepted |
 ---
 
@@ -8677,7 +8691,7 @@ An AI agent implementing any Mahina graphical component must understand:
 - **Motion Vocabulary enforcement is at the protocol level.** `LGP_SEND_MOTION` takes a motion class from the locked vocabulary in `core_laws.md`. There is no "custom animation" class. If the required animation is not in the vocabulary, it requires the amendment process before it can be specified.
 - **Animation Budget is enforced by the compositor.** Applications do not need to self-enforce the budget. The compositor will auto-complete over-budget animations. Applications should still respect the budget in their design — an animation that always gets cut off is a design error, not a compositor feature.
 - **LunaGUI is the correct interface for application development.** Direct LGP should only be used for game engines, video renderers, or other components that genuinely need raw surface access. A settings panel written with direct LGP instead of LunaGUI is a misuse of the protocol.
-- **The wire format is TBD.** Do not implement LGP message parsing until the wire format Decision Log entry is recorded. Use stubs or interface definitions that can be filled in once the format is decided.
+- **The wire format uses a 6-byte TLV header.** Per DL-053: 2-byte `uint16_t` type + 4-byte `uint32_t` length. Implementations must use `LGP_HEADER_SIZE = 6`. Do not use the 5-byte format from the superseded DL-025.
 - **luna-island is the reference implementation of Living Interface.** When implementing any other animated surface, its behavior should be derivable from the same LGP primitives that luna-island uses.
 
 ---
@@ -8688,12 +8702,8 @@ An AI agent implementing any Mahina graphical component must understand:
 *Depends on: living_interface_design.md, core_laws.md (Law III), non_negotiables.md, decision_log.md (DL-004R), identity.md*
 *Informs: 02_rendering_pipeline.md, 03_compositor.md, 04_lunagui.md, 05_animation_engine.md, 06_theme_engine.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Rendering Pipeline
 **Volume III · Chapter 2**
@@ -9055,12 +9065,8 @@ An AI agent implementing the Mahina rendering pipeline must understand:
 *Depends on: 01_lgp.md, core_laws.md (Law III — Animation Budget), living_interface_design.md, decision_log.md (DL-004R), linux_architecture.md*
 *Informs: 03_compositor.md, 05_animation_engine.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — LGP Compositor
 **Volume III · Chapter 3**
@@ -9437,12 +9443,8 @@ An AI agent implementing or interacting with the LGP compositor must understand:
 *Depends on: 01_lgp.md, 02_rendering_pipeline.md, living_interface_design.md, core_laws.md (Law III), boot_flow.md (Stage 5), scheduler.md (luna-compositor.slice), security.md, non_negotiables.md*
 *Informs: 04_lunagui.md, 05_animation_engine.md, Volume IV (luna-island compositor surface)*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — LunaGUI Toolkit
 **Volume III · Chapter 4**
@@ -9893,12 +9895,8 @@ An AI agent building a LunaGUI application must understand:
 *Depends on: 01_lgp.md, 03_compositor.md, living_interface_design.md, core_laws.md (Law III), non_negotiables.md, decision_log.md (DL-004R)*
 *Informs: 05_animation_engine.md, 06_theme_engine.md, Volume V (all userland applications)*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Animation Engine
 **Volume III · Chapter 5**
@@ -10212,12 +10210,8 @@ An AI agent implementing animated UI elements must understand:
 *Depends on: 01_lgp.md, 02_rendering_pipeline.md, 03_compositor.md, core_laws.md (Law III — Animation Budget, Motion Vocabulary), living_interface_design.md, luna_personality.md*
 *Informs: 06_theme_engine.md, Volume IV (LUNA expression system), Volume V (Performance Lab animation controls)*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Theme Engine
 **Volume III · Chapter 6**
@@ -10277,7 +10271,7 @@ This is a deliberate constraint. Mahina's "presence" identity comes partly from 
 
 ### The default theme is the canonical reference
 
-The default theme ("Luna Dark") defines the canonical hex values that all other Mahina documentation refers to when it says "LUNA Green (#2EFF8A)" etc. If a user applies a different theme, those hex values change on their screen — but the semantic meaning does not.
+The default theme ("Animexcyberpunk") defines the canonical hex values that all other Mahina documentation refers to when it says "LUNA Green (#2EFF8A)" etc. If a user applies a different theme, those hex values change on their screen — but the semantic meaning does not.
 
 ### Dark mode is the default
 
@@ -10302,10 +10296,10 @@ Mahina themes are defined in TOML files (DL-008 — TOML is the system configura
 
 ```toml
 # /usr/share/luna/themes/luna-dark/theme.toml
-# Official Mahina default theme — Luna Dark
+# Official Mahina default theme — Animexcyberpunk (supersedes Luna Dark)
 
 [meta]
-name        = "Luna Dark"
+name        = "Animexcyberpunk"
 author      = "Mahina Project"
 version     = "1.0"
 base        = "dark"    # "dark" or "light" — affects default contrast assumptions
@@ -10648,12 +10642,8 @@ An AI agent implementing UI components for Mahina must understand:
 *Depends on: 01_lgp.md, 03_compositor.md, 04_lunagui.md, core_laws.md (Law III — Color Semantic Contract), living_interface_design.md, decision_log.md (DL-008)*
 *Informs: Volume IV (Luna Island theming), Volume V (Settings / theme picker application)*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Luna Island
 **Volume III · Chapter 7**
@@ -10664,9 +10654,11 @@ An AI agent implementing UI components for Mahina must understand:
 
 ## Purpose
 
-Luna Island is the **physical location of LUNA's presence on screen**. It is the one graphical element on the Mahina desktop that LUNA owns and inhabits. It is not a widget, not a notification banner, not a status icon. It is the rendered body of LUNA as a presence.
+Luna Island is the **physical location of LUNA's presence on screen**. 
 
-This document specifies:
+Additionally, the entire desktop environment itself is conceptually named **"Luna Island"**—a floating digital sanctuary where the background is your active island (rendered via dynamic wallpaper shaders, changing with day/night cycles, dynamic weather, moving clouds, and falling rain), where widgets float, and LUNA's primary circular presence indicator sits as a focal point.
+
+This document specifies the presence indicator and interactive surfaces:
 - What Luna Island is and what it renders
 - Its three visual states and transitions
 - Its surface architecture as an LGP client
@@ -11166,12 +11158,8 @@ Decision not yet finalized.
 *Depends on: 01_lgp.md, 03_compositor.md, 05_animation_engine.md, 06_theme_engine.md, Volume IV/00_luna_runtime.md, DL-034, DL-044*
 *Informs: Volume IV/01_presence_engine.md, Volume V/01_shell.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Window Objects
 **Volume III · Chapter 8**
@@ -11585,12 +11573,8 @@ Decision not yet finalized.
 *Depends on: 01_lgp.md, 03_compositor.md, 07_luna_island.md, DL-034, DL-035*
 *Informs: Volume V/01_shell.md, Volume III/09_visual_language.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Visual Language
 **Volume III · Chapter 9**
@@ -11644,18 +11628,16 @@ These three words are the test for every visual decision: if a proposed design e
 
 ### Foundation: Dark Environment
 
-Mahina v1 ships **Luna Dark** as its only built-in theme (DL-039). All color decisions are made for dark environments first. The dark environment is not a constraint — it is the designed state.
+Mahina v1 ships **Animexcyberpunk** as its default built-in theme (DL-039). All color decisions are made for dark environments first. The dark environment is not a constraint — it is the designed state.
 
 ```
-Luna Dark color environment:
+Animexcyberpunk color environment:
 
-  Void Black    #0A0A0F   — Deepest background (void of space)
-  Deep Navy     #0D0D1A   — Secondary background layer
-  Surface Dark  #12121E   — Card and panel surfaces
-  Surface Mid   #1A1A2E   — Elevated surfaces (hover states)
-  Surface High  #22223A   — Highest surface (tooltips, modals)
-  Border Dim    #2A2A4A   — Subtle borders, dividers
-  Border Active #3D3D6B   — Active / focused borders
+  Deep Space    #0A0A0F   — Base background
+  Glassmorphic  #15141B   — Panel background
+  Neon Magenta  #E03E8A   — Primary Accent highlight
+  Purple        #8A2BE2   — Secondary gradient & border
+  Cyan          #00F0FF   — Highlight / info text
 ```
 
 ### Semantic Colors
@@ -11855,14 +11837,11 @@ The Luna Dark visual identity is built on **depth through transparency** — the
 ```
 Glass effect specification:
 
-  Background blur:     backdrop-filter: blur(20px)
-  Background tint:     rgba(13, 13, 26, 0.75)  — dark navy at 75% opacity
+  Background blur:     backdrop-filter: blur(20px) (Windows 11 level)
+  Background tint:     rgba(10, 10, 15, 0.15)  — Deep Space at 15% opacity (Dark Acrylic)
   Border:              1px solid rgba(255, 255, 255, 0.08)
   Inner highlight:     1px solid rgba(255, 255, 255, 0.04) on top edge only
   Shadow:              Elevation 1–3 depending on surface
-
-Visual result: surfaces appear to float over the content beneath them,
-               with depth communicated by blur intensity and shadow size.
 ```
 
 ```
@@ -12106,12 +12085,8 @@ Font stack:
 *Depends on: 05_animation_engine.md, 06_theme_engine.md, 07_luna_island.md, DL-028, DL-039, DL-050, DL-051, AP-001*
 *Informs: All Volume V UI components, Volume VI coding standards for UI*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — LUNA Runtime
 **Volume IV · Chapter 0**
@@ -12521,12 +12496,8 @@ Implementation constraints for luna-ai-d v1:
 *Depends on: non_negotiables.md, decision_log.md (DL-021, DL-023, DL-049), identity.md, luna_personality.md, 06_memory.md, 08_ipc.md*
 *Informs: All Volume IV documents (context engine, memory engine, conversation, inference)*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Presence Engine
 **Volume IV · Chapter 1**
@@ -13023,12 +12994,8 @@ Decision not yet finalized.
 *Depends on: Volume IV/00_luna_runtime.md, non_negotiables.md, DL-022, AP-002*
 *Informs: Volume IV/03_context_engine.md, Volume IV/04_memory_engine.md, Volume III/07_luna_island.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Personality Engine
 **Volume IV · Chapter 2**
@@ -13573,12 +13540,8 @@ These items are carried forward from `luna_personality.md`:
 *Depends on: Volume IV/00_luna_runtime.md, Volume IV/01_presence_engine.md, luna_personality.md*
 *Informs: Volume IV/03_context_engine.md, Volume IV/06_conversation_rules.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Context Engine
 **Volume IV · Chapter 3**
@@ -14045,12 +14008,8 @@ Decision not yet finalized.
 *Depends on: Volume IV/00_luna_runtime.md, Volume IV/01_presence_engine.md, Volume IV/02_personality_engine.md*
 *Informs: Volume IV/04_memory_engine.md, Volume IV/06_conversation_rules.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Memory Engine
 **Volume IV · Chapter 4**
@@ -14463,12 +14422,8 @@ Decision not yet finalized.
 *Depends on: Volume IV/00_luna_runtime.md, Volume IV/01_presence_engine.md, Volume IV/03_context_engine.md, DL-023*
 *Informs: Volume IV/05_permission_engine.md, Volume V/08_sdk.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Permission Engine
 **Volume IV · Chapter 5**
@@ -14828,12 +14783,8 @@ Decision not yet finalized.
 *Depends on: Volume IV/00_luna_runtime.md, non_negotiables.md, DL-020, Core Laws II & V*
 *Informs: Volume IV/09_automation.md, Volume V/08_sdk.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Conversation Rules
 **Volume IV · Chapter 6**
@@ -15277,12 +15228,8 @@ Decision not yet finalized.
 *Depends on: Volume IV/00_luna_runtime.md, Volume IV/02_personality_engine.md, Volume IV/03_context_engine.md, Volume IV/04_memory_engine.md*
 *Informs: Volume IV/07_voice.md, Volume V/08_sdk.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Voice Module
 **Volume IV · Chapter 7**
@@ -15630,12 +15577,8 @@ Decision not yet finalized.
 *Depends on: Volume IV/00_luna_runtime.md, Volume IV/02_personality_engine.md, Volume IV/05_permission_engine.md, DL-041*
 *Informs: Volume IV/08_vision.md, Volume V/08_sdk.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Vision Module
 **Volume IV · Chapter 8**
@@ -15937,12 +15880,8 @@ Decision not yet finalized.
 *Depends on: Volume IV/00_luna_runtime.md, Volume IV/05_permission_engine.md, Volume III/01_lgp.md, Core Law II*
 *Informs: Volume V/08_sdk.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Automation Engine
 **Volume IV · Chapter 9**
@@ -16276,12 +16215,8 @@ Decision not yet finalized.
 *Depends on: Volume IV/00_luna_runtime.md, Volume IV/02_personality_engine.md, Volume IV/05_permission_engine.md*
 *Informs: Volume V/08_sdk.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — AI Models
 **Volume IV · Chapter 10**
@@ -16749,12 +16684,8 @@ Recommended hardware for good AI experience:
 *Depends on: Volume IV/00_luna_runtime.md, DL-006, DL-026, DL-042, DL-046, DL-047*
 *Informs: Volume VII/implementation_roadmap.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Shell
 **Volume V · Chapter 1**
@@ -16787,7 +16718,7 @@ luna-shell process and its surfaces:
   │                        luna-shell                            │
   │                                                               │
   │  Surfaces owned:                                              │
-  │   WALLPAPER surface   (layer 100)  — desktop background      │
+  │   WALLPAPER surface   (layer 100)  — Luna Island dynamic background (Live-Wallpapers rendering the floating island)      │
   │   SHELL_PANEL surface (layer 200)  — luna-bar (top)          │
   │   SHELL_PANEL surface (layer 200)  — luna-dock (bottom)      │
   │   APPLICATION_WINDOW  (layer 300)  — launcher panel          │
@@ -16863,7 +16794,9 @@ luna-shell startup (called by luna-init in Stage 6):
 
 ---
 
-## Wallpaper System
+## Wallpaper System (Live-Wallpapers)
+
+The wallpaper system is powered by the shell's background rendering engine. Instead of a simple static background, the desktop background is conceived as **"Luna Island"**—a floating digital sanctuary that changes dynamically.
 
 ### Wallpaper Configuration
 
@@ -16871,35 +16804,22 @@ luna-shell startup (called by luna-init in Stage 6):
 # ~/.luna/config/wallpaper.toml
 
 [wallpaper]
-mode    = "image"      # "image" | "color" | "procedural" (v1.5)
-source  = "~/.luna/wallpapers/default.png"
-scale   = "fill"       # "fill" | "fit" | "center" | "tile"
-color   = "#0A0A0F"    # fallback color if image fails to load
+mode    = "shader"     # "static" | "video" | "animated" | "shader" | "live2d" | "slideshow"
+theme   = "animexcyberpunk"
+live_wallpaper = true  # Live-Wallpapers enabled by default
 
-# Per-display wallpaper (optional — uses default if not specified)
-[[wallpaper.displays]]
-output_name = "DP-1"
-source      = "~/.luna/wallpapers/wide.png"
+# Time & weather triggers map to dynamic GLSL shaders or video loops
+[wallpaper.dynamic]
+morning_shader   = "/usr/share/luna/shaders/island_morning.glsl"
+afternoon_shader = "/usr/share/luna/shaders/island_afternoon.glsl"
+night_shader     = "/usr/share/luna/shaders/island_night.glsl"
+rain_overlay     = "/usr/share/luna/shaders/rain_overlay.glsl"
+snow_overlay     = "/usr/share/luna/shaders/snow_overlay.glsl"
 ```
 
 ### Wallpaper Render Path
 
-```
-Wallpaper rendering:
-
-  Image mode:
-    Load PNG/JPEG/WebP via stb_image (or libpng + libjpeg)
-    Scale to display resolution using bilinear interpolation
-    Write to WALLPAPER surface shared memory buffer
-    Commit via LGP_COMMIT_BUFFER
-
-  Color mode:
-    Fill surface buffer with solid color (hex from config)
-    No image loading required
-
-  Fallback (image load fails):
-    Fill with #0A0A0F (Void Black from visual language spec)
-    Log error: "Wallpaper load failed: [path] — using fallback"
+The shell runs a background thread that manages rendering. The wallpaper engine compiles GLSL/WebGPU shaders or decodes video loops (e.g. H.264), mapping them directly to the `WALLPAPER` LGP surface buffer. Day/night switching and dynamic weather overlays (clouds, rain, snow, or festival fireworks) are rendered on top of the active base shader.
 ```
 
 ---
@@ -16913,7 +16833,7 @@ luna-bar surface:
   Position: top edge of display
   Size:     display_width × 32px
   Layer:    SHELL_PANEL (200)
-  Style:    Glass effect (dark navy tint, no backdrop blur in Stage 2)
+  Style:    Dark Acrylic glass effect (Void Black background with 10-20% opacity, Windows 11 level backdrop blur)
 ```
 
 ### Layout
@@ -16921,16 +16841,13 @@ luna-bar surface:
 ```
 luna-bar layout (32px height):
 
-  ┌──────────────────────────────────────────────────────────────┐
-  │  [  ]  Mahina        App Name — Window Title      🌐 🔋 🔊 13:31 │
-  │  ↑                   ↑                            ↑          │
-  │  Super key           Active window title          System tray│
-  │  (opens launcher)                                 + clock    │
-  └──────────────────────────────────────────────────────────────┘
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │ 🌙 MahinaOS | Luna Island | Workspace 1       12:00 AM       🌐 🔋 🔊 ⚡   ⏻ │
+  └─────────────────────────────────────────────────────────────────────────────┘
 
-  Left zone:    Luna icon / super key affordance (32×32px)
-  Center zone:  Active application name + window title (dynamic)
-  Right zone:   System tray icons + clock
+  Left zone:    Mahina logo + Workspace Switcher + Current Workspace Label
+  Center zone:  Clock + Date + Calendar popup + Weather
+  Right zone:   System tray icons (Network, Bluetooth, Audio, Brightness, Battery, Updates, AI status, VPN, Notifications, Profile, Power menu)
 ```
 
 ### System Tray Icons (v1)
@@ -16954,35 +16871,20 @@ show_date_on_hover = true
 
 ---
 
-## luna-dock (Application Dock)
+## Docks
 
-### Geometry
+luna-dock layouts:
 
-```
-luna-dock surface:
-  Position: bottom edge of display
-  Size:     display_width × 64px
-  Layer:    SHELL_PANEL (200)
-  Style:    Glass effect
-```
+### Left Dock (Application Launcher)
+Houses launchers for system tools and user applications:
+- **Default Apps**: Terminal, Files, Browser, Editor, Settings, Tasks, Music, Apps launcher.
+- **Expanded Apps**: Calculator, Store, AI panel, Camera, Photos, Discord, Steam, System Monitor, VM Manager, Package Manager, Developer Hub.
+- **Features**: Hover magnification/scale animation, active running indicators, pin/unpin options, drag-and-drop reordering, right-click context menus, recent files, and jump lists.
 
-### Layout
-
-```
-luna-dock layout (64px height, horizontal):
-
-  ┌───────────────────────────────────────────────────────────────┐
-  │  [App1] [App2] [App3]  |  [Running1] [Running2]  |  [Trash]  │
-  │   ↑ Pinned apps           ↑ Open windows             ↑ Misc  │
-  └───────────────────────────────────────────────────────────────┘
-
-  Left section:  Pinned applications (user-configured)
-  Divider:       1px vertical separator
-  Center section: Currently open application windows (dynamic)
-  Divider:       1px vertical separator
-  Right section: Utility icons (Trash, etc.)
-
-  Each dock icon: 48×48px with 8px padding = 64px total slot
+### Bottom Dock (Quick Launcher & Running Apps)
+A floating bar matching the top bar aesthetic:
+- **Features**: Auto-hide when windows overlap, dark acrylic blur, bounce animation on app launch, live indicators for window count.
+- **Geometry**: display_width × 64px, Layer: SHELL_PANEL (200).
 ```
 
 ### Dock Icon States
@@ -17108,6 +17010,26 @@ void shell_launch_app(const char *app_id) {
 ```
 
 ---
+
+## Desktop Widgets & Panels
+
+### Music Widget
+Shows now playing metadata (Album art, Artist, Controls, Lyrics sheet, audio visualizer, local queue, and Spotify integration).
+
+### System Monitor
+Tracks CPU, RAM, VRAM, GPU, Disk I/O, Temperature, Network speeds, Battery status, and local AI service load.
+
+### Calendar & Scheduler
+Provides a monthly layout, today's focus tasks, upcoming meetings, local weather alerts, and active Moon Phase indicator (🌙).
+
+### Notification Center
+Organizes grouped notifications with action buttons (Dismiss, Inline Reply, Progress bars for downloads, Clipboard history panel, and screenshot previews).
+
+### AI Widget ("Luna")
+A personalized dashboard (e.g. *"Good Evening Hardik. Today's Focus: Continue LGP, 2 Issues, 1 Pending Build. [Continue Session]"*).
+
+### Screenshot & OCR Tool
+A desktop utility that captures regions, windows, or full desktops, records screens (GIFs/video), and uses OCR to copy text directly to the clipboard.
 
 ## Window Management
 
@@ -17341,12 +17263,8 @@ Decision not yet finalized.
 *Depends on: Volume II/01_architecture_overview.md, Volume II/02_boot_flow.md, Volume III/03_compositor.md, Volume III/08_window_objects.md, DL-004R, DL-035*
 *Informs: Volume V/05_core_applications.md, Volume V/06_installer.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Terminal
 **Volume V · Chapter 2**
@@ -17741,12 +17659,8 @@ Decision not yet finalized.
 *Depends on: Volume III/04_lunagui.md, Volume III/09_visual_language.md, Volume IV/01_presence_engine.md, DL-022, DL-029*
 *Informs: Volume V/08_sdk.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Package Manager (lpkg)
 **Volume V · Chapter 3**
@@ -18261,12 +18175,8 @@ GPG is not used anywhere in the Mahina toolchain.
 *Depends on: DL-003, DL-016, DL-017, DL-018, DL-019, DL-027, DL-048, Volume II/09_filesystem.md*
 *Informs: Volume V/06_installer.md, Volume V/07_updater.md, Volume VI/07_release_process.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Public APIs
 **Volume V · Chapter 4**
@@ -18686,12 +18596,8 @@ Decision not yet finalized.
 *Depends on: Volume III/01_lgp.md, Volume II/07_ipc.md, Volume IV/00_luna_runtime.md*
 *Informs: Volume V/08_sdk.md, Volume VI/02_ai_coding_guidelines.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Core Applications
 **Volume V · Chapter 5**
@@ -18722,6 +18628,7 @@ v1 Core Applications:
     lgp-compositor   — graphics compositor (Volume III/03)
     luna-ai-d        — AI presence daemon (Volume IV/00)
     luna-lock        — screen lock (DL-035)
+    luna-screenshot  — screenshot and OCR utility
 
   Desktop Layer:
     luna-shell       — desktop shell, launcher, workspaces (Volume V/01)
@@ -18890,7 +18797,7 @@ luna-settings navigation:
     └── Night light (color temperature)
 
   ● Appearance
-    ├── Theme (Luna Dark only in v1)
+    ├── Theme (Animexcyberpunk default)
     ├── Font sizes (density: compact / regular)
     └── Cursor
 
@@ -18959,7 +18866,7 @@ luna-text is the default text editor. It handles plain text, Markdown, and code 
 - Line numbers, word wrap toggle
 - Find and replace
 - Multiple tabs
-- Dark theme by default (Luna Dark)
+- Cyberpunk Dark theme by default
 
 ### Features (v1.5)
 
@@ -19091,12 +18998,8 @@ Decision not yet finalized.
 *Depends on: Volume V/01_shell.md, Volume III/09_visual_language.md, DL-035*
 *Informs: Volume V/06_installer.md, Volume VI/01_coding_standards.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Installer
 **Volume V · Chapter 6**
@@ -19152,6 +19055,19 @@ The installer runs as a full LunaGUI application with a restricted desktop envir
 - luna-installer as the only application window (FULLSCREEN)
 - No luna-shell, no luna-dock, no luna-bar
 - luna-ai-d in a limited mode (no LLM, presence-only)
+
+### Setup Experience Rule
+
+Mahina setup is GUI-first. The supported user-facing install path is the
+full-screen LunaGUI installer described in this document, with guided automatic
+partitioning as the default. Terminal-only setup is reserved for emergency
+recovery, development shells, and debugging; it is not the primary install
+experience and must not become the normal user flow.
+
+The implementation order is:
+1. Prove LGP surface creation and shared-memory commits in `lgp-compositor`.
+2. Build the LunaGUI client library on top of LGP.
+3. Build `luna-installer` as a LunaGUI application using the screen flow below.
 
 ```
 Installer system services (running during install):
@@ -19552,12 +19468,8 @@ Decision not yet finalized.
 *Depends on: Volume II/09_filesystem.md, Volume V/01_shell.md, Volume V/03_package_manager.md, DL-005, DL-022, DL-027, DL-046, DL-047*
 *Informs: Volume V/07_updater.md, Volume VI/06_milestones.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Updater
 **Volume V · Chapter 7**
@@ -19911,12 +19823,8 @@ Decision not yet finalized.
 *Depends on: Volume V/03_package_manager.md, Volume II/09_filesystem.md, DL-001, DL-018, DL-027*
 *Informs: Volume VI/07_release_process.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Developer SDK
 **Volume V · Chapter 8**
@@ -20424,12 +20332,8 @@ Decision not yet finalized.
 *Depends on: Volume V/04_apis.md, Volume III/04_lunagui.md, Volume III/09_visual_language.md, Volume IV/05_permission_engine.md*
 *Informs: Volume VI/01_coding_standards.md, Volume VI/02_ai_coding_guidelines.md*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Coding Standards
 **Volume VI · Chapter 01**
@@ -20448,9 +20352,11 @@ Mahina targets resource-constrained hardware (v1). Memory efficiency, determinis
 
 ## Language Scope
 
-- **Systems & Graphics (Stage 0–3):** C17
-- **AI Runtime (Stage 4):** C17 (v1), Rust (v2 migration)
-- **Tooling:** Shell, Python (v1 build scripts)
+- **Bootloader:** Assembly + C
+- **Kernel & Core Init (Stage 0-1):** C17
+- **Compositor & Protocol (Stage 2-3):** C17
+- **Desktop & Userland (Above Compositor):** Rust
+- **Tooling:** Shell, Python (build helper scripts)
 - **C++ is forbidden** in the Mahina base system.
 
 ---
@@ -20533,12 +20439,8 @@ To mitigate the inherent risks of C17 in highly privileged daemons (`luna-init`,
 *Author: Hardik Bhaskar (Luna Kitsune)*
 *Status: Active*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — AI Coding Guidelines
 **Volume VI · Chapter 02**
@@ -20597,12 +20499,8 @@ If a feature requires a structural decision (e.g., choosing a protocol, selectin
 *Author: Hardik Bhaskar (Luna Kitsune)*
 *Status: Active*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Architecture Rules
 **Volume VI · Chapter 03**
@@ -20653,12 +20551,8 @@ The boot sequence must be predictable.
 *Author: Hardik Bhaskar (Luna Kitsune)*
 *Status: Active*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Benchmarks & Performance Targets
 **Volume VI · Chapter 04**
@@ -20736,12 +20630,8 @@ The base system must leave room for the AI model and user applications.
 *Author: Hardik Bhaskar (Luna Kitsune)*
 *Status: Active*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Testing Standards
 **Volume VI · Chapter 05**
@@ -21011,12 +20901,8 @@ If a PR causes any benchmark to regress by > 10% from baseline:
 *Depends on: 01_coding_standards.md, 04_benchmarks.md, DL-049*
 *Informs: Volume VII/implementation_roadmap.md, CI pipeline configuration*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Milestones & Stage Definitions
 **Volume VI · Chapter 06**
@@ -21267,12 +21153,8 @@ Do not begin Stage N+1 until Stage N exit criteria are all verified.
 *Depends on: 04_benchmarks.md, Volume VII/implementation_roadmap.md, decision_log.md*
 *Informs: All implementation work — read this before picking up a task*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Release Process
 **Volume VI · Chapter 07**
@@ -21559,12 +21441,8 @@ This includes automated CI releases — the pipeline may build the artifact but 
 *Depends on: 04_benchmarks.md, 06_milestones.md, DL-048 (Ed25519 signing)*
 *Informs: Distribution infrastructure, GitHub Actions pipeline*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Contributing Guidelines
 **Volume VI · Chapter 08**
@@ -21630,12 +21508,8 @@ Do not submit "placeholder" UI. If you are building a LunaGUI component, it must
 *Author: Hardik Bhaskar (Luna Kitsune)*
 *Status: Active*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Implementation Roadmap
 **Volume VII · Chapter 1**
@@ -22406,12 +22280,8 @@ All blocking decisions for v1.0 implementation are resolved. The two remaining o
 *Status: Living document — updated with every completed milestone*
 *This document is the daily engineering reference. If you are writing code not listed here, you are either ahead of schedule or off course.*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Versioning Policy
 **Volume VII · Chapter 2**
@@ -22625,12 +22495,8 @@ The following are **frozen** between MAJOR releases:
 *Depends on: Volume VI/07_release_process.md, DL-025 (LGP format)*
 *Informs: All engineering decisions involving API design and compatibility*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Hardware Compatibility Matrix
 **Volume VII · Chapter 3**
@@ -22879,12 +22745,8 @@ These numbers are estimates. Actual performance depends on CPU cache, memory ban
 *Depends on: DL-046 (Qwen2.5 3B resource requirements), Volume VI/04_benchmarks.md*
 *Informs: Volume V/06_installer.md (minimum requirements), marketing and release notes*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Security Review Checklist
 **Volume VII · Chapter 4**
@@ -23233,12 +23095,8 @@ No item is marked [x] without verifiable evidence.
 *Depends on: DL-048 (Ed25519), DL-023 (memory encryption), Volume VI/05_testing_standards.md*
 *Must be completed: Before every stable release. Before every RC candidate publication.*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina — Dependency Audit
 **Volume VII · Chapter 5**
@@ -23639,12 +23497,8 @@ Prohibited:
 *Depends on: DL-007, DL-046, DL-048, DL-049, DL-050, DL-051*
 *Must be updated: Any time a dependency is added, removed, or version-bumped*
 
-
----
-
-
-
 <div style="page-break-after: always"></div>
+
 
 # Mahina v1.0 — Known Issues & Limitations
 **Volume VII · Chapter 6**
@@ -23820,7 +23674,3 @@ If you discover an issue not listed here:
 *Author: Hardik Bhaskar (Luna Kitsune)*
 *Version: 1.0*
 *This document is updated with every release. Check the version in the release notes to confirm you are reading the correct edition.*
-
-
----
-

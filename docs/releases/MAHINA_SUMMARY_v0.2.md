@@ -10,7 +10,7 @@ Mahina OS is a ground-up Linux-based operating system: custom kernel configurati
 
 **Philosophy** rests on three non-negotiable laws: *Own Every Layer* (no borrowed base, no mystery components), *Local First, Cloud When Useful* (the system must work fully offline; cloud AI is opt-in only), and *Aesthetic Is Functional* (visual polish is treated as information density, not decoration).
 
-**Long-term vision**: an OS that feels like a collaborator rather than a tool — a dark cyberpunk, anime-influenced aesthetic combined with an AI presence (LUNA) that observes and assists without being asked. The project is documentation-first: architecture is written into the DCKL (Document Control Knowledge Library) before code is allowed to exist.
+**Long-term vision**: an OS that feels like a collaborator rather than a tool — a dark cyberpunk, anime-influenced aesthetic combined with an AI presence (LUNA) that observes and assists without being asked. The project is documentation-first: architecture is written into the DCKL (Divine Collection of Knowledge about Luna) before code is allowed to exist.
 
 ---
 

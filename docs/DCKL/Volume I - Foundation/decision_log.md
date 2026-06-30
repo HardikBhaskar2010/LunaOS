@@ -1463,6 +1463,34 @@ The goal of Mahina is to rethink OS architecture, not to restrict how people use
 
 ---
 
+## [DL-054] Userland Technology Stack: Rust Transition Above Compositor
+Date: 2026-06-30
+Status: ✅ ACCEPTED
+Decided by: Hardik Bhaskar
+
+### Question
+What programming language policy should Mahina enforce across the different layers of the operating system?
+
+### Options Considered
+- **Everything in C**: Uniformity, minimal dependency footprint, standard systems language, but high risk of memory-safety issues in complex userland applications (shell, editor, file manager).
+- **Rust for everything**: Hard to boot (kernel/bootloader in Rust requires a complex runtime setup for early stages), but excellent security.
+- **Assembly/C for Boot/Core, Rust for Userland (this decision)**: Restrict C to low-level stages where necessary (Bootloader, Kernel, Init manager, Compositor, LGP Protocol), and write everything above the compositor layer (desktop shell, applications, widgets, background services) in Rust.
+
+### Decision
+Adopt the hybrid stack: Assembly + C for the Bootloader, C for the Kernel, `luna-init` (init system), `lgp-compositor`, and the LGP protocol definitions. Transition all components residing above the compositor layer to Rust.
+
+### Reasoning
+- Core components like the bootloader, kernel, init, and compositor need direct hardware access, absolute minimum footprint, and low-level system call integration where C excels.
+- The layers above the compositor (the shell, applications, widgets, search, screenshot/OCR tools, and daemons) represent a massive surface area for user interaction and complexity. Implementing these in C leads to elevated risks of memory corruption and bounds-checking bugs.
+- Rust offers safety guarantees, a robust package manager (Cargo) for graphics and UI libraries, and allows high development velocity for the desktop experience without sacrificing performance.
+
+### Consequences
+- `luna-shell`, widgets, desktop launcher/dock, and future applications (Luna Terminal, Luna Files, Settings) will be written/rewritten in Rust.
+- C remains the standard for the boot, kernel, compositor, and LGP protocol headers.
+- Volume VI / Chapter 01 (Coding Standards) must enforce both C and Rust rules for their respective domains.
+
+---
+
 ## [DL-053] LGP Wire Format: 2-byte Type + 4-byte Length Header
 Date: 2026-06-29
 Status: ✅ ACCEPTED — Supersedes DL-025

@@ -7,7 +7,7 @@
 
 ## What Is Mahina?
 
-Mahina is a ground-up Linux-based operating system built under a strict Documentation-First methodology. Every architectural decision is recorded in the Document Control Knowledge Library (DCKL) before code is written. The code exists solely to satisfy the documentation — never the reverse.
+Mahina is a ground-up Linux-based operating system built under a strict Documentation-First methodology. Every architectural decision is recorded in the Divine Collection of Knowledge about Luna (DCKL) before code is written. The code exists solely to satisfy the documentation — never the reverse.
 
 **Three Laws govern every decision (see `docs/DCKL/Volume I - Foundation/philosophy.md`):**
 - **Law I — Own Every Layer:** Every component is written from scratch or deeply understood. No distro base. No mystery components.
@@ -188,7 +188,7 @@ mahina-os/
 │   └── run-qemu.sh             # QEMU launch helper
 │
 ├── docs/
-│   ├── DCKL/                   # Document Control Knowledge Library (7 volumes)
+│   ├── DCKL/                   # Divine Collection of Knowledge about Luna (7 volumes)
 │   │   ├── Volume I - Foundation/
 │   │   ├── Volume II - Architecture/
 │   │   ├── Volume III - Graphics & Presence/

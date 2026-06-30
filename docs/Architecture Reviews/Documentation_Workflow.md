@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines the official documentation workflow used to build and maintain **The Divine Collection of Knowledge of Mahina (DCKL)**.
+This document defines the official documentation workflow used to build and maintain **The Divine Collection of Knowledge about Luna (DCKL)**.
 
 Its purpose is to ensure documentation remains consistent, scalable, AI-friendly, and architecture-driven throughout the lifetime of the Mahina project.
 
@@ -392,7 +392,7 @@ The long-term objective is for any future developer or AI coding agent to unders
 
 # Final Principle
 
-The Divine Collection of Knowledge of Mahina is not simply documentation.
+The Divine Collection of Knowledge about Luna is not simply documentation.
 
 It is the engineering constitution of Mahina.
 

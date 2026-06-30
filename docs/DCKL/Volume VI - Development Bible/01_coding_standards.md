@@ -15,9 +15,11 @@ Mahina targets resource-constrained hardware (v1). Memory efficiency, determinis
 
 ## Language Scope
 
-- **Systems & Graphics (Stage 0–3):** C17
-- **AI Runtime (Stage 4):** C17 (v1), Rust (v2 migration)
-- **Tooling:** Shell, Python (v1 build scripts)
+- **Bootloader:** Assembly + C
+- **Kernel & Core Init (Stage 0-1):** C17
+- **Compositor & Protocol (Stage 2-3):** C17
+- **Desktop & Userland (Above Compositor):** Rust
+- **Tooling:** Shell, Python (build helper scripts)
 - **C++ is forbidden** in the Mahina base system.
 
 ---

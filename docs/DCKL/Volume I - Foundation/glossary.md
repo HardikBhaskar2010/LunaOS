@@ -47,7 +47,7 @@ Reuse identical wording everywhere thereafter
 |---|---|---|
 | **Mahina** | The ground-up Linux-based OS this project builds. Not a distro reskin. | `identity.md` |
 | **LUNA** | The OS's local-first AI presence. Not an assistant, not a mascot — the OS's digital presence. | `identity.md`, `vision.md` |
-| **DCKL** | "The Divine Collection of Knowledge of Mahina" — the name of this documentation project. | System prompt / project structure |
+| **DCKL** | "The Divine Collection of Knowledge about Luna" — the name of this documentation project. | System prompt / project structure |
 | **Luna Kitsune** | Project author identity, Hardik Bhaskar. | All Foundation docs |
 
 ### LUNA-Specific

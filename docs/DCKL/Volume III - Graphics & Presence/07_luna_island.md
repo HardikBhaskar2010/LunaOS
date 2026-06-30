@@ -7,9 +7,11 @@
 
 ## Purpose
 
-Luna Island is the **physical location of LUNA's presence on screen**. It is the one graphical element on the Mahina desktop that LUNA owns and inhabits. It is not a widget, not a notification banner, not a status icon. It is the rendered body of LUNA as a presence.
+Luna Island is the **physical location of LUNA's presence on screen**. 
 
-This document specifies:
+Additionally, the entire desktop environment itself is conceptually named **"Luna Island"**—a floating digital sanctuary where the background is your active island (rendered via dynamic wallpaper shaders, changing with day/night cycles, dynamic weather, moving clouds, and falling rain), where widgets float, and LUNA's primary circular presence indicator sits as a focal point.
+
+This document specifies the presence indicator and interactive surfaces:
 - What Luna Island is and what it renders
 - Its three visual states and transitions
 - Its surface architecture as an LGP client

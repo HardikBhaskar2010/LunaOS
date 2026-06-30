@@ -29,7 +29,7 @@ luna-shell process and its surfaces:
   │                        luna-shell                            │
   │                                                               │
   │  Surfaces owned:                                              │
-  │   WALLPAPER surface   (layer 100)  — desktop background      │
+  │   WALLPAPER surface   (layer 100)  — Luna Island dynamic background (Live-Wallpapers rendering the floating island)      │
   │   SHELL_PANEL surface (layer 200)  — luna-bar (top)          │
   │   SHELL_PANEL surface (layer 200)  — luna-dock (bottom)      │
   │   APPLICATION_WINDOW  (layer 300)  — launcher panel          │
@@ -105,7 +105,9 @@ luna-shell startup (called by luna-init in Stage 6):
 
 ---
 
-## Wallpaper System
+## Wallpaper System (Live-Wallpapers)
+
+The wallpaper system is powered by the shell's background rendering engine. Instead of a simple static background, the desktop background is conceived as **"Luna Island"**—a floating digital sanctuary that changes dynamically.
 
 ### Wallpaper Configuration
 
@@ -113,35 +115,22 @@ luna-shell startup (called by luna-init in Stage 6):
 # ~/.luna/config/wallpaper.toml
 
 [wallpaper]
-mode    = "image"      # "image" | "color" | "procedural" (v1.5)
-source  = "~/.luna/wallpapers/default.png"
-scale   = "fill"       # "fill" | "fit" | "center" | "tile"
-color   = "#0A0A0F"    # fallback color if image fails to load
+mode    = "shader"     # "static" | "video" | "animated" | "shader" | "live2d" | "slideshow"
+theme   = "animexcyberpunk"
+live_wallpaper = true  # Live-Wallpapers enabled by default
 
-# Per-display wallpaper (optional — uses default if not specified)
-[[wallpaper.displays]]
-output_name = "DP-1"
-source      = "~/.luna/wallpapers/wide.png"
+# Time & weather triggers map to dynamic GLSL shaders or video loops
+[wallpaper.dynamic]
+morning_shader   = "/usr/share/luna/shaders/island_morning.glsl"
+afternoon_shader = "/usr/share/luna/shaders/island_afternoon.glsl"
+night_shader     = "/usr/share/luna/shaders/island_night.glsl"
+rain_overlay     = "/usr/share/luna/shaders/rain_overlay.glsl"
+snow_overlay     = "/usr/share/luna/shaders/snow_overlay.glsl"
 ```
 
 ### Wallpaper Render Path
 
-```
-Wallpaper rendering:
-
-  Image mode:
-    Load PNG/JPEG/WebP via stb_image (or libpng + libjpeg)
-    Scale to display resolution using bilinear interpolation
-    Write to WALLPAPER surface shared memory buffer
-    Commit via LGP_COMMIT_BUFFER
-
-  Color mode:
-    Fill surface buffer with solid color (hex from config)
-    No image loading required
-
-  Fallback (image load fails):
-    Fill with #0A0A0F (Void Black from visual language spec)
-    Log error: "Wallpaper load failed: [path] — using fallback"
+The shell runs a background thread that manages rendering. The wallpaper engine compiles GLSL/WebGPU shaders or decodes video loops (e.g. H.264), mapping them directly to the `WALLPAPER` LGP surface buffer. Day/night switching and dynamic weather overlays (clouds, rain, snow, or festival fireworks) are rendered on top of the active base shader.
 ```
 
 ---
@@ -155,7 +144,7 @@ luna-bar surface:
   Position: top edge of display
   Size:     display_width × 32px
   Layer:    SHELL_PANEL (200)
-  Style:    Glass effect (dark navy tint, no backdrop blur in Stage 2)
+  Style:    Dark Acrylic glass effect (Void Black background with 10-20% opacity, Windows 11 level backdrop blur)
 ```
 
 ### Layout
@@ -163,16 +152,13 @@ luna-bar surface:
 ```
 luna-bar layout (32px height):
 
-  ┌──────────────────────────────────────────────────────────────┐
-  │  [  ]  Mahina        App Name — Window Title      🌐 🔋 🔊 13:31 │
-  │  ↑                   ↑                            ↑          │
-  │  Super key           Active window title          System tray│
-  │  (opens launcher)                                 + clock    │
-  └──────────────────────────────────────────────────────────────┘
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │ 🌙 MahinaOS | Luna Island | Workspace 1       12:00 AM       🌐 🔋 🔊 ⚡   ⏻ │
+  └─────────────────────────────────────────────────────────────────────────────┘
 
-  Left zone:    Luna icon / super key affordance (32×32px)
-  Center zone:  Active application name + window title (dynamic)
-  Right zone:   System tray icons + clock
+  Left zone:    Mahina logo + Workspace Switcher + Current Workspace Label
+  Center zone:  Clock + Date + Calendar popup + Weather
+  Right zone:   System tray icons (Network, Bluetooth, Audio, Brightness, Battery, Updates, AI status, VPN, Notifications, Profile, Power menu)
 ```
 
 ### System Tray Icons (v1)
@@ -196,35 +182,20 @@ show_date_on_hover = true
 
 ---
 
-## luna-dock (Application Dock)
+## Docks
 
-### Geometry
+luna-dock layouts:
 
-```
-luna-dock surface:
-  Position: bottom edge of display
-  Size:     display_width × 64px
-  Layer:    SHELL_PANEL (200)
-  Style:    Glass effect
-```
+### Left Dock (Application Launcher)
+Houses launchers for system tools and user applications:
+- **Default Apps**: Terminal, Files, Browser, Editor, Settings, Tasks, Music, Apps launcher.
+- **Expanded Apps**: Calculator, Store, AI panel, Camera, Photos, Discord, Steam, System Monitor, VM Manager, Package Manager, Developer Hub.
+- **Features**: Hover magnification/scale animation, active running indicators, pin/unpin options, drag-and-drop reordering, right-click context menus, recent files, and jump lists.
 
-### Layout
-
-```
-luna-dock layout (64px height, horizontal):
-
-  ┌───────────────────────────────────────────────────────────────┐
-  │  [App1] [App2] [App3]  |  [Running1] [Running2]  |  [Trash]  │
-  │   ↑ Pinned apps           ↑ Open windows             ↑ Misc  │
-  └───────────────────────────────────────────────────────────────┘
-
-  Left section:  Pinned applications (user-configured)
-  Divider:       1px vertical separator
-  Center section: Currently open application windows (dynamic)
-  Divider:       1px vertical separator
-  Right section: Utility icons (Trash, etc.)
-
-  Each dock icon: 48×48px with 8px padding = 64px total slot
+### Bottom Dock (Quick Launcher & Running Apps)
+A floating bar matching the top bar aesthetic:
+- **Features**: Auto-hide when windows overlap, dark acrylic blur, bounce animation on app launch, live indicators for window count.
+- **Geometry**: display_width × 64px, Layer: SHELL_PANEL (200).
 ```
 
 ### Dock Icon States
@@ -350,6 +321,26 @@ void shell_launch_app(const char *app_id) {
 ```
 
 ---
+
+## Desktop Widgets & Panels
+
+### Music Widget
+Shows now playing metadata (Album art, Artist, Controls, Lyrics sheet, audio visualizer, local queue, and Spotify integration).
+
+### System Monitor
+Tracks CPU, RAM, VRAM, GPU, Disk I/O, Temperature, Network speeds, Battery status, and local AI service load.
+
+### Calendar & Scheduler
+Provides a monthly layout, today's focus tasks, upcoming meetings, local weather alerts, and active Moon Phase indicator (🌙).
+
+### Notification Center
+Organizes grouped notifications with action buttons (Dismiss, Inline Reply, Progress bars for downloads, Clipboard history panel, and screenshot previews).
+
+### AI Widget ("Luna")
+A personalized dashboard (e.g. *"Good Evening Hardik. Today's Focus: Continue LGP, 2 Issues, 1 Pending Build. [Continue Session]"*).
+
+### Screenshot & OCR Tool
+A desktop utility that captures regions, windows, or full desktops, records screens (GIFs/video), and uses OCR to copy text directly to the clipboard.
 
 ## Window Management
 

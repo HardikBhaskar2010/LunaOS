@@ -27,6 +27,7 @@ v1 Core Applications:
     lgp-compositor   — graphics compositor (Volume III/03)
     luna-ai-d        — AI presence daemon (Volume IV/00)
     luna-lock        — screen lock (DL-035)
+    luna-screenshot  — screenshot and OCR utility
 
   Desktop Layer:
     luna-shell       — desktop shell, launcher, workspaces (Volume V/01)
@@ -195,7 +196,7 @@ luna-settings navigation:
     └── Night light (color temperature)
 
   ● Appearance
-    ├── Theme (Luna Dark only in v1)
+    ├── Theme (Animexcyberpunk default)
     ├── Font sizes (density: compact / regular)
     └── Cursor
 
@@ -264,7 +265,7 @@ luna-text is the default text editor. It handles plain text, Markdown, and code 
 - Line numbers, word wrap toggle
 - Find and replace
 - Multiple tabs
-- Dark theme by default (Luna Dark)
+- Cyberpunk Dark theme by default
 
 ### Features (v1.5)
 
