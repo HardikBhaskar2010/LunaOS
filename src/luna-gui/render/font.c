@@ -1,11 +1,5 @@
-/*
- * Copyright (c) 2026 Hardik Bhaskar
- *
- * Licensed under the MIT License.
- * See the LICENSE file for details.
- */
-
 #include "lunagui.h"
+#include "lgui_private.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -33,26 +27,41 @@ void lgui_font_init(const char *psf_path) {
     }
 }
 
-void lgui_font_draw_text(void *pixels, int x, int y, uint32_t stride, const char *text, uint32_t color) {
-    if (!pixels || !text || !g_font_data) return;
+void lgui_font_draw_text(lgui_canvas_t *canvas, int x, int y, const char *text, uint32_t color) {
+    if (!canvas || !canvas->pixels || !text || !g_font_data) return;
     
+    int clip_x = 0, clip_y = 0, clip_w = (int)canvas->width, clip_h = (int)canvas->height;
+    if (canvas->clip_count > 0) {
+        clip_x = canvas->clip_stack[canvas->clip_count - 1].x;
+        clip_y = canvas->clip_stack[canvas->clip_count - 1].y;
+        clip_w = canvas->clip_stack[canvas->clip_count - 1].w;
+        clip_h = canvas->clip_stack[canvas->clip_count - 1].h;
+    }
+
     int cx = x;
     while (*text) {
         if (*text == '\n') {
-            y += g_glyph_height;
+            y += (int)g_glyph_height;
             cx = x;
         } else {
             uint8_t *glyph = g_font_data + (uint8_t)(*text) * g_glyph_height;
             for (uint32_t r = 0; r < g_glyph_height; r++) {
+                int py = y + (int)r;
+                if (py < clip_y || py >= clip_y + clip_h) continue;
+
                 uint8_t row = glyph[r];
-                uint32_t *dst = (uint32_t *)((uint8_t *)pixels + (y + r) * stride) + cx;
+                uint32_t *dst = (uint32_t *)((uint8_t *)canvas->pixels + py * canvas->stride);
+                
                 for (int c = 0; c < 8; c++) {
+                    int px = cx + c;
+                    if (px < clip_x || px >= clip_x + clip_w) continue;
+
                     if (row & (1 << (7 - c))) {
-                        dst[c] = color;
+                        dst[px] = color;
                     }
                 }
             }
-            cx += g_glyph_width;
+            cx += (int)g_glyph_width;
         }
         text++;
     }

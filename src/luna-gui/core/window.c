@@ -16,6 +16,7 @@
 #include "lunagui.h"
 #include "lgui_private.h"
 #include "window_private.h"
+#include "widget_private.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdint.h>

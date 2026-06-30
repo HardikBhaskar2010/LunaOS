@@ -8,6 +8,7 @@ BUILD_LUNAGUI := $(BUILD_DIR)/luna-gui
 LUNAGUI_SOURCES := \
     $(LUNAGUI_SRC)/core/application.c \
     $(LUNAGUI_SRC)/core/window.c \
+    $(LUNAGUI_SRC)/core/keyboard.c \
     $(LUNAGUI_SRC)/render/canvas.c \
     $(LUNAGUI_SRC)/render/font.c \
     $(LUNAGUI_SRC)/render/render.c \
@@ -15,7 +16,9 @@ LUNAGUI_SOURCES := \
     $(LUNAGUI_SRC)/widgets/button.c \
     $(LUNAGUI_SRC)/widgets/label.c \
     $(LUNAGUI_SRC)/widgets/vbox.c \
-    $(LUNAGUI_SRC)/widgets/hbox.c
+    $(LUNAGUI_SRC)/widgets/hbox.c \
+    $(LUNAGUI_SRC)/widgets/canvas_widget.c \
+    $(LUNAGUI_SRC)/widgets/scroll.c
 
 LUNAGUI_OBJECTS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(LUNAGUI_SOURCES))
 LUNAGUI_LIB := $(BUILD_LUNAGUI)/liblunagui.a

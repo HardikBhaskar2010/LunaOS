@@ -476,9 +476,17 @@ static bool lgp_handle_commit_buffer(lgp_compositor_state_t *state,
 }
 
 static bool lgp_handle_wm_set_position(lgp_compositor_state_t *state, lgp_client_t *client, const lgp_msg_t *msg, drm_device_t *drm_dev) {
-    if (!(client->caps_granted & 128)) return false; /* Must be WM */
+    if (!(client->caps_granted & LGP_CAP_WINDOW_MANAGER)) return false; /* Must be WM */
     lgp_wm_set_position_payload_t payload;
     if (!lgp_wm_decode_set_position(msg, &payload)) return false;
+
+    /* Validate bounds */
+    int max_w = drm_dev ? (int)drm_dev->mode.hdisplay : 4096;
+    int max_h = drm_dev ? (int)drm_dev->mode.vdisplay : 4096;
+    if (payload.x < -max_w || payload.x > max_w || payload.y < -max_h || payload.y > max_h) {
+        LGP_WARN("wm", "WM rejected surface position (%d, %d) out of bounds", payload.x, payload.y);
+        return false;
+    }
 
     for (size_t i = 0; i < LGP_SURFACE_MAX; i++) {
         if (state->surface_manager.surfaces[i].in_use && state->surface_manager.surfaces[i].id == payload.surface_id) {
@@ -491,7 +499,7 @@ static bool lgp_handle_wm_set_position(lgp_compositor_state_t *state, lgp_client
 }
 
 static bool lgp_handle_wm_set_focus(lgp_compositor_state_t *state, lgp_client_t *client, const lgp_msg_t *msg) {
-    if (!(client->caps_granted & 128)) return false;
+    if (!(client->caps_granted & LGP_CAP_WINDOW_MANAGER)) return false;
     lgp_wm_set_focus_payload_t payload;
     if (!lgp_wm_decode_set_focus(msg, &payload)) return false;
     
@@ -500,7 +508,7 @@ static bool lgp_handle_wm_set_focus(lgp_compositor_state_t *state, lgp_client_t 
 }
 
 static bool lgp_handle_wm_set_state(lgp_compositor_state_t *state, lgp_client_t *client, const lgp_msg_t *msg) {
-    if (!(client->caps_granted & 128)) return false;
+    if (!(client->caps_granted & LGP_CAP_WINDOW_MANAGER)) return false;
     lgp_wm_set_state_payload_t payload;
     if (!lgp_wm_decode_set_state(msg, &payload)) return false;
     
@@ -509,7 +517,7 @@ static bool lgp_handle_wm_set_state(lgp_compositor_state_t *state, lgp_client_t 
 }
 
 static bool lgp_handle_wm_grab_key(lgp_compositor_state_t *state, lgp_client_t *client, const lgp_msg_t *msg) {
-    if (!(client->caps_granted & 128)) return false;
+    if (!(client->caps_granted & LGP_CAP_WINDOW_MANAGER)) return false;
     lgp_wm_grab_key_payload_t payload;
     if (!lgp_wm_decode_grab_key(msg, &payload)) return false;
     
@@ -541,7 +549,7 @@ static bool lgp_handle_client_message(lgp_compositor_state_t *state,
 
     if (msg->type == LGP_MSG_HELLO) {
         bool ok = lgp_hello_handle(client, msg);
-        if (ok && (client->caps_granted & 128)) { /* LGP_CAP_WINDOW_MANAGER */
+        if (ok && (client->caps_granted & LGP_CAP_WINDOW_MANAGER)) { /* LGP_CAP_WINDOW_MANAGER */
             state->wm_client = client;
             LGP_INFO("ipc", "Client session=%u registered as Window Manager", client->session_id);
         }
@@ -565,6 +573,10 @@ static bool lgp_handle_client_message(lgp_compositor_state_t *state,
     }
 
     if (msg->type == LGP_MSG_CLIPBOARD_SET) {
+        if (!(client->caps_granted & LGP_CAP_CLIPBOARD)) {
+            LGP_WARN("protocol", "Client session=%u attempted CLIPBOARD_SET without capability", client->session_id);
+            return false;
+        }
         size_t payload_len = msg->length - LGP_HEADER_SIZE;
         if (payload_len >= sizeof(state->global_clipboard)) {
             payload_len = sizeof(state->global_clipboard) - 1;
@@ -576,6 +588,10 @@ static bool lgp_handle_client_message(lgp_compositor_state_t *state,
     }
 
     if (msg->type == LGP_MSG_CLIPBOARD_GET) {
+        if (!(client->caps_granted & LGP_CAP_CLIPBOARD)) {
+            LGP_WARN("protocol", "Client session=%u attempted CLIPBOARD_GET without capability", client->session_id);
+            return false;
+        }
         size_t cb_len = strlen(state->global_clipboard);
         uint8_t *frame = malloc(LGP_HEADER_SIZE + cb_len + 1);
         if (frame) {

@@ -186,6 +186,40 @@ void test_commit_shm_and_composite(void) {
     lgp_surface_manager_destroy_for_client(&manager, &client);
 }
 
+#include "../../../src/lgp-compositor/protocol/wm.h"
+
+void test_wm_surface_created_encoding(void);
+void test_wm_surface_created_encoding(void) {
+    uint8_t buf[LGP_HEADER_SIZE + 16];
+    TEST_ASSERT_TRUE(lgp_wm_encode_surface_created(buf, sizeof(buf), 42, 4, 100, 200));
+
+    uint16_t type = 0;
+    uint32_t len = 0;
+    TEST_ASSERT_TRUE(lgp_tlv_peek_header(buf, sizeof(buf), &type, &len));
+    TEST_ASSERT_EQUAL_UINT16(0x0200u, type); /* LGP_MSG_WM_SURFACE_CREATED */
+    TEST_ASSERT_EQUAL_UINT32(sizeof(buf), len);
+}
+
+void test_wm_decode_set_position(void);
+void test_wm_decode_set_position(void) {
+    uint8_t payload[12];
+    write_u32_le(payload + 0, 42); // surface_id
+    write_u32_le(payload + 4, 150); // x
+    write_u32_le(payload + 8, 250); // y
+
+    lgp_msg_t msg = {
+        .type = LGP_MSG_WM_SET_SURFACE_POSITION,
+        .length = LGP_HEADER_SIZE + sizeof(payload),
+        .payload = payload
+    };
+
+    lgp_wm_set_position_payload_t decoded;
+    TEST_ASSERT_TRUE(lgp_wm_decode_set_position(&msg, &decoded));
+    TEST_ASSERT_EQUAL_UINT32(42, decoded.surface_id);
+    TEST_ASSERT_EQUAL_INT32(150, decoded.x);
+    TEST_ASSERT_EQUAL_INT32(250, decoded.y);
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_tlv_rejects_partial_frame);
@@ -193,5 +227,7 @@ int main(void) {
     RUN_TEST(test_surface_lifecycle_and_client_cleanup);
     RUN_TEST(test_surface_denies_privileged_surface_without_cap);
     RUN_TEST(test_commit_shm_and_composite);
+    RUN_TEST(test_wm_surface_created_encoding);
+    RUN_TEST(test_wm_decode_set_position);
     return UNITY_END();
 }

@@ -152,15 +152,34 @@ LGP_UNIT_TEST_SOURCES := \
 LGP_UNIT_TEST_SUPPORT := \
     $(SRC_DIR)/lgp-compositor/protocol/tlv.c \
     $(SRC_DIR)/lgp-compositor/protocol/surface.c \
+    $(SRC_DIR)/lgp-compositor/protocol/wm.c \
     $(SRC_DIR)/lgp-compositor/scene/surface.c \
     $(SRC_DIR)/lgp-compositor/logging/log.c
+
+LUNA_GUI_UNIT_TEST_SOURCES := \
+    $(TESTS_DIR)/unit/luna-gui/gui_test.c
+
+LUNA_GUI_UNIT_TEST_SUPPORT := \
+    $(SRC_DIR)/luna-gui/core/application.c \
+    $(SRC_DIR)/luna-gui/core/window.c \
+    $(SRC_DIR)/luna-gui/core/keyboard.c \
+    $(SRC_DIR)/luna-gui/render/canvas.c \
+    $(SRC_DIR)/luna-gui/render/font.c \
+    $(SRC_DIR)/luna-gui/render/render.c \
+    $(SRC_DIR)/luna-gui/widgets/widget.c \
+    $(SRC_DIR)/luna-gui/widgets/button.c \
+    $(SRC_DIR)/luna-gui/widgets/label.c \
+    $(SRC_DIR)/luna-gui/widgets/vbox.c \
+    $(SRC_DIR)/luna-gui/widgets/hbox.c \
+    $(SRC_DIR)/luna-gui/widgets/canvas_widget.c \
+    $(SRC_DIR)/luna-gui/widgets/scroll.c
 
 # ---------------------------------------------------------------------------
 # Primary targets
 # ---------------------------------------------------------------------------
 
 .PHONY: all luna-init luna-init-ctl luna-splash image run-qemu clean \
-        test-unit test-fuzz lint help
+        test-unit test-fuzz lint verify help
 
 all: luna-init luna-init-ctl luna-splash lgp-compositor lunagui luna-shell luna-desktop luna-installer luna-terminal luna-settings luna-files luna-calc luna-text luna-about luna-tasks
 
@@ -285,6 +304,18 @@ test-unit: $(UNITY_OBJ) $(filter-out $(BUILD_DIR)/luna-init/main_test_asan.o, $(
 	    echo "  RUN     $$name"; \
 	    $(BUILD_DIR)/tests/$$name || failed=1; \
 	done; \
+	for src in $(LUNA_GUI_UNIT_TEST_SOURCES); do \
+	    name=gui_$$(basename $$src .c); \
+	    echo "  BUILD   $$name"; \
+	    $(CC) $(CFLAGS_TEST) $(INCLUDES) \
+	        -I$(TESTS_DIR)/vendor/unity \
+	        $$src \
+	        $(LUNA_GUI_UNIT_TEST_SUPPORT) \
+	        $(UNITY_OBJ) \
+	        -o $(BUILD_DIR)/tests/$$name 2>&1 || { failed=1; continue; }; \
+	    echo "  RUN     $$name"; \
+	    $(BUILD_DIR)/tests/$$name || failed=1; \
+	done; \
 	if [ $$failed -eq 0 ]; then \
 	    echo "  PASS    All unit tests passed"; \
 	else \
@@ -329,6 +360,30 @@ test-fuzz: | $(BUILD_DIR)/tests
 	    $(BUILD_DIR)/tests/fuzz_corpus/lgp_tlv/ \
 	    -max_total_time=5 \
 	    -print_final_stats=1
+
+# ---------------------------------------------------------------------------
+# Integrated Verification Loop (Stage 2 Integration Boot Smoke Test)
+# ---------------------------------------------------------------------------
+
+verify: clean all test-unit image
+	@echo "  VERIFY  Running QEMU headless smoke test..."
+	@rm -f build/qemu-serial.log
+	@qemu-system-x86_64 $(QEMU_FLAGS) -display none -serial file:build/qemu-serial.log & \
+	pid=$$!; \
+	sleep 5; \
+	kill $$pid 2>/dev/null || true; \
+	wait $$pid 2>/dev/null || true
+	@if grep -q "FATAL" build/qemu-serial.log; then \
+	    echo "  FAIL    Smoke test failed: FATAL found in serial log"; \
+	    cat build/qemu-serial.log; \
+	    exit 1; \
+	elif grep -q "interactive shell" build/qemu-serial.log || grep -q "luna-init" build/qemu-serial.log; then \
+	    echo "  PASS    Smoke test passed! Mahina booted successfully."; \
+	else \
+	    echo "  FAIL    Smoke test failed: Mahina did not boot correctly (no expected output in serial log)"; \
+	    cat build/qemu-serial.log; \
+	    exit 1; \
+	fi
 
 # ---------------------------------------------------------------------------
 # Static analysis (clang-tidy)

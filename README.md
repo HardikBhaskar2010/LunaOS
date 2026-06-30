@@ -18,7 +18,9 @@ It aims to provide:
 
 - **`luna-init`:** A completely custom PID 1 init system. It uses TOML for service definitions, builds a deterministic dependency graph, detects cycles, and reaps zombies gracefully.
 - **`luna-splash`:** A decoupled boot graphics engine that paints the screen directly via the Linux framebuffer (`/dev/fb0`), completely free of dynamic memory allocation (`malloc`).
-- **LGP (Luna Graphics Protocol):** (In Development) A modern, minimal display protocol designed to replace heavy legacy systems.
+- **LGP (Luna Graphics Protocol):** A modern, minimal display protocol designed to replace heavy legacy systems, complete with surface management, alpha blending, and privileged Window Manager extensions.
+- **LunaGUI Toolkit:** A lightweight native GUI library in C17 featuring a robust widget tree, custom layouts (VBox/HBox), scrolling, and event-routing.
+- **luna-shell:** A native desktop shell and Window Manager.
 - **Documentation-First:** No code is written unless it is first codified in the Document Control Knowledge Library (DCKL).
 
 ## 🏗️ Architecture
@@ -30,6 +32,8 @@ Mahina's architecture is explicitly defined in the `docs/DCKL/` directory. If yo
 - **Bootloader:** Limine.
 - **Init System:** `luna-init` (Custom C17).
 - **Boot Splash:** `luna-splash` (Custom C17).
+- **Compositor:** `lgp-compositor` (Custom C17).
+- **Desktop Shell:** `luna-shell` (Custom C17).
 
 ## 🛠️ Build Instructions
 
@@ -44,7 +48,7 @@ Mahina uses a standard Makefile toolchain. You must be on Linux or WSL2 to build
 ### Compiling
 
 ```bash
-# Build luna-init, luna-splash, and luna-init-ctl
+# Build all Mahina binaries
 make all
 
 # Run static analysis and linting (Required)
@@ -59,7 +63,7 @@ make run-qemu
 
 ## 🗺️ Roadmap
 
-Mahina is currently in the **Phase 1: Boot Aesthetics** stage. We have successfully implemented a deterministic init system and are now finalizing the graphical boot splash.
+Mahina is currently in the **Phase 3: AI & Shell Integration** stage. We have successfully implemented a deterministic init system, boot graphics, the compositor, the native LunaGUI widget toolkit, a window manager shell, and ten desktop applications.
 
 See [ROADMAP.md](ROADMAP.md) for a high-level overview, or dive into `docs/DCKL/Volume VII - Implementation Roadmap/` for specific engineering milestones.
 

@@ -2,9 +2,9 @@
 
 The development of Mahina OS is strictly governed by the Document Control Knowledge Library (DCKL). This document provides a high-level overview of our milestones. For the detailed, authoritative roadmap, see `docs/DCKL/Volume VII - Implementation Roadmap/`.
 
-## 🚧 Phase 0: Core Foundation (Current)
+## 🌙 Phase 0: Core Foundation
 *Focus: Getting the OS to boot cleanly, establishing PID 1, and bringing up the absolute minimal environment.*
-
+- **Status:** ✅ COMPLETE
 - **Boot Chain Verification**
   - Limine Bootloader integration
   - Custom Linux Kernel config validation
@@ -19,7 +19,7 @@ The development of Mahina OS is strictly governed by the Document Control Knowle
 
 ## 🎨 Phase 1: Boot Aesthetics
 *Focus: Transitioning from text-mode initialization to a branded graphical boot experience.*
-
+- **Status:** ✅ COMPLETE
 - **`luna-splash`**
   - Standalone boot graphics engine
   - Zero-malloc `/dev/fb0` framebuffer mapping
@@ -31,26 +31,29 @@ The development of Mahina OS is strictly governed by the Document Control Knowle
 
 ## 🖼️ Phase 2: The Graphics Layer
 *Focus: Building the custom Luna Graphics Protocol (LGP).*
-
+- **Status:** ✅ COMPLETE
 - **LGP Compositor**
   - Wayland-inspired, but highly specialized and simplified protocol
-  - hardware-accelerated rendering backbone
-  - Window management primitives
+  - Software rendering alpha-blending backbone
+  - Window management primitives (crashed-window, dynamic keyboard grabs)
+  - Privileged Window Manager (`luna-shell`) interface
 - **Display Server Handoff**
   - Seamless transition from `luna-splash` to the compositor
+- **LunaGUI Toolkit**
+  - Fully recursive widget hierarchy with layout flows, font rendering, scrolling, and inputs.
+- **Graphical Applications**
+  - Ten complete graphical applications, including a native PTY/ANSI terminal.
 
-## 🧠 Phase 3: AI & Shell Integration
+## 🧠 Phase 3: AI & Shell Integration (Current)
 *Focus: Building the user space and intelligent agents.*
-
 - **`luna-shell`**
-  - The primary user interface and desktop environment
+  - The primary user interface and desktop environment (Wallpaper, Top bar, Alt+Tab, Super+T)
 - **Mahina AI Integration**
   - Deep system hooks for Ollama or local LLM agents
   - Agentic filesystem management and settings configuration
 
 ## 🚀 Phase 4: Public Release (v1.0)
 *Focus: Polish, security audits, and deployment.*
-
 - **Security Hardening**
 - **Documentation Freeze**
 - **First Public ISO Release**

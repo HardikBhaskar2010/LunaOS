@@ -62,7 +62,7 @@ sudo mount "$LOOP_ESP" "$MNT_ROOT/boot/efi"
 echo "  IMAGE   Installing files..."
 
 # Create directory structure
-sudo mkdir -p "$MNT_ROOT"/{usr/bin,usr/sbin,etc/luna/services,var/log/luna-init,tmp,run,proc,sys,dev}
+sudo mkdir -p "$MNT_ROOT"/{usr/bin,usr/sbin,usr/share/fonts,etc/luna/services,var/log/luna-init,tmp,run,proc,sys,dev}
 # /usr merge symlinks
 sudo ln -s usr/bin "$MNT_ROOT/bin"
 sudo ln -s usr/sbin "$MNT_ROOT/sbin"
@@ -85,6 +85,30 @@ if [ -f "${BUILD_DIR}/luna-shell/luna-shell" ]; then
 fi
 if [ -f "${BUILD_DIR}/luna-terminal/luna-terminal" ]; then
     sudo cp "${BUILD_DIR}/luna-terminal/luna-terminal" "$MNT_ROOT/usr/bin/"
+fi
+
+# Deploy other applications
+for app in settings files calc installer tasks about text; do
+    if [ -f "${BUILD_DIR}/luna-${app}/luna-${app}" ]; then
+        sudo cp "${BUILD_DIR}/luna-${app}/luna-${app}" "$MNT_ROOT/usr/bin/"
+    fi
+done
+
+# Download and deploy PSF font
+if [ ! -f "${BUILD_DIR}/luna-8x16.psf" ]; then
+    echo "  IMAGE   Obtaining PSF font..."
+    if [ -f /usr/share/consolefonts/Uni2-Terminus16.psf.gz ]; then
+        zcat /usr/share/consolefonts/Uni2-Terminus16.psf.gz > "${BUILD_DIR}/luna-8x16.psf"
+    elif [ -f /usr/share/consolefonts/Lat15-Terminus16.psf.gz ]; then
+        zcat /usr/share/consolefonts/Lat15-Terminus16.psf.gz > "${BUILD_DIR}/luna-8x16.psf"
+    else
+        wget -qO "${BUILD_DIR}/luna-8x16.psf" "https://raw.githubusercontent.com/vitas/UniVGA/master/UniVGA16.psf" || \
+        curl -sLo "${BUILD_DIR}/luna-8x16.psf" "https://raw.githubusercontent.com/vitas/UniVGA/master/UniVGA16.psf" || \
+        echo "Warning: Failed to download font"
+    fi
+fi
+if [ -f "${BUILD_DIR}/luna-8x16.psf" ]; then
+    sudo cp "${BUILD_DIR}/luna-8x16.psf" "$MNT_ROOT/usr/share/fonts/"
 fi
 
 # Fetch and install busybox for an emergency shell

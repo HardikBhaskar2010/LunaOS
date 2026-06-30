@@ -15,6 +15,9 @@
  */
 
 #include "lunagui.h"
+#include "lgui_private.h"
+#include "window_private.h"
+#include "widget_private.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,6 +40,8 @@
 #define LGP_CAP_CANVAS_SURFACE (1u << 1)
 #define LGP_CAP_LAYER_SHELL    (1u << 3)
 #define LGP_CAP_LUNA_ISLAND    (1u << 4)
+#define LGP_CAP_CLIPBOARD      (1u << 6)
+#define LGP_CAP_WINDOW_MANAGER (1u << 7)
 
 #define LGP_MSG_WM_SURFACE_CREATED   0x0200u
 #define LGP_MSG_WM_SURFACE_DESTROYED 0x0201u
@@ -208,7 +213,8 @@ lgui_application_t *lgui_application_create(const char *name) {
 
     /* Perform the LGP_HELLO handshake — mandatory before any other message */
     uint32_t caps_granted = 0;
-    if (!lgui_do_hello(fd, 2 | 8 | 16, &caps_granted)) { /* CANVAS_SURFACE | LAYER_SHELL | LUNA_ISLAND */
+    uint32_t caps_req = LGP_CAP_CANVAS_SURFACE | LGP_CAP_LAYER_SHELL | LGP_CAP_LUNA_ISLAND | LGP_CAP_CLIPBOARD;
+    if (!lgui_do_hello(fd, caps_req, &caps_granted)) { /* CANVAS_SURFACE | LAYER_SHELL | LUNA_ISLAND */
         close(fd);
         free(app);
         return NULL;
@@ -254,7 +260,8 @@ lgui_application_t *lgui_application_create_wm(const char *name,
     app->lgp_fd = fd;
 
     uint32_t caps_granted = 0;
-    if (!lgui_do_hello(fd, 2 | 8 | 16 | 128, &caps_granted)) { /* Includes LGP_CAP_WINDOW_MANAGER */
+    uint32_t caps_req = LGP_CAP_CANVAS_SURFACE | LGP_CAP_LAYER_SHELL | LGP_CAP_LUNA_ISLAND | LGP_CAP_WINDOW_MANAGER;
+    if (!lgui_do_hello(fd, caps_req, &caps_granted)) { /* Includes LGP_CAP_WINDOW_MANAGER */
         close(fd);
         free(app);
         return NULL;
