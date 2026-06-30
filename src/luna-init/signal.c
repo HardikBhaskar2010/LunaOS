@@ -14,6 +14,7 @@
 #include "log.h"
 
 #include <errno.h>
+#include <signal.h> // NOLINT(readability-duplicate-include)
 
 #include <string.h>
 #include <unistd.h>
