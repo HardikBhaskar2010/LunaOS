@@ -52,8 +52,8 @@ void lgp_mouse_pump(lgp_compositor_state_t *state) {
         int dx = (int)data[1];
         int dy = (int)data[2];
 
-        if (data[0] & 0x10u) dx -= 256;   /* X sign bit */
-        if (data[0] & 0x20u) dy -= 256;   /* Y sign bit */
+        if (data[0] & 0x10U) dx -= 256;   /* X sign bit */
+        if (data[0] & 0x20U) dy -= 256;   /* Y sign bit */
 
         /* /dev/input/mice Y axis is inverted relative to screen coordinates */
         g_mouse_x += dx;
@@ -72,8 +72,8 @@ void lgp_mouse_pump(lgp_compositor_state_t *state) {
         static bool last_left = false;
         static bool last_right = false;
 
-        bool left_button = (data[0] & 0x01u) != 0;
-        bool right_button = (data[0] & 0x02u) != 0;
+        bool left_button = (data[0] & 0x01U) != 0;
+        bool right_button = (data[0] & 0x02U) != 0;
 
         if (left_button != last_left) {
             lgp_dispatch_pointer_button(state, g_mouse_x, g_mouse_y, 0, left_button);

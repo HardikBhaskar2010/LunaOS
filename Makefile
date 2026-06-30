@@ -394,7 +394,7 @@ lint:
 	    --checks='-*,clang-analyzer-*,-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,cert-*,-cert-err33-c,-cert-err34-c,bugprone-*,-bugprone-easily-swappable-parameters,performance-*,portability-*,readability-*,-readability-magic-numbers,-readability-identifier-length,-readability-braces-around-statements,-readability-math-missing-parentheses,-readability-function-cognitive-complexity' \
 	    --warnings-as-errors='*' \
 	    $(LUNA_INIT_SOURCES) $(LUNA_CTL_SOURCES) $(LUNA_SPLASH_SOURCES) $(LGP_COMPOSITOR_SOURCES) \
-	    -- $(CFLAGS) $(INCLUDES)
+	    -- $(CFLAGS) $(INCLUDES) -I/usr/include/libdrm
 
 # ---------------------------------------------------------------------------
 # Directory creation

@@ -15,8 +15,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#define LGP_BYTES_PER_PIXEL_XRGB8888 4u
-#define LGP_LUNA_VOID_XRGB8888 0x000A0A0Fu
+#define LGP_BYTES_PER_PIXEL_XRGB8888 4U
+#define LGP_LUNA_VOID_XRGB8888 0x000A0A0FU
 
 static void lgp_surface_release(lgp_surface_t *surface) {
     if (!surface) return;

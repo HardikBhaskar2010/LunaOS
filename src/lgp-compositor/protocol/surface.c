@@ -24,10 +24,10 @@ static int32_t lgp_read_i32_le(const uint8_t *p) {
 }
 
 static void lgp_write_u32_le(uint8_t *p, uint32_t value) {
-    p[0] = (uint8_t)(value & 0xFFu);
-    p[1] = (uint8_t)((value >> 8) & 0xFFu);
-    p[2] = (uint8_t)((value >> 16) & 0xFFu);
-    p[3] = (uint8_t)((value >> 24) & 0xFFu);
+    p[0] = (uint8_t)(value & 0xFFU);
+    p[1] = (uint8_t)((value >> 8) & 0xFFU);
+    p[2] = (uint8_t)((value >> 16) & 0xFFU);
+    p[3] = (uint8_t)((value >> 24) & 0xFFU);
 }
 
 bool lgp_surface_decode_create(const lgp_msg_t *msg, lgp_surface_create_payload_t *out_payload) {

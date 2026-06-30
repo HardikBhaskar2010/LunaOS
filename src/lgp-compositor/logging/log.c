@@ -65,7 +65,7 @@ void lgp_log(lgp_log_level_t level, const char *component, const char *fmt, ...)
     if (len > 0 && len < (int)sizeof(buf)) {
         va_list args;
         va_start(args, fmt);
-        int msg_len = vsnprintf(buf + len, sizeof(buf) - len, fmt, args);
+        int msg_len = vsnprintf(buf + len, sizeof(buf) - len, fmt, args); // NOLINT(clang-analyzer-valist.Uninitialized)
         va_end(args);
 
         if (msg_len > 0) {

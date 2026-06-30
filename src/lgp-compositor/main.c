@@ -53,7 +53,7 @@ void lgp_dispatch_pointer_motion(lgp_compositor_state_t *state, int x, int y) {
             y >= s->y && y < s->y + (int32_t)s->height) {
             
             if ((int)s->layer > top_layer) {
-                top_layer = s->layer;
+                top_layer = (int)s->layer;
                 target_session_id = s->owner_session_id;
             }
         }
@@ -99,7 +99,7 @@ void lgp_dispatch_pointer_button(lgp_compositor_state_t *state, int x, int y, ui
             y >= s->y && y < s->y + (int32_t)s->height) {
             
             if ((int)s->layer > top_layer) {
-                top_layer = s->layer;
+                top_layer = (int)s->layer;
                 target_session_id = s->owner_session_id;
                 target_surface_id = s->id;
             }
