@@ -587,224 +587,27 @@ int lgui_application_run(lgui_application_t *app) {
         if (r < 0) {
             if (errno == EINTR) continue;
             break;
-
-            app->focused_widget = hit;
-
-            /* Focus new TextField */
-            if (hit->type == 7) {
-                hit->focused = true;
-                hit->cursor_pos = hit->text_len; /* Move cursor to end */
-            }
-
-            if (hit->type == 2 /* Button */ && hit->on_click) {
-                hit->on_click(hit, hit->user_data);
-                /* Window tree may have changed; mark all windows dirty */
-                for (int j = 0; j < app->window_count; j++) {
-                    if (app->windows[j]) app->windows[j]->dirty = true;
-                }
-            }
-            return;
-        }
-    }
-
-    /* Clicked on nothing - unfocus */
-    if (app->focused_widget && app->focused_widget->type == 7)
-        app->focused_widget->focused = false;
-}
-
-/* ---------------------------------------------------------------------------
- * TextField keyboard input handling
- * ---------------------------------------------------------------------------*/
-
-static void lgui_textfield_handle_key(lgui_widget_t *tf, uint32_t key, uint32_t modifiers) {
-    if (!tf || tf->type != 7) return;
-
-    char c = lgui_keymap_translate(key, modifiers);
-
-    if (c >= 32 && c < 127) {
-        /* Printable character - insert at cursor */
-        if (tf->text_len < tf->max_length) {
-            /* Shift digits to make room */
-            memmove(&tf->text[tf->cursor_pos + 1], &tf->text[tf->cursor_pos],
-                    (size_t)(tf->text_len - tf->cursor_pos));
-            tf->text[tf->cursor_pos] = c;
-            tf->text_len++;
-            tf->cursor_pos++;
-            /* Scroll view if cursor goes past visible area */
-            int max_visible = (tf->width - 16) / 8;
-            if (tf->cursor_pos > tf->view_offset + max_visible)
-                tf->view_offset = tf->cursor_pos - max_visible;
-        }
-    } else if (key == 0x00E7) {
-        /* Backspace (KEY_BACKSPACE = 0x00E7 in linux input) */
-        if (tf->cursor_pos > 0) {
-            memmove(&tf->text[tf->cursor_pos - 1], &tf->text[tf->cursor_pos],
-                    (size_t)(tf->text_len - tf->cursor_pos));
-            tf->text_len--;
-            tf->cursor_pos--;
-            if (tf->view_offset > 0 && tf->cursor_pos < tf->view_offset)
-                tf->view_offset = tf->cursor_pos;
-        }
-    } else if (key == 0x009C) {
-        /* Delete key */
-        if (tf->cursor_pos < tf->text_len) {
-            memmove(&tf->text[tf->cursor_pos], &tf->text[tf->cursor_pos + 1],
-                    (size_t)(tf->text_len - tf->cursor_pos - 1));
-            tf->text_len--;
-        }
-    } else if (key == 0x0098) {
-        /* Left arrow */
-        if (tf->cursor_pos > 0) tf->cursor_pos--;
-        if (tf->view_offset > 0 && tf->cursor_pos < tf->view_offset)
-            tf->view_offset = tf->cursor_pos;
-    } else if (key == 0x0097) {
-        /* Right arrow */
-        if (tf->cursor_pos < tf->text_len) tf->cursor_pos++;
-        int max_visible = (tf->width - 16) / 8;
-        if (tf->cursor_pos > tf->view_offset + max_visible)
-            tf->view_offset = tf->cursor_pos - max_visible;
-    } else if (key == 0x0096) {
-        /* Home */
-        tf->cursor_pos = 0;
-        tf->view_offset = 0;
-    } else if (key == 0x009B) {
-        /* End */
-        tf->cursor_pos = tf->text_len;
-        int max_visible = (tf->width - 16) / 8;
-        if (tf->cursor_pos > tf->view_offset + max_visible)
-            tf->view_offset = tf->cursor_pos - max_visible;
-    }
-
-    tf->text[tf->text_len] = '\0';
-
-    if (tf->on_text_change)
-        tf->on_text_change(tf, tf->text, tf->user_data);
-}
-
-/* ---------------------------------------------------------------------------
- * Window Management (WM) APIs
- * ---------------------------------------------------------------------------*/
-
-void lgui_wm_set_surface_position(lgui_application_t *app, uint32_t surface_id, int x, int y) {
-    if (!app || app->lgp_fd < 0) return;
-    uint8_t buf[LGP_HEADER_SIZE + 12];
-    write_u16_le(buf, LGP_MSG_WM_SET_SURFACE_POSITION);
-    write_u32_le(buf + 2, sizeof(buf));
-    write_u32_le(buf + LGP_HEADER_SIZE, surface_id);
-    write_u32_le(buf + LGP_HEADER_SIZE + 4, (uint32_t)x);
-    write_u32_le(buf + LGP_HEADER_SIZE + 8, (uint32_t)y);
-    lgui_write_all(app->lgp_fd, buf, sizeof(buf));
-}
-
-void lgui_wm_set_focus(lgui_application_t *app, uint32_t surface_id) {
-    if (!app || app->lgp_fd < 0) return;
-    uint8_t buf[LGP_HEADER_SIZE + 4];
-    write_u16_le(buf, LGP_MSG_WM_SET_FOCUS);
-    write_u32_le(buf + 2, sizeof(buf));
-    write_u32_le(buf + LGP_HEADER_SIZE, surface_id);
-    lgui_write_all(app->lgp_fd, buf, sizeof(buf));
-}
-
-uint32_t lgui_output_width(lgui_application_t *app) {
-    return app ? app->output_width : 0;
-}
-
-uint32_t lgui_output_height(lgui_application_t *app) {
-    return app ? app->output_height : 0;
-}
-
-void lgui_application_set_output_geometry_cb(lgui_application_t *app, lgui_output_geometry_cb cb, void *user_data) {
-    if (app) {
-        app->output_geometry_cb = cb;
-        app->output_geometry_user_data = user_data;
-    }
-}
-
-void lgui_wm_set_state(lgui_application_t *app, uint32_t surface_id, uint32_t state) {
-    if (!app || app->lgp_fd < 0) return;
-    uint8_t buf[LGP_HEADER_SIZE + 8];
-    write_u16_le(buf, LGP_MSG_WM_SET_STATE);
-    write_u32_le(buf + 2, sizeof(buf));
-    write_u32_le(buf + LGP_HEADER_SIZE, surface_id);
-    write_u32_le(buf + LGP_HEADER_SIZE + 4, state);
-    lgui_write_all(app->lgp_fd, buf, sizeof(buf));
-}
-
-void lgui_wm_grab_key(lgui_application_t *app, uint32_t key, uint32_t modifiers) {
-    if (!app || app->lgp_fd < 0) return;
-    uint8_t buf[LGP_HEADER_SIZE + 8];
-    write_u16_le(buf, LGP_MSG_WM_GRAB_KEY);
-    write_u32_le(buf + 2, sizeof(buf));
-    write_u32_le(buf + LGP_HEADER_SIZE, key);
-    write_u32_le(buf + LGP_HEADER_SIZE + 4, modifiers);
-    lgui_write_all(app->lgp_fd, buf, sizeof(buf));
-}
-
-void lgui_application_set_global_key_cb(lgui_application_t *app, lgui_global_key_cb cb, void *user_data) {
-    if (app) {
-        app->global_key_cb = cb;
-        app->global_key_user_data = user_data;
-    }
-}
-
-void lgui_application_set_global_pointer_cb(lgui_application_t *app, lgui_global_pointer_cb cb, void *user_data) {
-    if (app) {
-        app->global_pointer_cb = cb;
-        app->global_pointer_user_data = user_data;
-    }
-}
-
-void lgui_widget_focus(lgui_application_t *app, lgui_widget_t *widget) {
-    if (app) app->focused_widget = widget;
-}
-
-int lgui_application_run(lgui_application_t *app) {
-    if (!app) return -1;
-    app->running = true;
-
-    /* +1 for the compositor fd, +N for user-registered fds */
-    struct pollfd pfds[9];
-
-    while (app->running) {
-        pfds[0].fd      = app->lgp_fd;
-        pfds[0].events  = POLLIN;
-        pfds[0].revents = 0;
-
-        int pfd_count = 1;
-        for (int i = 0; i < app->custom_fd_count; i++) {
-            pfds[pfd_count].fd      = app->custom_fds[i].fd;
-            pfds[pfd_count].events  = POLLIN;
-            pfds[pfd_count].revents = 0;
-            pfd_count++;
-        }
-
-        int r = poll(pfds, (nfds_t)pfd_count, 16); /* ~60 fps poll interval */
-        if (r < 0) {
-            if (errno == EINTR) continue;
-            break;
         }
 
         /* Compositor fd events */
         if (pfds[0].revents & (POLLERR | POLLHUP)) {
             break; /* Compositor disconnected */
         }
+
         if (pfds[0].revents & POLLIN) {
-            size_t available = sizeof(app->rx_buf) - app->rx_len;
-            if (available > 0) {
-                ssize_t n = read(app->lgp_fd, app->rx_buf + app->rx_len, available);
-                if (n <= 0) break;
-                app->rx_len += (size_t)n;
-            }
+            uint8_t rx[4096];
+            ssize_t n = read(app->lgp_fd, rx, sizeof(rx));
+            if (n <= 0) break;
 
             /* Parse incoming TLV frames */
             size_t offset = 0;
-            while (offset + (size_t)LGP_HEADER_SIZE <= app->rx_len) {
-                uint16_t type = (uint16_t)(app->rx_buf[offset] | (app->rx_buf[offset + 1] << 8));
-                uint32_t len  = read_u32_le(app->rx_buf + offset + 2);
+            while (offset + (size_t)LGP_HEADER_SIZE <= (size_t)n) {
+                uint16_t type = (uint16_t)(rx[offset] | (rx[offset + 1] << 8));
+                uint32_t len  = read_u32_le(rx + offset + 2);
 
-                if (len < LGP_HEADER_SIZE || offset + len > app->rx_len) break;
+                if (len < LGP_HEADER_SIZE || offset + len > (size_t)n) break;
 
-                const uint8_t *payload = app->rx_buf + offset + LGP_HEADER_SIZE;
+                const uint8_t *payload = rx + offset + LGP_HEADER_SIZE;
                 uint32_t payload_len = len - (uint32_t)LGP_HEADER_SIZE;
 
                 if (type == 0x0110u) {
@@ -815,6 +618,91 @@ int lgui_application_run(lgui_application_t *app) {
                         int py = (int)read_u32_le(payload + 4);
                         app->cursor_x = px;
                         app->cursor_y = py;
+
+                        if (app->global_pointer_cb) {
+                            app->global_pointer_cb(px, py, false, false, app->global_pointer_user_data);
+                        }
+                    }
+                } else if (type == 0x0111u) {
+                    /* LGP_MSG_POINTER_BUTTON: uint8_t button, uint8_t pressed */
+                    if (payload_len >= 2u) {
+                        bool pressed = payload[1] != 0u;
+                        lgui_dispatch_pointer_button(app,
+                                                      app->cursor_x, app->cursor_y,
+                                                      pressed);
+                        if (app->global_pointer_cb) {
+                            app->global_pointer_cb(app->cursor_x, app->cursor_y, pressed, true, app->global_pointer_user_data);
+                        }
+                    }
+                } else if (type == 0x0112u) {
+                    /* LGP_MSG_KEYBOARD_KEY: uint32 key, uint32 state, uint32 modifiers */
+                    if (payload_len >= 12u) {
+                        uint32_t key = read_u32_le(payload + 0);
+                        uint32_t state = read_u32_le(payload + 4);
+                        uint32_t modifiers = read_u32_le(payload + 8);
+                        
+                        /* Dispatch to global callback if registered (e.g. for WM) */
+                        if (state != 0 && app->global_key_cb) {
+                            app->global_key_cb(key, modifiers, app->global_key_user_data);
+                        }
+                        
+                        /* Handle TextField keyboard input */
+                        if (state != 0 && app->focused_widget && app->focused_widget->type == 7) {
+                            lgui_textfield_handle_key(app->focused_widget, key, modifiers);
+                        }
+                        
+                        /* Also dispatch to focused widget */
+                        if (state != 0 && app->focused_widget && app->focused_widget->on_key) {
+                            app->focused_widget->on_key(app->focused_widget, key, modifiers, app->focused_widget->user_data);
+                        }
+                    }
+                } else if (type == 0x0122u) {
+                    /* LGP_MSG_CLIPBOARD_DATA: string payload */
+                    if (app->clipboard_cb) {
+                        char *text = NULL;
+                        if (payload_len > 0) {
+                            text = malloc(payload_len + 1);
+                            if (text) {
+                                memcpy(text, payload, payload_len);
+                                text[payload_len] = '\0';
+                            }
+                        }
+                        app->clipboard_cb(text, app->clipboard_user_data);
+                        if (text) free(text);
+                        app->clipboard_cb = NULL;
+                    }
+                } else if (type == LGP_MSG_WM_SURFACE_CREATED) {
+                    if (payload_len >= 16u && app->wm_surface_created_cb) {
+                        uint32_t surface_id = read_u32_le(payload + 0);
+                        uint32_t surface_type = read_u32_le(payload + 4);
+                        uint32_t w = read_u32_le(payload + 8);
+                        uint32_t h = read_u32_le(payload + 12);
+                        app->wm_surface_created_cb(surface_id, surface_type, w, h, app->wm_user_data);
+                    }
+                } else if (type == LGP_MSG_WM_SURFACE_DESTROYED) {
+                    if (payload_len >= 4u && app->wm_surface_destroyed_cb) {
+                        uint32_t surface_id = read_u32_le(payload + 0);
+                        app->wm_surface_destroyed_cb(surface_id, app->wm_user_data);
+                    }
+                } else if (type == 0x0300u) { /* LGP_MSG_OUTPUT_GEOMETRY */
+                    if (payload_len >= 8u) {
+                        uint32_t w = read_u32_le(payload + 0);
+                        uint32_t h = read_u32_le(payload + 4);
+                        app->output_width = w;
+                        app->output_height = h;
+                        if (app->output_geometry_cb) {
+                            app->output_geometry_cb(w, h, app->output_geometry_user_data);
+                        }
+                    }
+                }
+                offset += len;
+            }
+        }
+
+        /* User-registered fd callbacks */
+        for (int i = 0; i < app->custom_fd_count; i++) {
+            if (pfds[i + 1].revents & POLLIN) {
+                app->custom_fds[i].cb(app->custom_fds[i].fd, app->custom_fds[i].user_data);
             }
         }
 

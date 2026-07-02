@@ -34,8 +34,8 @@ impl Window {
         }
     }
 
-    pub fn pixels(&self) -> Option<&mut [u8]> {
-        self.surface.as_ref().map(|s| s.pixels())
+    pub fn pixels(&mut self) -> Option<&mut [u8]> {
+        self.surface.as_mut().map(|s| s.pixels())
     }
 
     pub fn buffer_size(&self) -> usize {

@@ -100,9 +100,9 @@ static bool lgp_surface_is_in_display(const lgp_surface_create_payload_t *payloa
                                       uint32_t display_width __attribute__((unused)),
                                       uint32_t display_height __attribute__((unused))) {
     if (payload->width == 0 || payload->height == 0) return false;
-    if (payload->width > 4096 || payload->height > 4096) return false;
-    if (payload->x < -4096 || payload->x > 4096) return false;
-    if (payload->y < -4096 || payload->y > 4096) return false;
+    if (payload->width > 16384 || payload->height > 16384) return false;
+    if (payload->x < -16384 || payload->x > 16384) return false;
+    if (payload->y < -16384 || payload->y > 16384) return false;
     return true;
 }
 

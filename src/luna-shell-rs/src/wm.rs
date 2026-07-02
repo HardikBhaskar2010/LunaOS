@@ -325,18 +325,17 @@ impl WmManager {
     pub fn switch_workspace(&mut self, idx: usize, conn: &mut LgpConnection) {
         if idx >= NUM_WORKSPACES || idx == self.active_workspace { return; }
 
-        // Hide windows on old workspace
+        // Hide windows on old workspace and restore windows on new workspace
         let old_ws = self.active_workspace;
-        for &sid in &self.workspaces[old_ws].leaves().clone() {
-            let _ = LgpWm::set_state(conn, sid, LGP_WM_STATE_HIDDEN);
+        for (&sid, win) in self.windows.iter() {
+            if win.workspace == old_ws {
+                let _ = LgpWm::set_state(conn, sid, LGP_WM_STATE_HIDDEN);
+            } else if win.workspace == idx {
+                let _ = LgpWm::set_state(conn, sid, LGP_WM_STATE_NORMAL);
+            }
         }
 
         self.active_workspace = idx;
-
-        // Restore windows on new workspace
-        for &sid in &self.workspaces[idx].leaves().clone() {
-            let _ = LgpWm::set_state(conn, sid, LGP_WM_STATE_NORMAL);
-        }
 
         // Set focus to the first window on new workspace
         self.focused_surface = self.workspaces[idx].focused;

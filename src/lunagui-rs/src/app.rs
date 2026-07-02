@@ -71,11 +71,13 @@ impl App {
     }
 
     pub fn present(&mut self) -> std::io::Result<()> {
-        if let Some(ref surface) = self.surface {
+        if let Some(ref mut surface) = self.surface {
             if let Some(ref mut handler) = self.handler {
+                let width = surface.width;
+                let height = surface.height;
                 let pixels = surface.pixels();
-                let stride = surface.width * 4;
-                handler.render(pixels, stride, surface.width, surface.height);
+                let stride = width * 4;
+                handler.render(pixels, stride, width, height);
             }
             surface.commit(&mut self.conn)?;
         }

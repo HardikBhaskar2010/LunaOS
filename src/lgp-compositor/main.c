@@ -112,6 +112,9 @@ static const lgp_surface_t *lgp_find_pointer_target(lgp_compositor_state_t *stat
         if (s->layer < LGP_LAYER_APPLICATION || s->layer >= LGP_LAYER_SHELL) {
             continue;
         }
+        if (s->wm_state == LGP_WM_STATE_HIDDEN || s->wm_state == LGP_WM_STATE_MINIMIZED) {
+            continue;
+        }
 
         if (x >= s->x && x < s->x + (int32_t)s->width &&
             y >= s->y && y < s->y + (int32_t)s->height) {
@@ -584,7 +587,7 @@ static bool lgp_handle_wm_grab_key(lgp_compositor_state_t *state, lgp_client_t *
     lgp_wm_grab_key_payload_t payload;
     if (!lgp_wm_decode_grab_key(msg, &payload)) return false;
     
-    if (state->grabbed_keys_count < 16) {
+    if (state->grabbed_keys_count < 128) {
         state->grabbed_keys[state->grabbed_keys_count].key = payload.key;
         state->grabbed_keys[state->grabbed_keys_count].modifiers = payload.modifiers;
         state->grabbed_keys_count++;

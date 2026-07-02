@@ -19,7 +19,7 @@ typedef struct {
     struct {
         uint32_t key;
         uint32_t modifiers;
-    } grabbed_keys[16];
+    } grabbed_keys[128];
     size_t grabbed_keys_count;
     
     lgp_client_t *wm_client;
